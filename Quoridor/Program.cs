@@ -2,11 +2,15 @@
 
 namespace Quoridor
 {
+    using System.Text;
+    using Logic;
+
     class Program
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            Console.OutputEncoding = Encoding.UTF8;
+            var gameModel = new QuoridorModel();
         }
     }
 }
