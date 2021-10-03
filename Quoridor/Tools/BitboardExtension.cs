@@ -8,7 +8,7 @@ namespace Quoridor.Tools
 
     public static class BitboardExtension
     {
-        public static int Flatten(int x, int y)
+        public static int Flatten(int y, int x)
         {
             return x + y * QuoridorModel.BitsBlockSize;
         }

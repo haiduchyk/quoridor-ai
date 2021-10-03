@@ -1,5 +1,6 @@
 namespace Quoridor.Logic
 {
+    using System;
     using System.Collections.Generic;
     using Tools;
 
@@ -109,15 +110,29 @@ namespace Quoridor.Logic
                 var xOffset = wallOrientation == WallOrientation.Horizontal ? i - 1 : 0;
                 wall.SetBit(y + yOffset, x + xOffset, true);
             }
+
             return wall;
+            walls.ToStr(blueCharacterStart, redCharacterStart).Log();
+            // var a = (long)~0 >> (QuoridorModel.BitsBlockSize - 9 - 1);
+            redCharacterStart.ToStr().Log();
+
         }
 
         // private bool IsValid(int index)
         // {
         // }
 
-        private void Log()
+
+
+        private bool IsInRange(int index)
         {
+            return index is >= 0 and < UsedBitsAmount;
+        }
+
+        private bool IsInRange(int y, int x)
+        {
+            var index = BitboardExtension.Flatten(y, x);
+            return IsInRange(index);
         }
     }
 }
