@@ -58,5 +58,10 @@ namespace Quoridor.Logic
                 }
             }
         }
+
+        public bool IsZero()
+        {
+            return block0 == 0 && block1 == 0 && block2 == 0 && block3 == 0 && block4 == 0;
+        }
     }
 }
