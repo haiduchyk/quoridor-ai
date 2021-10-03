@@ -35,7 +35,7 @@ namespace Quoridor.Tools
             return bitboard.GetBit(index);
         }
 
-        public static void SetBit(this FieldMask bitboard, int index, bool bit)
+        public static void SetBit(this ref FieldMask bitboard, int index, bool bit)
         {
             var (i, j) = Nest(index);
             var bitIndex = QuoridorModel.BitsBlockSize - j - 1;
@@ -46,7 +46,7 @@ namespace Quoridor.Tools
             bitboard[i] = block;
         }
 
-        public static void SetBit(this FieldMask bitboard, int y, int x, bool bit)
+        public static void SetBit(this ref FieldMask bitboard, int y, int x, bool bit)
         {
             var index = x + y * QuoridorModel.BitboardSize;
             bitboard.SetBit(index, bit);
