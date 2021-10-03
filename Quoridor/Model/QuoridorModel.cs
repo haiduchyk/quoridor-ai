@@ -1,5 +1,6 @@
 namespace Quoridor.Logic
 {
+    using System.Collections.Generic;
     using Tools;
 
     public class QuoridorModel
@@ -7,7 +8,7 @@ namespace Quoridor.Logic
         private const int FieldSize = 9;
 
         public const int BitsBlockSize = 64;
-        private const int BitBlocksAmount = 5;
+        public const int BitBlocksAmount = 5;
         public const int BitboardSize = 17;
 
         public const int BitboardCenter = BitboardSize / 2 + 1;
@@ -20,22 +21,22 @@ namespace Quoridor.Logic
 
         private ushort blueCharacterWalls;
         private ushort redCharacterWalls;
-        
+
         private const int WallsPerGame = 10;
 
-        private long[] blueCharacterStart = new long[BitBlocksAmount]
-            { 0, 0, 0, 0, 1L << ExtraBits + BitboardCenter - 1};
+        private FieldMask blueCharacterStart =
+            new(new[] { 0, 0, 0, 0, 1L << ExtraBits + BitboardCenter - 1 });
 
-        private long[] redCharacterStart = new long[BitBlocksAmount]
-        { 1L << (BitsBlockSize - BitboardCenter), 0, 0, 0, 0 };
+        private FieldMask redCharacterStart =
+            new(new[] { 1L << (BitsBlockSize - BitboardCenter), 0, 0, 0, 0 });
 
 
-        // private long[] walls = new long[BitBlocksAmount];
-        private long[] walls = new long[BitBlocksAmount];
-        private long[] blueCharacter = new long[BitBlocksAmount];
-        private long[] redCharacter = new long[BitBlocksAmount];
+        // private FieldMask walls = new FieldMask();
+        private FieldMask walls;
+        private FieldMask blueCharacter;
+        private FieldMask redCharacter;
 
-        // private Dictionary<int, Dictionary<long, long[]>>
+        private Dictionary<FieldMask, Dictionary<FieldMask, FieldMask[]>> simplePLayersMoves;
 
 
         public QuoridorModel()
