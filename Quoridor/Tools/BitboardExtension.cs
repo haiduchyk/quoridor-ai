@@ -35,6 +35,53 @@ namespace Quoridor.Tools
             return bitboard.GetBit(index);
         }
 
+        public static void SetBit(this long[] bitboard, int index, bool bit)
+        {
+            var (i, j) = Nest(index);
+            var bitIndex = QuoridorModel.BitsBlockSize - j - 1;
+            var mask = bit ? 1L : 0L;
+            mask <<= bitIndex;
+            var block = bitboard[i];
+            block |= mask;
+            bitboard[i] = block;
+        }
+
+        public static void SetBit(this long[] bitboard, int y, int x, bool bit)
+        {
+            var index = x + y * QuoridorModel.BitboardSize;
+            bitboard.SetBit(index, bit);
+        }
+
+        public static long[] And(this long[] bitboard, long[] mask)
+        {
+            var result = new long[QuoridorModel.BitBlocksAmount];
+            for (var i = 0; i < QuoridorModel.BitBlocksAmount; i++)
+            {
+                result[i] = bitboard[i] & mask[i];
+            }
+            return result;
+        }
+
+        public static long[] Or(this long[] bitboard, long[] mask)
+        {
+            var result = new long[QuoridorModel.BitBlocksAmount];
+            for (var i = 0; i < QuoridorModel.BitBlocksAmount; i++)
+            {
+                result[i] = bitboard[i] | mask[i];
+            }
+            return result;
+        }
+
+        public static long[] ExclusiveOr(this long[] bitboard, long[] mask)
+        {
+            var result = new long[QuoridorModel.BitBlocksAmount];
+            for (var i = 0; i < QuoridorModel.BitBlocksAmount; i++)
+            {
+                result[i] = bitboard[i] ^ mask[i];
+            }
+            return result;
+        }
+
         private static string wall = "⬛";
         private static string emptyWall = "⬜";
         private static string none = " ";
@@ -46,7 +93,8 @@ namespace Quoridor.Tools
 
         private static Dictionary<int, string> boardNumbers = new Dictionary<int, string>
         {
-            [0] = "0", [1] = "1", [2] = "2", [3] = "3", [4] = "4", [5] = "5", [6] = "6", [7] = "7", [8] = "8", [9] = "9",
+            [0] = "0", [1] = "1", [2] = "2", [3] = "3", [4] = "4", [5] = "5", [6] = "6", [7] = "7", [8] = "8",
+            [9] = "9",
             [10] = "a", [11] = "b", [12] = "c", [13] = "d", [14] = "e", [15] = "f", [16] = "g", [17] = "h",
         };
 
@@ -94,10 +142,9 @@ namespace Quoridor.Tools
 
             res.Append(horizontalLine);
 
-
             return res.ToString();
         }
-        
+
         public static string ToStr(this long[] bitboard, long[] blueBitboard, long[] redBitboard)
         {
             var res = new StringBuilder();
@@ -132,7 +179,7 @@ namespace Quoridor.Tools
                         {
                             var isRed = redBitboard.GetBit(y, x);
                             var isBlue = blueBitboard.GetBit(y, x);
-                            
+
                             if (isRed)
                             {
                                 res.Append($"{red} ");
@@ -146,7 +193,6 @@ namespace Quoridor.Tools
                             if (!isRed && !isBlue)
                             {
                                 res.Append($"{emptyCharacter} ");
-
                             }
                         }
                     }
@@ -156,7 +202,6 @@ namespace Quoridor.Tools
             }
 
             res.Append(horizontalLine);
-
 
             return res.ToString();
         }
