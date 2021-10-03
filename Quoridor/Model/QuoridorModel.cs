@@ -2,6 +2,7 @@ namespace Quoridor.Logic
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using Tools;
 
     public class QuoridorModel
@@ -37,43 +38,127 @@ namespace Quoridor.Logic
         private FieldMask blueCharacter;
         private FieldMask redCharacter;
 
-        private Dictionary<FieldMask, Dictionary<FieldMask, FieldMask[]>> simplePLayersMoves;
+        private Dictionary<FieldMask, Dictionary<FieldMask, FieldMask[]>> simplePlayersMoves = new();
+        private Dictionary<FieldMask, FieldMask> simplePlayersMovesMasks = new();
+        private Random random = new();
 
         public QuoridorModel()
         {
+            CreateSimplePlayerMovesMasks();
+            CreateSimplePlayerMoves();
             CreateAvailableWallsMask();
-            var search = new DijkstraSearch();
-            var position = BitboardExtension.Flatten(0, 8);
-            PlaceWall(1, 1, WallOrientation.Horizontal);
-            PlaceWall(1, 11, WallOrientation.Horizontal);
-            PlaceWall(1, 15, WallOrientation.Horizontal);
-            PlaceWall(3, 3, WallOrientation.Vertical);
-            PlaceWall(5, 1, WallOrientation.Vertical);
-            PlaceWall(5, 5, WallOrientation.Horizontal);
-            PlaceWall(5, 9, WallOrientation.Horizontal);
-            PlaceWall(5, 13, WallOrientation.Horizontal);
-            PlaceWall(7, 3, WallOrientation.Horizontal);
-            PlaceWall(7, 7, WallOrientation.Vertical);
-            PlaceWall(7, 11, WallOrientation.Vertical);
-            PlaceWall(7, 15, WallOrientation.Horizontal);
-            // PlaceWall(9, 5, WallOrientation.Vertical);
-            // PlaceWall(9, 9, WallOrientation.Vertical);
-            // PlaceWall(9, 13, WallOrientation.Horizontal);
+            PutPlayersOnStartPosition();
 
-            if (search.HasPath(this, position, Direction.Down, out var path))
+            SetupSimpleCorridor();
+
+            walls.ToStr(blueCharacterStart, redCharacterStart).Log();
+
+            for (var i = 0; i < 100; i++)
             {
-                var mask = new FieldMask();
-                foreach (var node in path.nodes)
-                {
-                    mask.SetBit(node, true);
-                }
-                walls.Or(mask).ToStr().Log();
-                return;
+                MakeRandomRedMove();
+                MakeRandomBlueMove();
+                walls.ToStr(blueCharacter, redCharacter).Log();
             }
-            Console.WriteLine($"Shit");
-            // walls.ToStr(blueCharacterStart, redCharacterStart).Log();
-            // // var a = (long)~0 >> (QuoridorModel.BitsBlockSize - 9 - 1);
-            // redCharacterStart.ToStr().Log();
+
+
+            walls.ToStr(blueCharacterStart, redCharacterStart).Log();
+            // var a = (long)~0 >> (QuoridorModel.BitsBlockSize - 9 - 1);
+            redCharacterStart.ToStr().Log();
+        }
+
+        private void PutPlayersOnStartPosition()
+        {
+            redCharacter = redCharacterStart;
+            blueCharacter = blueCharacterStart;
+        }
+
+        private void SetupSimpleCorridor()
+        {
+            PlaceWall(1, 1, WallOrientation.Horizontal);
+            PlaceWall(1, 3, WallOrientation.Horizontal);
+            PlaceWall(1, 5, WallOrientation.Horizontal);
+            PlaceWall(1, 7, WallOrientation.Horizontal);
+            PlaceWall(1, 9, WallOrientation.Horizontal);
+            PlaceWall(1, 11, WallOrientation.Horizontal);
+            PlaceWall(1, 13, WallOrientation.Horizontal);
+        }
+
+        private void MakeRandomRedMove()
+        {
+            redCharacter = MakeRandomMove(redCharacter);
+        }
+
+        private void MakeRandomBlueMove()
+        {
+            blueCharacter = MakeRandomMove(blueCharacter);
+        }
+
+        private FieldMask MakeRandomMove(FieldMask playerMask)
+        {
+            var moves = simplePlayersMoves[playerMask];
+            var wallMask = simplePlayersMovesMasks[playerMask];
+            var currentWallMask = wallMask.And(walls);
+            var availableMoves = moves[currentWallMask];
+            var move = availableMoves[random.Next(0, availableMoves.Length)];
+            return move;
+        }
+
+        private void CreateSimplePlayerMovesMasks()
+        {
+            for (var y = 0; y < BitboardSize; y++)
+            {
+                for (var x = 0; x < BitboardSize; x++)
+                {
+                    if (y % 2 == 0 && x % 2 == 0)
+                    {
+                        var playerMask = new FieldMask();
+                        playerMask.SetBit(y, x, true);
+                        simplePlayersMovesMasks[playerMask] = CreateSimplePlayerMovesMaskFor(y, x);
+                    }
+                }
+            }
+        }
+
+        private FieldMask CreateSimplePlayerMovesMaskFor(int y, int x)
+        {
+            var fieldMask = new FieldMask();
+            for (var yDelta = -SimpleMoveBitsAmount / 2; yDelta < SimpleMoveBitsAmount / 2 + 1; yDelta++)
+            {
+                for (var xDelta = -SimpleMoveBitsAmount / 2; xDelta < SimpleMoveBitsAmount / 2 + 1; xDelta++)
+                {
+                    var curY = y + yDelta;
+                    var curX = x + xDelta;
+                    CalculateSimplePlayerMovesMaskFor(curY, curX, ref fieldMask);
+                }
+            }
+
+            return fieldMask;
+        }
+
+        private void CalculateSimplePlayerMovesMaskFor(int curY, int curX, ref FieldMask fieldMask)
+        {
+            if (curY % 2 != 0)
+            {
+                if (curX % 2 == 0)
+                {
+                    TrySetBit(curY, curX, ref fieldMask);
+                }
+            }
+            else
+            {
+                if (curX % 2 != 0)
+                {
+                    TrySetBit(curY, curX, ref fieldMask);
+                }
+            }
+        }
+
+        private void TrySetBit(int y, int x, ref FieldMask mask)
+        {
+            if (IsInRange(y, x))
+            {
+                mask.SetBit(y, x, true);
+            }
         }
 
         private void CreateAvailableWallsMask()
@@ -90,7 +175,6 @@ namespace Quoridor.Logic
         public void PlaceWall(int y, int x, WallOrientation wallOrientation)
         {
             var wallMask = availableWalls.ExclusiveOr(walls);
-            wallMask.ToStr().Log();
             if (CanPlaceWall(wallMask, y, x, wallOrientation))
             {
                 var wall = GenerateWall(y, x, wallOrientation);
@@ -144,6 +228,89 @@ namespace Quoridor.Logic
             return wall;
         }
 
+        private void CreateSimplePlayerMoves()
+        {
+            for (var y = 0; y < BitboardSize; y++)
+            {
+                for (var x = 0; x < BitboardSize; x++)
+                {
+                    if (y % 2 == 0 && x % 2 == 0)
+                    {
+                        var playerMask = new FieldMask();
+                        playerMask.SetBit(y, x, true);
+                        var moves = CalculateUniqueVariantFor(y, x);
+                        simplePlayersMoves[playerMask] = moves;
+                    }
+                }
+            }
+        }
+
+        private Dictionary<FieldMask, FieldMask[]> CalculateUniqueVariantFor(int y, int x)
+        {
+            var result = new Dictionary<FieldMask, FieldMask[]>();
+
+            var uniqueVariants = Math.Pow(4, 2);
+
+            for (var unique = 0; unique < uniqueVariants; unique++)
+            {
+                var playerMoveMasks = new List<FieldMask>();
+                var fieldMask = new FieldMask();
+
+                var uniquePosition = 0;
+                for (var yDelta = -SimpleMoveBitsAmount / 2; yDelta < SimpleMoveBitsAmount / 2 + 1; yDelta++)
+                {
+                    for (var xDelta = -SimpleMoveBitsAmount / 2; xDelta < SimpleMoveBitsAmount / 2 + 1; xDelta++)
+                    {
+                        var curY = y + yDelta;
+                        var curX = x + xDelta;
+
+                        if (curY % 2 != 0)
+                        {
+                            if (curX % 2 == 0)
+                            {
+                                UpdateFieldMask();
+                            }
+                        }
+                        else
+                        {
+                            if (curX % 2 != 0)
+                            {
+                                UpdateFieldMask();
+                            }
+                        }
+
+                        void UpdateFieldMask()
+                        {
+                            var isTrue = (1 << uniquePosition & unique) != 0;
+                            if (IsInRange(curY, curX))
+                            {
+                                fieldMask.SetBit(curY, curX, isTrue);
+
+                                if (!isTrue)
+                                {
+                                    var newPlayerX = x + xDelta * 2;
+                                    var newPlayerY = y + yDelta * 2;
+
+                                    if (IsInRange(newPlayerY, newPlayerX))
+                                    {
+                                        var playerMask = new FieldMask();
+                                        playerMask.SetBit(newPlayerY, newPlayerX, true);
+                                        playerMoveMasks.Add(playerMask);
+                                    }
+                                }
+                            }
+
+                            uniquePosition++;
+                        }
+                    }
+                }
+
+                result[fieldMask] = playerMoveMasks.ToArray();
+            }
+
+            return result;
+        }
+        
         public bool IsInRange(int index)
         {
             return index is >= 0 and < UsedBitsAmount;
@@ -151,8 +318,7 @@ namespace Quoridor.Logic
 
         public bool IsInRange(int y, int x)
         {
-            var index = BitboardExtension.Flatten(y, x);
-            return IsInRange(index);
+            return y is >= 0 and < BitboardSize && x is >= 0 and < BitboardSize;
         }
 
         public bool CanMove(FieldMask moveMask)

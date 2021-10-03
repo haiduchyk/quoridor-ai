@@ -2,8 +2,6 @@ namespace Quoridor.Logic
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using C5;
     using Tools;
 
     public class DijkstraSearch : ISearch
