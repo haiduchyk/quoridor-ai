@@ -6,14 +6,22 @@ namespace Quoridor.Logic
 
     public class DijkstraSearch : ISearch
     {
-        private Direction dominantDirection;
-        private QuoridorModel model;
+        private readonly Direction[] directions = new Direction[4];
+
+        private Dictionary<Direction, (int y, int x)> moveOffsets = new()
+        {
+            { Direction.Up, (-1, 0) },
+            { Direction.Down, (1, 0) },
+            { Direction.Left, (0, -1) },
+            { Direction.Right, (0, 1) },
+        };
 
         private readonly Dictionary<int, int> distances;
         private readonly Dictionary<int, int> prevNodes;
         private readonly List<int> queue;
         private readonly List<int> searced;
         private readonly Comparer comparer;
+        private QuoridorModel model;
 
         public DijkstraSearch()
         {
@@ -27,8 +35,21 @@ namespace Quoridor.Logic
         public bool HasPath(QuoridorModel model, int position, Direction direction, out Path path)
         {
             this.model = model;
-            dominantDirection = direction;
-            queue.Clear();
+            SetDirections(direction);
+            Initialize(position);
+            return Search(out path);
+        }
+
+        private void SetDirections(Direction direction)
+        {
+            directions[0] = direction;
+            directions[1] = Direction.Right;
+            directions[2] = Direction.Left;
+            directions[3] = direction.Opposite();
+        }
+
+        private void Initialize(int position)
+        {
             for (var i = 0; i < QuoridorModel.UsedBitsAmount; i++)
             {
                 distances[i] = int.MaxValue;
@@ -36,7 +57,6 @@ namespace Quoridor.Logic
             }
             distances[position] = 0;
             queue.Add(position);
-            return Search(out path);
         }
 
         private bool Search(out Path path)
@@ -46,12 +66,7 @@ namespace Quoridor.Logic
                 var position = queue[0];
                 queue.RemoveAt(0);
                 searced.Add(position);
-                var (i, j) = Nested(position);
-                if (i == 6)
-                {
-                    Console.WriteLine($"s");
-                }
-                
+
                 if (IsDestinationReached(position))
                 {
                     path = RetrievePath(position);
@@ -80,14 +95,7 @@ namespace Quoridor.Logic
         private bool IsDestinationReached(int position)
         {
             var i = position / QuoridorModel.BitboardSize;
-            return dominantDirection == Direction.Up ? i == 0 : i == QuoridorModel.BitboardSize - 1;
-        }
-
-        private (int i, int j) Nested(int position)
-        {
-            var i = position / QuoridorModel.BitboardSize;
-            var j = position % QuoridorModel.BitboardSize;
-            return (i, j);
+            return directions[0] == Direction.Up ? i == 0 : i == QuoridorModel.BitboardSize - 1;
         }
 
         private Path RetrievePath(int position)
@@ -107,49 +115,55 @@ namespace Quoridor.Logic
         private List<int> GetPossibleMoves(int position)
         {
             var moves = new List<int>(4);
-            if (TryGetPosition(position, dominantDirection, out var targetPosition))
+            foreach (var direction in directions)
             {
-                moves.Add(targetPosition);
-            }
-            if (TryGetPosition(position, Direction.Right, out targetPosition))
-            {
-                moves.Add(targetPosition);
-            }
-            if (TryGetPosition(position, Direction.Left, out targetPosition))
-            {
-                moves.Add(targetPosition);
-            }
-            if (TryGetPosition(position, dominantDirection.Opposite(), out targetPosition))
-            {
-                moves.Add(targetPosition);
+                if (TryGetPosition(position, direction, out var targetPosition))
+                {
+                    moves.Add(targetPosition);
+                }
             }
             return moves;
         }
 
         private bool TryGetPosition(int position, Direction direction, out int targetPosition)
         {
-            var offset = (int)direction;
-            targetPosition = position + 2 * offset;
-            if (!IsValid(targetPosition))
+            var (y, x) = Nested(position);
+            var (yOffset, xOffset) = moveOffsets[direction];
+            var targetX = x + 2 * xOffset;
+            var targetY = y + 2 * yOffset;
+            targetPosition = Flatten(targetY, targetX);
+            if (!IsValid(targetY, targetX))
             {
                 return false;
             }
-            var moveMask = GetMask(position, offset);
+            var moveMask = GetMask(y, x, yOffset, xOffset);
             return model.CanMove(moveMask);
         }
 
-        private FieldMask GetMask(int position, int offset)
+        private (int i, int j) Nested(int position)
         {
-            var moveMask = new FieldMask();
-            moveMask.SetBit(position, true);
-            moveMask.SetBit(position + offset, true);
-            moveMask.SetBit(position + 2 * offset, true);
-            return moveMask;
+            var i = position / QuoridorModel.BitboardSize;
+            var j = position % QuoridorModel.BitboardSize;
+            return (i, j);
         }
 
-        private bool IsValid(int position)
+        private int Flatten(int y, int x)
         {
-            return model.IsInRange(position);
+            return x + y * QuoridorModel.BitboardSize;
+        }
+
+        private bool IsValid(int y, int x)
+        {
+            return model.IsInRange(y, x);
+        }
+
+        private FieldMask GetMask(int y, int x, int yOffset, int xOffset)
+        {
+            var moveMask = new FieldMask();
+            moveMask.SetBit(y, x, true);
+            moveMask.SetBit(y + yOffset, x + xOffset, true);
+            moveMask.SetBit(y + 2 * yOffset, x + 2 * xOffset, true);
+            return moveMask;
         }
 
         private class Comparer : IComparer<int>

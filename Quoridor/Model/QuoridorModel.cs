@@ -60,7 +60,6 @@ namespace Quoridor.Logic
                 walls.ToStr(blueCharacter, redCharacter).Log();
             }
 
-
             walls.ToStr(blueCharacterStart, redCharacterStart).Log();
             // var a = (long)~0 >> (QuoridorModel.BitsBlockSize - 9 - 1);
             redCharacterStart.ToStr().Log();
@@ -310,7 +309,7 @@ namespace Quoridor.Logic
 
             return result;
         }
-        
+
         public bool IsInRange(int index)
         {
             return index is >= 0 and < UsedBitsAmount;
