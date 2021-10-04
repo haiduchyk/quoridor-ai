@@ -8,7 +8,7 @@ namespace Quoridor.Logic
     {
         private readonly Direction[] directions = new Direction[4];
 
-        private Dictionary<Direction, (int y, int x)> moveOffsets = new()
+        private readonly Dictionary<Direction, (int y, int x)> moveOffsets = new()
         {
             { Direction.Up, (-1, 0) },
             { Direction.Down, (1, 0) },
@@ -18,23 +18,20 @@ namespace Quoridor.Logic
 
         private readonly Dictionary<int, int> distances;
         private readonly Dictionary<int, int> prevNodes;
-        private readonly List<int> queue;
-        private readonly List<int> searced;
-        private readonly Comparer comparer;
+        private readonly SortedSet<int> queue;
         private QuoridorModel model;
 
-        public DijkstraSearch()
-        {
-            prevNodes = new Dictionary<int, int>(QuoridorModel.UsedBitsAmount);
-            distances = new Dictionary<int, int>(QuoridorModel.UsedBitsAmount);
-            queue = new List<int>(QuoridorModel.UsedBitsAmount);
-            searced = new List<int>(QuoridorModel.UsedBitsAmount);
-            comparer = new Comparer(distances);
-        }
-
-        public bool HasPath(QuoridorModel model, int position, Direction direction, out Path path)
+        public DijkstraSearch(QuoridorModel model)
         {
             this.model = model;
+            prevNodes = new Dictionary<int, int>(QuoridorModel.UsedBitsAmount);
+            distances = new Dictionary<int, int>(QuoridorModel.UsedBitsAmount);
+            var comparer = new Comparer(distances);
+            queue = new SortedSet<int>(comparer);
+        }
+
+        public bool HasPath(int position, Direction direction, out Path path)
+        {
             SetDirections(direction);
             Initialize(position);
             return Search(out path);
@@ -63,9 +60,8 @@ namespace Quoridor.Logic
         {
             while (queue.Count > 0)
             {
-                var position = queue[0];
-                queue.RemoveAt(0);
-                searced.Add(position);
+                var position = queue.Min;
+                queue.Remove(position);
 
                 if (IsDestinationReached(position))
                 {
@@ -81,9 +77,7 @@ namespace Quoridor.Logic
                     {
                         distances[pos] = distance;
                         prevNodes[pos] = position;
-                        queue.Remove(pos);
                         queue.Add(pos);
-                        queue.Sort(comparer);
                     }
                 }
             }
@@ -177,7 +171,7 @@ namespace Quoridor.Logic
 
             public int Compare(int x, int y)
             {
-                return distances[x] - distances[y];
+                return distances[x].CompareTo(distances[y]);
             }
         }
     }
