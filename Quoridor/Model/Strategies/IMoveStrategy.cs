@@ -2,6 +2,8 @@ namespace Quoridor.Model.Strategies
 {
     public interface IMoveStrategy
     {
-        FieldMask MakeMove(FieldMask playerMask);
+        bool IsManual { get; }
+
+        FieldMask MakeMove(Field field, FieldMask playerMask);
     }
 }
