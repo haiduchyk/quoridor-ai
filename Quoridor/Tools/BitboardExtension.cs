@@ -8,80 +8,6 @@ namespace Quoridor.Tools
 
     public static class BitboardExtension
     {
-        public static int Flatten(int y, int x)
-        {
-            return x + y * QuoridorModel.BitsBlockSize;
-        }
-
-        // c
-        public static (int i, int j) Nest(int index)
-        {
-            var i = index / QuoridorModel.BitsBlockSize;
-            var j = index % QuoridorModel.BitsBlockSize;
-            return (i, j);
-        }
-
-        // c
-        public static bool GetBit(this FieldMask bitboard, int index)
-        {
-            var (i, j) = Nest(index);
-            var block = bitboard[i];
-            return (block & (1L << (QuoridorModel.BitsBlockSize - j - 1))) != 0;
-        }
-
-        public static bool GetBit(this FieldMask bitboard, int y, int x)
-        {
-            var index = x + y * QuoridorModel.BitboardSize;
-            return bitboard.GetBit(index);
-        }
-
-        public static void SetBit(this ref FieldMask bitboard, int index, bool bit)
-        {
-            var (i, j) = Nest(index);
-            var bitIndex = QuoridorModel.BitsBlockSize - j - 1;
-            var mask = bit ? 1L : 0L;
-            mask <<= bitIndex;
-            var block = bitboard[i];
-            block |= mask;
-            bitboard[i] = block;
-        }
-
-        public static void SetBit(this ref FieldMask bitboard, int y, int x, bool bit)
-        {
-            var index = x + y * QuoridorModel.BitboardSize;
-            bitboard.SetBit(index, bit);
-        }
-
-        public static FieldMask And(this FieldMask bitboard, FieldMask mask)
-        {
-            var result = new FieldMask();
-            for (var i = 0; i < QuoridorModel.BitBlocksAmount; i++)
-            {
-                result[i] = bitboard[i] & mask[i];
-            }
-            return result;
-        }
-
-        public static FieldMask Or(this FieldMask bitboard, FieldMask mask)
-        {
-            var result = new FieldMask();
-            for (var i = 0; i < QuoridorModel.BitBlocksAmount; i++)
-            {
-                result[i] = bitboard[i] | mask[i];
-            }
-            return result;
-        }
-
-        public static FieldMask ExclusiveOr(this FieldMask bitboard, FieldMask mask)
-        {
-            var result = new FieldMask();
-            for (var i = 0; i < QuoridorModel.BitBlocksAmount; i++)
-            {
-                result[i] = bitboard[i] ^ mask[i];
-            }
-            return result;
-        }
-
         private static string wall = "⬛";
         private static string emptyWall = "⬜";
         private static string none = " ";
@@ -97,7 +23,7 @@ namespace Quoridor.Tools
             [9] = "9",
             [10] = "a", [11] = "b", [12] = "c", [13] = "d", [14] = "e", [15] = "f", [16] = "g", [17] = "h",
         };
-        
+
         private static string horizontalLine = "  0 1 2 3 4 5 6 7 8 9 a b c d e f g \n";
 
         public static string ToStr(this FieldMask bitboard)
@@ -105,11 +31,11 @@ namespace Quoridor.Tools
             var res = new StringBuilder();
             res.Append(horizontalLine);
 
-            for (var y = 0; y < QuoridorModel.BitboardSize; y++)
+            for (var y = 0; y < FieldMask.BitboardSize; y++)
             {
                 res.Append($"{boardNumbers[y]} ");
 
-                for (var x = 0; x < QuoridorModel.BitboardSize; x++)
+                for (var x = 0; x < FieldMask.BitboardSize; x++)
                 {
                     var isTrue = bitboard.GetBit(y, x);
 
@@ -150,11 +76,11 @@ namespace Quoridor.Tools
             var res = new StringBuilder();
             res.Append(horizontalLine);
 
-            for (var y = 0; y < QuoridorModel.BitboardSize; y++)
+            for (var y = 0; y < FieldMask.BitboardSize; y++)
             {
                 res.Append($"{boardNumbers[y]} ");
 
-                for (var x = 0; x < QuoridorModel.BitboardSize; x++)
+                for (var x = 0; x < FieldMask.BitboardSize; x++)
                 {
                     var isTrue = bitboard.GetBit(y, x);
 
@@ -211,11 +137,11 @@ namespace Quoridor.Tools
             var res = new StringBuilder();
             res.Append("  0 1 2 3 4 6 7 8 9 a b c d e f g h \n");
 
-            for (var y = 0; y < QuoridorModel.BitboardSize; y++)
+            for (var y = 0; y < FieldMask.BitboardSize; y++)
             {
                 res.Append($"{boardNumbers[y]} ");
 
-                for (var x = 0; x < QuoridorModel.BitboardSize; x++)
+                for (var x = 0; x < FieldMask.BitboardSize; x++)
                 {
                     var isTrue = bitboard.GetBit(y, x);
                     res.Append(isTrue ? $"{wall} " : $"{emptyWall} ");
@@ -234,26 +160,25 @@ namespace Quoridor.Tools
         {
             Console.WriteLine($"{s}");
         }
-        
+
         public static string ToBinary(this long n)
         {
             if (n < 2) return n.ToString();
-        
+
             var divisor = n / 2;
             var remainder = n % 2;
-        
+
             return ToBinary(divisor) + remainder;
         }
-        
+
         public static string ToBinary(this int n)
         {
             if (n < 2) return n.ToString();
-        
+
             var divisor = n / 2;
             var remainder = n % 2;
-        
+
             return ToBinary(divisor) + remainder;
         }
-        
     }
 }
