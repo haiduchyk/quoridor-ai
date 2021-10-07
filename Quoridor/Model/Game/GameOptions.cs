@@ -1,4 +1,4 @@
-namespace Quoridor.Model.Game
+namespace Quoridor.Model
 {
     public class GameOptions
     {

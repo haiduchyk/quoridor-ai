@@ -6,8 +6,6 @@ namespace Quoridor.Model
 
         private FieldMask availableWalls;
         private FieldMask walls;
-        private FieldMask blueCharacter;
-        private FieldMask redCharacter;
 
         public Field(int size)
         {
@@ -29,6 +27,16 @@ namespace Quoridor.Model
         public void PlaceWall(ref FieldMask wall)
         {
             walls = walls.Or(ref wall);
+        }
+
+        public void RemoveWall(ref FieldMask wall)
+        {
+            walls = walls.Nor(ref wall);
+        }
+
+        public bool HasWall(int y, int x)
+        {
+            return walls.GetBit(y, x);
         }
 
         public FieldMask GetPossibleWallsMask()

@@ -3,6 +3,7 @@
 namespace Quoridor
 {
     using System.Text;
+    using Controller;
     using Model;
 
     class Program
@@ -10,7 +11,8 @@ namespace Quoridor
         static void Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
-            var gameModel = new QuoridorModel();
+            var gameContainer = new GameContainer();
+            gameContainer.MenuController.StartNewGame();
         }
     }
 }

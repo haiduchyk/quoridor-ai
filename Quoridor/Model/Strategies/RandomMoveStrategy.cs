@@ -1,12 +1,15 @@
 namespace Quoridor.Model.Strategies
 {
     using System;
+    using Moves;
+    using Players;
 
     public class RandomMoveStrategy : IMoveStrategy
     {
         public bool IsManual => false;
 
         private readonly IMoveProvider moveProvider;
+
         private readonly Random random = new();
 
         public RandomMoveStrategy(IMoveProvider moveProvider)
@@ -14,11 +17,12 @@ namespace Quoridor.Model.Strategies
             this.moveProvider = moveProvider;
         }
 
-        public FieldMask MakeMove(Field field, FieldMask playerMask)
+        public Move MakeMove(Field field, Player player)
         {
-            var availableMoves = moveProvider.GetAvailableMoves(field, ref playerMask);
+            var playerPosition = player.Position;
+            var availableMoves = moveProvider.GetAvailableMoves(field, ref playerPosition);
             var move = availableMoves[random.Next(0, availableMoves.Length)];
-            return move;
+            return new PlayerMove(field, player, move);
         }
     }
 }

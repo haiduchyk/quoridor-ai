@@ -1,12 +1,15 @@
 namespace Quoridor.Model.Strategies
 {
+    using Moves;
+    using Players;
+
     public class ManualStrategy : IMoveStrategy
     {
         public bool IsManual => true;
 
-        public FieldMask MakeMove(Field field, FieldMask playerMask)
+        public Move MakeMove(Field field, Player player)
         {
-            return new FieldMask();
+            return new DefaultMove(field, player, new FieldMask());
         }
     }
 }
