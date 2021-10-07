@@ -3,7 +3,7 @@
 namespace Quoridor
 {
     using System.Text;
-    using Logic;
+    using Model;
 
     class Program
     {

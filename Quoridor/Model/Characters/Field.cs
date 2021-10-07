@@ -1,4 +1,4 @@
-namespace Quoridor.Logic.Characters
+namespace Quoridor.Model.Characters
 {
     public class Field
     {

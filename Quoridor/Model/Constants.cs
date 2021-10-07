@@ -1,4 +1,4 @@
-namespace Quoridor.Logic
+namespace Quoridor.Model
 {
     public class Constants
     {

@@ -1,6 +1,6 @@
 namespace Quoridor.Controller
 {
-    using Logic;
+    using Model;
 
     public class WallController
     {

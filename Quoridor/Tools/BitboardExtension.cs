@@ -4,7 +4,7 @@ namespace Quoridor.Tools
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
-    using Logic;
+    using Model;
 
     public static class BitboardExtension
     {

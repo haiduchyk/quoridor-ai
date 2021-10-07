@@ -1,4 +1,4 @@
-namespace Quoridor.Logic.Strategies
+namespace Quoridor.Model.Strategies
 {
     public interface IMoveStrategy
     {
