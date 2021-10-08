@@ -17,5 +17,10 @@ namespace Quoridor.View
         {
             Console.WriteLine($"{item.id}. {item.name}");
         }
+
+        public void PrintErrorMessage()
+        {
+            Console.WriteLine($"Invalid option");
+        }
     }
 }

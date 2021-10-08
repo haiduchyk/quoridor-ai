@@ -33,12 +33,15 @@ namespace Quoridor.Controller
         {
             menuView.PrintOptions(Options);
             var input = consoleReader.WaitForInput();
-            if (TryGetOption(input, out var option))
+            OptionItem option;
+            while (!TryGetOption(input, out option))
             {
-                var gameOptions = GetOptionsFor(option);
-                gameStarter.StartNewGame(gameOptions);
-                gameController.ProcessGame();
+                menuView.PrintErrorMessage();
+                input = consoleReader.WaitForInput();
             }
+            var gameOptions = GetOptionsFor(option);
+            gameStarter.StartNewGame(gameOptions);
+            gameController.ProcessGame();
         }
 
         private bool TryGetOption(string input, out OptionItem optionItem)
