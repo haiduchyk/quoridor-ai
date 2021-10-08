@@ -8,11 +8,11 @@ namespace Quoridor.View
 
     public class FieldView
     {
-        private const string Wall = "⬛";
-        private const string EmptyWall = " ";
-        private const string EmptyCharacter = "○";
-        private const string Blue = "✱";
-        private const string Red = "❤";
+        private const char Wall = '⬛';
+        private const char EmptyWall = ' ';
+        private const char EmptyCharacter = '○';
+        private const char Blue = '✱';
+        private const char Red = '❤';
 
         private static readonly Dictionary<int, string> BoardNumbers = new Dictionary<int, string>
         {
@@ -37,39 +37,33 @@ namespace Quoridor.View
                     if (field.HasWall(y, x))
                     {
                         res.Append(Wall);
+                        res.Append(' ');
+                        continue;
                     }
 
-                    if (y % 2 != 0)
+                    if (y % 2 == 0 && x % 2 == 0)
                     {
-                        var hasWall = field.HasWall(y, x);
-                        res.Append(hasWall ? Wall : EmptyWall);
-                    }
-                    else
-                    {
-                        if (x % 2 != 0)
+                        var isBlue = bluePlayer.Position.GetBit(y, x);
+                        var isRed = redPlayer.Position.GetBit(y, x);
+
+                        if (isBlue)
                         {
-                            var hasWall = field.HasWall(y, x);
-                            res.Append(hasWall ? Wall : EmptyWall);
+                            res.Append(Blue);
+                        }
+                        else if (isRed)
+                        {
+                            res.Append(Red);
                         }
                         else
                         {
-                            var isBlue = bluePlayer.Position.GetBit(y, x);
-                            var isRed = redPlayer.Position.GetBit(y, x);
-
-                            if (isBlue)
-                            {
-                                res.Append(Blue);
-                            }
-                            if (isRed)
-                            {
-                                res.Append(Red);
-                            }
-                            if (!isRed && !isBlue)
-                            {
-                                res.Append(EmptyCharacter);
-                            }
+                            res.Append(EmptyCharacter);
                         }
                     }
+                    else
+                    {
+                        res.Append(EmptyWall);
+                    }
+
                     res.Append(' ');
                 }
 
