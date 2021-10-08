@@ -7,15 +7,13 @@ namespace Quoridor.Model
         public static readonly FieldMask BluePlayerPosition =
             new(new[] { 0, 0, 0, 0, 1L << FieldMask.ExtraBits + FieldMask.BitboardCenter - 1 });
 
-        // Need to calculate mask
         public static readonly FieldMask BlueEndPositions =
-            new(new[] { 1L << (FieldMask.BitsBlockSize - FieldMask.BitboardCenter), 0, 0, 0, 0 });
+            new(new[] { -6148961603732635648, 0, 0, 0, 0 });
 
         public static readonly FieldMask RedPlayerPosition =
             new(new[] { 1L << (FieldMask.BitsBlockSize - FieldMask.BitboardCenter), 0, 0, 0, 0 });
 
-        // Need to calculate mask
         public static readonly FieldMask RedEndPositions =
-            new(new[] { 0, 0, 0, 0, 1L << FieldMask.ExtraBits + FieldMask.BitboardCenter - 1 });
+            new(new[] { 0, 0, 0, 0, 1431650304L });
     }
 }
