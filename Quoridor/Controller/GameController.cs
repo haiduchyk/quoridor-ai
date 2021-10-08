@@ -26,13 +26,23 @@ namespace Quoridor.Controller
             moveQueue.Clear();
             bluePlayerMover = new PlayerMover(gameProvider, gameProvider.Game.BluePlayer, moveParser);
             redPlayerMover = new PlayerMover(gameProvider, gameProvider.Game.RedPlayer, moveParser);
+            var moveCount = 0;
             while (!gameProvider.Game.IsFinished)
             {
+                var mover = moveCount % 2 == 0 ? bluePlayerMover : redPlayerMover;
                 DrawField();
-                MakeMove(bluePlayerMover);
-                DrawField();
-                MakeMove(redPlayerMover);
+                MakeMove(mover);
+                moveCount++;
             }
+            EndGame(moveCount);
+        }
+
+        private void EndGame(int moveCount)
+        {
+            DrawField();
+            var winner = (moveCount - 1) % 2 == 0 ? "Blue" : "Red";
+            Console.WriteLine($"Winner: {winner} player");
+            Console.WriteLine($"Number of moves: {moveCount}");
         }
 
         private void DrawField()
@@ -43,10 +53,10 @@ namespace Quoridor.Controller
         private void MakeMove(PlayerMover playerMover)
         {
             var move = playerMover.WaitForMove();
-            if (!move.IsValid())
+            while (!move.IsValid())
             {
                 PrintMessage();
-                return;
+                move = playerMover.WaitForMove();
             }
             move.Execute();
             moveQueue.Add(move);
