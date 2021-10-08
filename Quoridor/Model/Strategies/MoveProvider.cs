@@ -19,6 +19,7 @@ namespace Quoridor.Model
         public MoveProvider()
         {
             CreateSimplePlayerMovesMasks();
+            CreateSimplePlayerMoves();
         }
 
         private void CreateSimplePlayerMovesMasks()
