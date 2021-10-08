@@ -1,6 +1,5 @@
 namespace Quoridor.Controller
 {
-    using System.Globalization;
     using System.Linq;
     using Model;
     using Model.Moves;

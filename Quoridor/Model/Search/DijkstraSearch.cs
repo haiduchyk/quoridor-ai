@@ -1,8 +1,6 @@
 namespace Quoridor.Model
 {
-    using System;
     using System.Collections.Generic;
-    using Tools;
 
     public class DijkstraSearch : ISearch
     {
