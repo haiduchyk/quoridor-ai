@@ -13,11 +13,20 @@ namespace Quoridor.Controller
 
     public class MoveParser : IMoveParser
     {
-        private readonly IMoveProvider moveProvider;
+        private const char Zero = '0';
+        private const char Nine = '9';
+        private const char A = 'a';
+        private const char G = 'g';
+        private const string H = "h";
+        private const string V = "v";
 
-        public MoveParser(IMoveProvider moveProvider)
+        private readonly IMoveProvider moveProvider;
+        private readonly IWallProvider wallProvider;
+
+        public MoveParser(IMoveProvider moveProvider, IWallProvider wallProvider)
         {
             this.moveProvider = moveProvider;
+            this.wallProvider = wallProvider;
         }
 
         public Move Parse(Field field, Player player, string input)
@@ -45,13 +54,6 @@ namespace Quoridor.Controller
             return false;
         }
 
-        private bool CanMoveTo(Field field, Player player, FieldMask to)
-        {
-            var playerPosition = player.Position;
-            var moves = moveProvider.GetAvailableMoves(field, ref playerPosition);
-            return moves.Any(m => !m.And(ref to).IsZero());
-        }
-
         private (FieldMask from, FieldMask to, bool isValid) ParsePlayerMove(string input)
         {
             var split = input.Trim().Split(' ');
@@ -66,16 +68,60 @@ namespace Quoridor.Controller
             return (new FieldMask(), new FieldMask(), false);
         }
 
+        private int ParseIndex(char character)
+        {
+            return character switch
+            {
+                >= Zero and <= Nine => character - Zero,
+                >= A and <= G => character - A + 10,
+                _ => -1
+            };
+        }
+
+        private bool CanMoveTo(Field field, Player player, FieldMask to)
+        {
+            var playerPosition = player.Position;
+            var moves = moveProvider.GetAvailableMoves(field, ref playerPosition);
+            return moves.Any(m => !m.And(ref to).IsZero());
+        }
+
+        private bool TryParseAsWallMove(Field field, Player player, string input, out Move move)
+        {
+            var (y, x, orientation, isValid) = ParseWallMove(input);
+            if (isValid && CanPlace(field, y, x, orientation))
+            {
+                var wall = wallProvider.GenerateWall(y, x, orientation);
+                move = new WallMove(field, player, wall);
+                return true;
+            }
+            move = null;
+            return false;
+        }
+
+        private (int y, int x, WallOrientation orientation, bool isValid) ParseWallMove(string input)
+        {
+            var split = input.Trim().Split(' ');
+            if (split.Length != 2)
+            {
+                return (-1, -1, WallOrientation.Horizontal, false);
+            }
+            if (TryParseCellIndex(split[0], out var y, out var x) && TryWallOrientation(split[1], out var orientation))
+            {
+                return (y, x, orientation, true);
+            }
+            return (-1, -1, WallOrientation.Horizontal, false);
+        }
+
+        private bool CanPlace(Field field, int y, int x, WallOrientation orientation)
+        {
+            var possibleWalls = field.GetPossibleWallsMask();
+            return wallProvider.CanPlaceWall(ref possibleWalls, y, x, orientation);
+        }
+
         private bool TryParseCell(string input, out FieldMask mask)
         {
             mask = new FieldMask();
-            if (input.Length != 2)
-            {
-                return false;
-            }
-            var x = ParseIndex(input[0]);
-            var y = ParseIndex(input[1]);
-            if (FieldMask.IsInRange(y, x))
+            if (TryParseCellIndex(input, out var y, out var x))
             {
                 mask.SetBit(y, x, true);
                 return true;
@@ -83,23 +129,33 @@ namespace Quoridor.Controller
             return false;
         }
 
-        private int ParseIndex(char character)
+        private bool TryParseCellIndex(string input, out int y, out int x)
         {
-            if (character >= 48 && character <= 57)
+            if (input.Length != 2)
             {
-                return character - 48;
+                y = -1;
+                x = -1;
+                return false;
             }
-            if (character >= 97 && character <= 103)
-            {
-                return character - 97 + 10;
-            }
-            return -1;
+            x = ParseIndex(input[0]);
+            y = ParseIndex(input[1]);
+            return FieldMask.IsInRange(y, x);
         }
 
-        private bool TryParseAsWallMove(Field field, Player player, string input, out Move move)
+        private bool TryWallOrientation(string input, out WallOrientation orientation)
         {
-            move = null;
-            return false;
+            switch (input)
+            {
+                case H:
+                    orientation = WallOrientation.Horizontal;
+                    return true;
+                case V:
+                    orientation = WallOrientation.Vertical;
+                    return true;
+                default:
+                    orientation = WallOrientation.Horizontal;
+                    return false;
+            }
         }
     }
 }

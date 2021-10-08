@@ -6,8 +6,6 @@ namespace Quoridor.Controller
     {
         public IGameProvider GameProvider { get; }
 
-        public WallController WallController { get; }
-
         public MenuController MenuController { get; }
 
         public GameController GameController { get; }
@@ -17,10 +15,9 @@ namespace Quoridor.Controller
             var wallProvider = new WallProvider();
             var moveProvider = new MoveProvider();
             var botCreator = new BotCreator(moveProvider);
-            var moveParser = new MoveParser(moveProvider);
+            var moveParser = new MoveParser(moveProvider, wallProvider);
             var gameProvider = new GameProvider(botCreator);
             GameProvider = gameProvider;
-            WallController = new WallController(gameProvider, wallProvider);
             GameController = new GameController(gameProvider, moveParser);
             MenuController = new MenuController(gameProvider, GameController);
         }
