@@ -54,8 +54,8 @@ namespace Quoridor.Model
             var wall = new FieldMask();
             for (var i = 0; i < WallSize; i++)
             {
-                var placeY = y + i - yOffset;
-                var placeX = x + i - xOffset;
+                var placeY = y + (i - 1) * yOffset;
+                var placeX = x + (i - 1) * xOffset;
                 wall.SetBit(placeY, placeX, true);
             }
 
