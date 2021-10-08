@@ -14,7 +14,7 @@ namespace Quoridor.Controller
         {
             var wallProvider = new WallProvider();
             var moveProvider = new MoveProvider();
-            var botCreator = new BotCreator(moveProvider);
+            var botCreator = new BotCreator(moveProvider, wallProvider);
             var moveParser = new MoveParser(moveProvider, wallProvider);
             var gameProvider = new GameProvider(botCreator);
             GameProvider = gameProvider;
