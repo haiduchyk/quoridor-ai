@@ -1,10 +1,8 @@
-﻿using System;
-
-namespace Quoridor
+﻿namespace Quoridor
 {
+    using System;
     using System.Text;
     using Controller;
-    using Model;
 
     class Program
     {
