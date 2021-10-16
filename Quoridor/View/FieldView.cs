@@ -14,7 +14,7 @@ namespace Quoridor.View
         private const char Blue = '✱';
         private const char Red = '❤';
 
-        private static readonly Dictionary<int, string> BoardNumbers = new Dictionary<int, string>
+        private static readonly Dictionary<int, string> BoardNumbers = new()
         {
             [0] = "0", [1] = "1", [2] = "2", [3] = "3", [4] = "4", [5] = "5", [6] = "6", [7] = "7", [8] = "8",
             [9] = "9",

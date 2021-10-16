@@ -36,9 +36,9 @@ namespace Quoridor.Model.Players
             return moveStrategy.IsManual;
         }
 
-        public Move MakeMove(Field field)
+        public Move MakeMove(Field field, Player enemy)
         {
-            return moveStrategy.MakeMove(field, this);
+            return moveStrategy.MakeMove(field, this, enemy);
         }
 
         public bool HasWalls()

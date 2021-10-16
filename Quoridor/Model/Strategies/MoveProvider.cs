@@ -2,27 +2,47 @@ namespace Quoridor.Model
 {
     using System;
     using System.Collections.Generic;
+    using Strategies;
 
     public interface IMoveProvider
     {
-        FieldMask[] GetAvailableMoves(Field field, ref FieldMask playerMask);
+        FieldMask[] GetAvailableMoves(Field field, ref FieldMask playerMask, FieldMask enemyMask);
     }
 
     public class MoveProvider : IMoveProvider
     {
-        private const int SimpleMoveBitsAmount = 3;
-        private const int MoveWithEnemyBitsAmount = 7;
+        //  <playerPosition 81, <enemyPlayerPosition, wallInBetweenPosition> ~3-4>
+        private Dictionary<FieldMask, Dictionary<FieldMask, FieldMask>> withEnemyMoveMasks = new();
 
-        private Dictionary<FieldMask, Dictionary<FieldMask, FieldMask[]>> simplePlayersMoves = new();
-        private Dictionary<FieldMask, FieldMask> simplePlayersMovesMasks = new();
+        private SimpleMoveCalculator simpleMoveCalculator;
+        private WithEnemyMoveCalculator withEnemyMoveCalculator;
 
         public MoveProvider()
         {
-            CreateSimplePlayerMovesMasks();
-            CreateSimplePlayerMoves();
+            CreateEnemyPlayerMasks();
+            simpleMoveCalculator = new SimpleMoveCalculator();
+            withEnemyMoveCalculator = new WithEnemyMoveCalculator();
         }
 
-        private void CreateSimplePlayerMovesMasks()
+        public FieldMask[] GetAvailableMoves(Field field, ref FieldMask playerMask, FieldMask enemyMask)
+        {
+            var enemyMoveMasks = withEnemyMoveMasks[playerMask];
+            if (enemyMoveMasks.TryGetValue(enemyMask, out var wallMask))
+            {
+                var isBetweenWalls = field.GetWallsForMask(ref wallMask).IsNotZero();
+                if (isBetweenWalls)
+                {
+                    return simpleMoveCalculator.GetAvailableMoves(field, ref playerMask);
+                }
+                return simpleMoveCalculator.GetAvailableMoves(field, ref playerMask);
+                // return withEnemyMoveCalculator.GetAvailableMoves(field, ref playerMask, enemyMask);
+            }
+            
+            
+            return simpleMoveCalculator.GetAvailableMoves(field, ref playerMask);
+        }
+
+        private void CreateEnemyPlayerMasks()
         {
             for (var y = 0; y < FieldMask.BitboardSize; y++)
             {
@@ -32,135 +52,36 @@ namespace Quoridor.Model
                     {
                         var playerMask = new FieldMask();
                         playerMask.SetBit(y, x, true);
-                        simplePlayersMovesMasks[playerMask] = CreateSimplePlayerMovesMaskFor(y, x);
+                        withEnemyMoveMasks[playerMask] = CreateSimplePlayerMovesMaskFor(y, x);
                     }
                 }
             }
         }
 
-        private FieldMask CreateSimplePlayerMovesMaskFor(int y, int x)
+        private Dictionary<FieldMask, FieldMask> CreateSimplePlayerMovesMaskFor(int y, int x)
         {
-            var fieldMask = new FieldMask();
-            for (var yDelta = -SimpleMoveBitsAmount / 2; yDelta < SimpleMoveBitsAmount / 2 + 1; yDelta++)
+            var result = new Dictionary<FieldMask, FieldMask>();
+
+            foreach (var (yDelta, xDelta) in Constants.Directions)
             {
-                for (var xDelta = -SimpleMoveBitsAmount / 2; xDelta < SimpleMoveBitsAmount / 2 + 1; xDelta++)
+                var enemyPosition = new FieldMask();
+                var wallPosition = new FieldMask();
+                
+                var wallY = y + yDelta;
+                var wallX = x + xDelta;
+
+                var enemyY = y + yDelta * 2;
+                var enemyX = x + xDelta * 2;
+
+                if (FieldMask.IsInRange(enemyY, enemyX))
                 {
-                    var curY = y + yDelta;
-                    var curX = x + xDelta;
-                    CalculateSimplePlayerMovesMaskFor(curY, curX, ref fieldMask);
+                    enemyPosition.SetBit(enemyY, enemyX, true);
+                    wallPosition.SetBit(wallY, wallX, true);
+                    result[enemyPosition] = wallPosition;
                 }
-            }
-
-            return fieldMask;
-        }
-
-        private void CalculateSimplePlayerMovesMaskFor(int curY, int curX, ref FieldMask fieldMask)
-        {
-            if (curY % 2 != 0)
-            {
-                if (curX % 2 == 0)
-                {
-                    fieldMask.TrySetBit(curY, curX, true);
-                }
-            }
-            else
-            {
-                if (curX % 2 != 0)
-                {
-                    fieldMask.TrySetBit(curY, curX, true);
-                }
-            }
-        }
-
-        private void CreateSimplePlayerMoves()
-        {
-            for (var y = 0; y < FieldMask.BitboardSize; y++)
-            {
-                for (var x = 0; x < FieldMask.BitboardSize; x++)
-                {
-                    if (y % 2 == 0 && x % 2 == 0)
-                    {
-                        var playerMask = new FieldMask();
-                        playerMask.SetBit(y, x, true);
-                        var moves = CalculateUniqueVariantFor(y, x);
-                        simplePlayersMoves[playerMask] = moves;
-                    }
-                }
-            }
-        }
-
-        private Dictionary<FieldMask, FieldMask[]> CalculateUniqueVariantFor(int y, int x)
-        {
-            var result = new Dictionary<FieldMask, FieldMask[]>();
-
-            var uniqueVariants = Math.Pow(4, 2);
-
-            for (var unique = 0; unique < uniqueVariants; unique++)
-            {
-                var playerMoveMasks = new List<FieldMask>();
-                var fieldMask = new FieldMask();
-
-                var uniquePosition = 0;
-                for (var yDelta = -SimpleMoveBitsAmount / 2; yDelta < SimpleMoveBitsAmount / 2 + 1; yDelta++)
-                {
-                    for (var xDelta = -SimpleMoveBitsAmount / 2; xDelta < SimpleMoveBitsAmount / 2 + 1; xDelta++)
-                    {
-                        var curY = y + yDelta;
-                        var curX = x + xDelta;
-
-                        if (curY % 2 != 0)
-                        {
-                            if (curX % 2 == 0)
-                            {
-                                UpdateFieldMask();
-                            }
-                        }
-                        else
-                        {
-                            if (curX % 2 != 0)
-                            {
-                                UpdateFieldMask();
-                            }
-                        }
-
-                        void UpdateFieldMask()
-                        {
-                            var isTrue = (1 << uniquePosition & unique) != 0;
-                            if (FieldMask.IsInRange(curY, curX))
-                            {
-                                fieldMask.SetBit(curY, curX, isTrue);
-
-                                if (!isTrue)
-                                {
-                                    var newPlayerX = x + xDelta * 2;
-                                    var newPlayerY = y + yDelta * 2;
-
-                                    if (FieldMask.IsInRange(newPlayerY, newPlayerX))
-                                    {
-                                        var playerMask = new FieldMask();
-                                        playerMask.SetBit(newPlayerY, newPlayerX, true);
-                                        playerMoveMasks.Add(playerMask);
-                                    }
-                                }
-                            }
-
-                            uniquePosition++;
-                        }
-                    }
-                }
-
-                result[fieldMask] = playerMoveMasks.ToArray();
             }
 
             return result;
-        }
-
-        public FieldMask[] GetAvailableMoves(Field field, ref FieldMask playerMask)
-        {
-            var moves = simplePlayersMoves[playerMask];
-            var wallMask = simplePlayersMovesMasks[playerMask];
-            var currentWallMask = field.GetWallsForMask(ref wallMask);
-            return moves[currentWallMask];
         }
     }
 }

@@ -24,11 +24,12 @@ namespace Quoridor.Controller
         public void ProcessGame()
         {
             moveQueue.Clear();
-            bluePlayerMover = new PlayerMover(gameProvider, gameProvider.Game.BluePlayer, moveParser);
-            redPlayerMover = new PlayerMover(gameProvider, gameProvider.Game.RedPlayer, moveParser);
+            bluePlayerMover = new PlayerMover(gameProvider, gameProvider.Game.BluePlayer, gameProvider.Game.RedPlayer, moveParser);
+            redPlayerMover = new PlayerMover(gameProvider, gameProvider.Game.RedPlayer,gameProvider.Game.BluePlayer, moveParser);
             var moveCount = 0;
             while (!gameProvider.Game.IsFinished)
             {
+                Console.ReadLine();
                 var mover = moveCount % 2 == 0 ? bluePlayerMover : redPlayerMover;
                 DrawField();
                 MakeMove(mover);
@@ -64,7 +65,7 @@ namespace Quoridor.Controller
 
         private void PrintMessage()
         {
-            Console.WriteLine("Invalid move");
+            // Console.WriteLine("Invalid move");
         }
     }
 }

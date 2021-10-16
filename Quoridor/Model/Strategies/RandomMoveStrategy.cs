@@ -19,15 +19,17 @@ namespace Quoridor.Model.Strategies
             this.wallProvider = wallProvider;
         }
 
-        public Move MakeMove(Field field, Player player)
+        public Move MakeMove(Field field, Player player, Player enemy)
         {
-            return random.NextDouble() < 0.5 ? GetRandomPlayerMove(field, player) : GetRandomWallMove(field, player);
+            return random.NextDouble() < 0.5 ? GetRandomPlayerMove(field, player, enemy) : GetRandomWallMove(field, player); 
         }
 
-        private Move GetRandomPlayerMove(Field field, Player player)
+        private Move GetRandomPlayerMove(Field field, Player player, Player enemy)
         {
             var playerPosition = player.Position;
-            var availableMoves = moveProvider.GetAvailableMoves(field, ref playerPosition);
+            var enemyPosition = enemy.Position;
+            
+            var availableMoves = moveProvider.GetAvailableMoves(field, ref playerPosition, enemyPosition);
             var move = availableMoves[random.Next(0, availableMoves.Length)];
             return new PlayerMove(field, player, move);
         }

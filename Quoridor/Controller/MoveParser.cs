@@ -7,7 +7,7 @@ namespace Quoridor.Controller
 
     public interface IMoveParser
     {
-        Move Parse(Field field, Player player, string input);
+        Move Parse(Field field, Player player, Player enemy, string input);
     }
 
     public class MoveParser : IMoveParser
@@ -28,27 +28,30 @@ namespace Quoridor.Controller
             this.wallProvider = wallProvider;
         }
 
-        public Move Parse(Field field, Player player, string input)
+        public Move Parse(Field field, Player player, Player enemy, string input)
         {
-            if (TryParseAsPlayerMove(field, player, input, out var move))
+            if (TryParseAsPlayerMove(field, player, enemy, input, out var move))
             {
                 return move;
             }
+
             if (TryParseAsWallMove(field, player, input, out move))
             {
                 return move;
             }
+
             return new DefaultMove(field, player, new FieldMask());
         }
 
-        private bool TryParseAsPlayerMove(Field field, Player player, string input, out Move move)
+        private bool TryParseAsPlayerMove(Field field, Player player, Player enemy, string input, out Move move)
         {
             var (from, to, isValid) = ParsePlayerMove(input);
-            if (isValid && !player.Position.And(ref from).IsZero() && CanMoveTo(field, player, to))
+            if (isValid && !player.Position.And(ref from).IsZero() && CanMoveTo(field, player, enemy, to))
             {
                 move = new PlayerMove(field, player, to);
                 return true;
             }
+
             move = null;
             return false;
         }
@@ -60,10 +63,12 @@ namespace Quoridor.Controller
             {
                 return (new FieldMask(), new FieldMask(), false);
             }
+
             if (TryParseCell(split[0], out var from) && TryParseCell(split[1], out var to))
             {
                 return (from, to, true);
             }
+
             return (new FieldMask(), new FieldMask(), false);
         }
 
@@ -77,10 +82,11 @@ namespace Quoridor.Controller
             };
         }
 
-        private bool CanMoveTo(Field field, Player player, FieldMask to)
+        private bool CanMoveTo(Field field, Player player, Player enemy, FieldMask to)
         {
             var playerPosition = player.Position;
-            var moves = moveProvider.GetAvailableMoves(field, ref playerPosition);
+            var enemyPosition = enemy.Position;
+            var moves = moveProvider.GetAvailableMoves(field, ref playerPosition, enemyPosition);
             return moves.Any(m => !m.And(ref to).IsZero());
         }
 
@@ -93,6 +99,7 @@ namespace Quoridor.Controller
                 move = new WallMove(field, player, wall);
                 return true;
             }
+
             move = null;
             return false;
         }
@@ -104,10 +111,12 @@ namespace Quoridor.Controller
             {
                 return (-1, -1, WallOrientation.Horizontal, false);
             }
+
             if (TryParseCellIndex(split[0], out var y, out var x) && TryWallOrientation(split[1], out var orientation))
             {
                 return (y, x, orientation, true);
             }
+
             return (-1, -1, WallOrientation.Horizontal, false);
         }
 
@@ -125,6 +134,7 @@ namespace Quoridor.Controller
                 mask.SetBit(y, x, true);
                 return true;
             }
+
             return false;
         }
 
@@ -136,6 +146,7 @@ namespace Quoridor.Controller
                 x = -1;
                 return false;
             }
+
             x = ParseIndex(input[0]);
             y = ParseIndex(input[1]);
             return FieldMask.IsInRange(y, x);

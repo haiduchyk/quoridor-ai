@@ -41,12 +41,14 @@ namespace Quoridor.Model
             return (block & (1L << bitIndex)) != 0;
         }
 
-        public void TrySetBit(int y, int x, bool bit)
+        public bool TrySetBit(int y, int x, bool bit)
         {
-            if (IsInRange(y, x))
+            var isIsInRange = IsInRange(y, x);
+            if (isIsInRange)
             {
                 SetBit(y, x, bit);
             }
+            return isIsInRange;
         }
 
         public void SetBit(int y, int x, bool bit)
@@ -114,6 +116,12 @@ namespace Quoridor.Model
         {
             return block0 == 0 && block1 == 0 && block2 == 0 && block3 == 0 && block4 == 0;
         }
+        
+        public bool IsNotZero()
+        {
+            return block0 != 0 || block1 != 0 || block2 != 0 || block3 != 0 || block4 != 0;
+        }
+
 
         private long this[int index]
         {

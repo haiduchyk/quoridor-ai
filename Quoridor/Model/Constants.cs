@@ -1,5 +1,7 @@
 namespace Quoridor.Model
 {
+    using System.Collections.Generic;
+
     public class Constants
     {
         public const int WallsPerGame = 10;
@@ -15,5 +17,7 @@ namespace Quoridor.Model
 
         public static readonly FieldMask RedEndPositions =
             new(new[] { 0, 0, 0, 0, 1431650304L });
+
+        public static readonly List<(int y, int x)> Directions = new() { (1, 0), (0, 1), (-1, 0), (0, -1) };
     }
 }
