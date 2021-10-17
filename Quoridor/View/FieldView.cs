@@ -1,8 +1,6 @@
 namespace Quoridor.View
 {
     using System;
-    using System.Collections.Generic;
-    using System.Text;
     using Model;
     using Model.Players;
 
@@ -13,66 +11,96 @@ namespace Quoridor.View
         private const char EmptyCharacter = '○';
         private const char Blue = '✱';
         private const char Red = '❤';
-
-        private static readonly Dictionary<int, string> BoardNumbers = new()
-        {
-            [0] = "0", [1] = "1", [2] = "2", [3] = "3", [4] = "4", [5] = "5", [6] = "6", [7] = "7", [8] = "8",
-            [9] = "9",
-            [10] = "a", [11] = "b", [12] = "c", [13] = "d", [14] = "e", [15] = "f", [16] = "g", [17] = "h",
-        };
+        private const string Symbols = "0123456789abcdefgh";
 
         private const string HorizontalLine = "  0 1 2 3 4 5 6 7 8 9 a b c d e f g \n";
 
         public void Draw(Field field, Player bluePlayer, Player redPlayer)
         {
-            var res = new StringBuilder();
-            res.Append(HorizontalLine);
-
+            RenderBoardLine();
             for (var y = 0; y < FieldMask.BitboardSize; y++)
             {
-                res.Append($"{BoardNumbers[y]} ");
-
+                RenderBoardNumber(y);
                 for (var x = 0; x < FieldMask.BitboardSize; x++)
                 {
                     if (field.HasWall(y, x))
                     {
-                        res.Append(Wall);
-                        res.Append(' ');
+                        RenderWall(y, x, bluePlayer, redPlayer);
                         continue;
                     }
 
-                    if (y % 2 == 0 && x % 2 == 0)
+                    if (IsPlayerPosition(y, x))
                     {
-                        var isBlue = bluePlayer.Position.GetBit(y, x);
-                        var isRed = redPlayer.Position.GetBit(y, x);
-
-                        if (isBlue)
-                        {
-                            res.Append(Blue);
-                        }
-                        else if (isRed)
-                        {
-                            res.Append(Red);
-                        }
-                        else
-                        {
-                            res.Append(EmptyCharacter);
-                        }
+                        RenderPlayer(y, x, bluePlayer, redPlayer);
                     }
                     else
                     {
-                        res.Append(EmptyWall);
+                        RenderEmptyWall();
                     }
-
-                    res.Append(' ');
                 }
-
-                res.Append($"{BoardNumbers[y]} \n");
+                RenderBoardNumber(y);
+                Console.WriteLine();
             }
+            RenderBoardLine();
+        }
 
-            res.Append(HorizontalLine);
+        private bool IsPlayerPosition(int y, int x)
+        {
+            return y % 2 == 0 && x % 2 == 0;
+        }
 
-            Console.WriteLine(res.ToString());
+        private void RenderWall(int y, int x, Player bluePlayer, Player redPlayer)
+        {
+            var isBlue = bluePlayer.Walls.GetBit(y, x);
+            var isRed = redPlayer.Walls.GetBit(y, x);
+            var color = isBlue ? ConsoleColor.Blue : isRed ? ConsoleColor.Red : ConsoleColor.Gray;
+            Write($"{Wall} ", color);
+        }
+
+        private void RenderPlayer(int y, int x, Player bluePlayer, Player redPlayer)
+        {
+            var isBlue = bluePlayer.Position.GetBit(y, x);
+            var isRed = redPlayer.Position.GetBit(y, x);
+
+            if (isBlue)
+            {
+                Write($"{Blue} ", ConsoleColor.Blue);
+            }
+            else if (isRed)
+            {
+                Write($"{Red} ", ConsoleColor.Red);
+            }
+            else
+            {
+                Write($"{EmptyCharacter} ");
+            }
+        }
+
+        private void RenderEmptyWall()
+        {
+            Write($"{EmptyWall} ");
+        }
+
+        private void RenderBoardNumber(int y)
+        {
+            Write($"{Symbols[y]} ", ConsoleColor.DarkMagenta);
+        }
+
+        private void RenderBoardLine()
+        {
+            Write(HorizontalLine, ConsoleColor.DarkCyan);
+        }
+
+        private void Write(string message)
+        {
+            Console.Write(message);
+        }
+
+        private void Write(string message, ConsoleColor color)
+        {
+            Console.ForegroundColor = color;
+            Console.Write(message);
+            Console.ResetColor();
         }
     }
 }

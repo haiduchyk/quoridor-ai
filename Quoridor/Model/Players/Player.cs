@@ -7,6 +7,8 @@ namespace Quoridor.Model.Players
     {
         public FieldMask Position { get; private set; }
 
+        public FieldMask Walls { get; private set; }
+
         public int AmountOfWalls { get; private set; }
 
         public string Name { get; }
@@ -41,13 +43,15 @@ namespace Quoridor.Model.Players
             return AmountOfWalls > 0;
         }
 
-        public void UseWall()
+        public void UseWall(FieldMask wall)
         {
+            Walls = Walls.Or(wall);
             AmountOfWalls--;
         }
 
-        public void RestoreWall()
+        public void RestoreWall(FieldMask wall)
         {
+            Walls = Walls.And(wall.Not());
             AmountOfWalls++;
         }
     }

@@ -97,6 +97,16 @@ namespace Quoridor.Model
             return result;
         }
 
+        public FieldMask Not()
+        {
+            var result = new FieldMask();
+            for (var i = 0; i < BitBlocksAmount; i++)
+            {
+                result[i] = ~this[i];
+            }
+            return result;
+        }
+
         public (long block, int bitIndex) GetBlockAndBitIndex(int index)
         {
             var (i, j) = Nest(index);
