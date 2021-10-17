@@ -23,17 +23,14 @@ namespace Quoridor.Model
 
         public void Enqueue(T x)
         {
-            if (list.Contains(x))
-            {
-                list.Remove(x);
-            }
+            list.Remove(x);
             list.Add(x);
             var i = Count - 1;
 
             while (i > 0)
             {
                 var p = (i - 1) / 2;
-                if (comparer.Compare(list[p], x) <= 0)
+                if (comparer.Compare(list[p], x) < 0)
                 {
                     break;
                 }

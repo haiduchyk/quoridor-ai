@@ -3,27 +3,30 @@ namespace Quoridor.Model
     using System.Collections.Generic;
     using Players;
 
-    public class DijkstraSearch : ISearch
+    public abstract class SearchAlgorithm : ISearch
     {
+        protected readonly Dictionary<FieldMask, int> distances = new(81);
+
         private readonly FieldMask[] possiblePositions = new FieldMask[81];
-        private readonly Dictionary<FieldMask, int> distances = new(81);
         private readonly Dictionary<FieldMask, FieldMask> prevNodes = new(81);
         private readonly PriorityQueue<FieldMask> queue;
         private readonly FieldMask nullPosition = new();
 
         private readonly IMoveProvider moveProvider;
 
+        protected FieldMask endMask;
         private Game game;
         private Player enemy;
-        private FieldMask endMask;
 
-        public DijkstraSearch(IMoveProvider moveProvider)
+        public SearchAlgorithm(IMoveProvider moveProvider)
         {
             this.moveProvider = moveProvider;
-            var comparer = new DistanceComparer(distances);
+            var comparer = GetComparer();
             queue = new PriorityQueue<FieldMask>(comparer);
             FindPossiblePositions();
         }
+
+        protected abstract IComparer<FieldMask> GetComparer();
 
         private void FindPossiblePositions()
         {
@@ -52,7 +55,7 @@ namespace Quoridor.Model
         {
             endMask = GetEndMask(player);
             enemy = GetEnemy(player);
-            Initialize(position);
+            Prepare(position);
             return Search(out path);
         }
 
@@ -66,7 +69,7 @@ namespace Quoridor.Model
             return player == game.BluePlayer ? game.RedPlayer : game.BluePlayer;
         }
 
-        private void Initialize(FieldMask position)
+        protected virtual void Prepare(FieldMask position)
         {
             for (var i = 0; i < 81; i++)
             {

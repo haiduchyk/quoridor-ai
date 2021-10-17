@@ -29,7 +29,7 @@ namespace Quoridor.Model
                         var wall = GenerateWall(i, j, WallOrientation.Horizontal);
                         generatedWalls.Add(wall);
                     }
-                    if (CanPlaceWall(ref possibleWalls, i, j, WallOrientation.Horizontal))
+                    if (CanPlaceWall(ref possibleWalls, i, j, WallOrientation.Vertical))
                     {
                         var wall = GenerateWall(i, j, WallOrientation.Vertical);
                         generatedWalls.Add(wall);

@@ -13,7 +13,7 @@ namespace Quoridor.Model
 
         public int Compare(FieldMask x, FieldMask y)
         {
-            return distances[x].CompareTo(distances[y]);
+            return distances[x] - distances[y];
         }
     }
 }
