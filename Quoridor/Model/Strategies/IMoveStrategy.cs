@@ -7,6 +7,6 @@ namespace Quoridor.Model.Strategies
     {
         bool IsManual { get; }
 
-        Move MakeMove(Field field, Player player, Player enemy);
+        IMove MakeMove(Field field, Player player, Player enemy);
     }
 }

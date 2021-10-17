@@ -3,26 +3,30 @@ namespace Quoridor.Model.Moves
     using Model;
     using Players;
 
-    public class PlayerMove : Move
+    public class PlayerMove : IMove
     {
+        private readonly Player player;
+        private readonly FieldMask position;
         private readonly FieldMask previousPosition;
 
-        public PlayerMove(Field field, Player player, FieldMask fieldMask) : base(field, player, fieldMask)
+        public PlayerMove(Player player, FieldMask position)
         {
+            this.player = player;
+            this.position = position;
             previousPosition = player.Position;
         }
 
-        public override bool IsValid()
+        public bool IsValid()
         {
             return true;
         }
 
-        public override void Execute()
+        public void Execute()
         {
-            player.ChangePosition(fieldMask);
+            player.ChangePosition(position);
         }
 
-        public override void Undo()
+        public void Undo()
         {
             player.ChangePosition(previousPosition);
         }

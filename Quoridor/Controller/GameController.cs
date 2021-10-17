@@ -41,10 +41,8 @@ namespace Quoridor.Controller
         private void PrepareComponents()
         {
             moveQueue.Clear();
-            bluePlayerMover = new PlayerMover(gameProvider, gameProvider.Game.BluePlayer, gameProvider.Game.RedPlayer,
-                moveParser, ioWorker);
-            redPlayerMover = new PlayerMover(gameProvider, gameProvider.Game.RedPlayer, gameProvider.Game.BluePlayer,
-                moveParser, ioWorker);
+            bluePlayerMover = new PlayerMover(gameProvider.Game, gameProvider.Game.BluePlayer, moveParser, ioWorker);
+            redPlayerMover = new PlayerMover(gameProvider.Game, gameProvider.Game.RedPlayer, moveParser, ioWorker);
             moveCount = 0;
         }
 
@@ -80,7 +78,7 @@ namespace Quoridor.Controller
             }
         }
 
-        private void Execute(Move move)
+        private void Execute(IMove move)
         {
             move.Execute();
             moveQueue.Add(move);

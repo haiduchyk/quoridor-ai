@@ -33,7 +33,7 @@ namespace Quoridor.Model.Players
             return moveStrategy.IsManual;
         }
 
-        public Move MakeMove(Field field, Player enemy)
+        public IMove MakeMove(Field field, Player enemy)
         {
             return moveStrategy.MakeMove(field, this, enemy);
         }
@@ -45,7 +45,7 @@ namespace Quoridor.Model.Players
 
         public void UseWall(FieldMask wall)
         {
-            Walls = Walls.Or(wall);
+            Walls = Walls.Or(in wall);
             AmountOfWalls--;
         }
 

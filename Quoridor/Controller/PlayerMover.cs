@@ -1,35 +1,40 @@
 namespace Quoridor.Controller
 {
+    using Model;
     using Model.Moves;
     using Model.Players;
 
     public class PlayerMover
     {
-        private readonly IGameProvider gameProvider;
+        private readonly Game game;
         private readonly Player player;
         private readonly Player enemy;
         private readonly IMoveParser moveParser;
         private readonly IInputReader inputReader;
 
-        public PlayerMover(IGameProvider gameProvider, Player player, Player enemy, IMoveParser moveParser,
-            IInputReader inputReader)
+        public PlayerMover(Game game, Player player, IMoveParser moveParser, IInputReader inputReader)
         {
-            this.gameProvider = gameProvider;
+            this.game = game;
             this.player = player;
-            this.enemy = enemy;
+            enemy = GetEnemy();
             this.moveParser = moveParser;
             this.inputReader = inputReader;
         }
 
-        public Move WaitForMove()
+        private Player GetEnemy()
         {
-            return player.ShouldWaitForMove() ? ReadMoveFromConsole() : player.MakeMove(gameProvider.Game.Field, enemy);
+            return player == game.BluePlayer ? game.RedPlayer : game.BluePlayer;
         }
 
-        private Move ReadMoveFromConsole()
+        public IMove WaitForMove()
+        {
+            return player.ShouldWaitForMove() ? ReadMoveFromConsole() : player.MakeMove(game.Field, enemy);
+        }
+
+        private IMove ReadMoveFromConsole()
         {
             var input = inputReader.ReadInput();
-            var move = moveParser.Parse(gameProvider.Game.Field, player, enemy, input);
+            var move = moveParser.Parse(game.Field, player, enemy, input);
             return move;
         }
     }

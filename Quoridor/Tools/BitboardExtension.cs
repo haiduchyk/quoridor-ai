@@ -4,7 +4,7 @@ namespace Quoridor
     using System.Collections.Generic;
     using System.Text;
     using Model;
-    
+
     // Debug tools
     public static class BitboardExtension
     {
@@ -159,6 +159,21 @@ namespace Quoridor
         public static void Log(this string s)
         {
             Console.WriteLine($"{s}");
+        }
+
+        public static string ToPos(this FieldMask mask)
+        {
+            for (var i = 0; i < FieldMask.BitboardSize; i++)
+            {
+                for (var j = 0; j < FieldMask.BitboardSize; j++)
+                {
+                    if (mask.GetBit(i, j))
+                    {
+                        return $"{i} {j}";
+                    }
+                }
+            }
+            return "";
         }
     }
 }

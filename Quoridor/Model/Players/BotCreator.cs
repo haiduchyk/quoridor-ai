@@ -12,11 +12,13 @@ namespace Quoridor.Model
     {
         private readonly IMoveProvider moveProvider;
         private readonly IWallProvider wallProvider;
+        private readonly ISearch search;
 
-        public BotCreator(IMoveProvider moveProvider, IWallProvider wallProvider)
+        public BotCreator(IMoveProvider moveProvider, IWallProvider wallProvider, ISearch search)
         {
             this.moveProvider = moveProvider;
             this.wallProvider = wallProvider;
+            this.search = search;
         }
 
         public Player CreateBotFor(FieldMask position, string name, BotDifficulty botDifficulty)
@@ -26,7 +28,7 @@ namespace Quoridor.Model
 
         private IMoveStrategy GetStrategyFor(BotDifficulty botDifficulty)
         {
-            return new RandomMoveStrategy(moveProvider, wallProvider);
+            return new RandomMoveStrategy(moveProvider, wallProvider, search);
         }
     }
 }

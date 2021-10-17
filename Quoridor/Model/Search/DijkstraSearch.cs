@@ -1,65 +1,89 @@
 namespace Quoridor.Model
 {
     using System.Collections.Generic;
+    using Players;
 
     public class DijkstraSearch : ISearch
     {
-        private readonly Dictionary<Direction, (int y, int x)> moveOffsets = new()
+        private readonly FieldMask[] possiblePositions = new FieldMask[81];
+        private readonly Dictionary<FieldMask, int> distances = new(81);
+        private readonly Dictionary<FieldMask, FieldMask> prevNodes = new(81);
+        private readonly PriorityQueue<FieldMask> queue;
+        private readonly FieldMask nullPosition = new();
+
+        private readonly IMoveProvider moveProvider;
+
+        private Game game;
+        private Player enemy;
+        private FieldMask endMask;
+
+        public DijkstraSearch(IMoveProvider moveProvider)
         {
-            { Direction.Up, (-1, 0) },
-            { Direction.Down, (1, 0) },
-            { Direction.Left, (0, -1) },
-            { Direction.Right, (0, 1) },
-        };
-
-        private readonly Direction[] directions = new Direction[4];
-        private readonly Dictionary<int, int> distances;
-        private readonly Dictionary<int, int> prevNodes;
-        private readonly SortedSet<int> queue;
-
-        private Field field;
-
-        public DijkstraSearch(Field field)
-        {
-            this.field = field;
-            prevNodes = new Dictionary<int, int>(FieldMask.UsedBitsAmount);
-            distances = new Dictionary<int, int>(FieldMask.UsedBitsAmount);
-            var comparer = new Comparer(distances);
-            queue = new SortedSet<int>(comparer);
+            this.moveProvider = moveProvider;
+            var comparer = new DistanceComparer(distances);
+            queue = new PriorityQueue<FieldMask>(comparer);
+            FindPossiblePositions();
         }
 
-        public bool HasPath(int position, Direction direction, out Path path)
+        private void FindPossiblePositions()
         {
-            SetDirections(direction);
+            var count = 0;
+            for (var y = 0; y < FieldMask.BitboardSize; y++)
+            {
+                for (var x = 0; x < FieldMask.BitboardSize; x++)
+                {
+                    if (y % 2 == 0 && x % 2 == 0)
+                    {
+                        var mask = new FieldMask();
+                        mask.SetBit(y, x, true);
+                        possiblePositions[count] = mask;
+                        count++;
+                    }
+                }
+            }
+        }
+
+        public void Initialize(Game game)
+        {
+            this.game = game;
+        }
+
+        public bool HasPath(Player player, FieldMask position, out FieldMask path)
+        {
+            endMask = GetEndMask(player);
+            enemy = GetEnemy(player);
             Initialize(position);
             return Search(out path);
         }
 
-        private void SetDirections(Direction direction)
+        private FieldMask GetEndMask(Player player)
         {
-            directions[0] = direction;
-            directions[1] = Direction.Right;
-            directions[2] = Direction.Left;
-            directions[3] = direction.Opposite();
+            return player == game.BluePlayer ? Constants.BlueEndPositions : Constants.RedEndPositions;
         }
 
-        private void Initialize(int position)
+        private Player GetEnemy(Player player)
         {
-            for (var i = 0; i < FieldMask.UsedBitsAmount; i++)
+            return player == game.BluePlayer ? game.RedPlayer : game.BluePlayer;
+        }
+
+        private void Initialize(FieldMask position)
+        {
+            for (var i = 0; i < 81; i++)
             {
-                distances[i] = int.MaxValue;
-                prevNodes[i] = -1;
+                var pos = possiblePositions[i];
+                distances[pos] = int.MaxValue;
+                prevNodes[pos] = nullPosition;
             }
             distances[position] = 0;
-            queue.Add(position);
+            queue.Clear();
+            queue.Enqueue(position);
         }
 
-        private bool Search(out Path path)
+        private bool Search(out FieldMask path)
         {
             while (queue.Count > 0)
             {
-                var position = queue.Min;
-                queue.Remove(position);
+                var position = queue.Dequeue();
 
                 if (IsDestinationReached(position))
                 {
@@ -75,7 +99,7 @@ namespace Quoridor.Model
                     {
                         distances[pos] = distance;
                         prevNodes[pos] = position;
-                        queue.Add(pos);
+                        queue.Enqueue(pos);
                     }
                 }
             }
@@ -84,82 +108,25 @@ namespace Quoridor.Model
             return false;
         }
 
-        private bool IsDestinationReached(int position)
+        private bool IsDestinationReached(FieldMask position)
         {
-            var i = position / FieldMask.BitboardSize;
-            return directions[0] == Direction.Up ? i == 0 : i == FieldMask.BitboardSize - 1;
+            return endMask.And(position).IsNotZero();
         }
 
-        private Path RetrievePath(int position)
+        private FieldMask RetrievePath(FieldMask position)
         {
-            var path = new Path
+            var path = new FieldMask();
+            while (!position.Equals(nullPosition))
             {
-                nodes = new List<int>()
-            };
-            while (position != -1)
-            {
-                path.nodes.Insert(0, position);
+                path = path.Or(position);
                 position = prevNodes[position];
             }
             return path;
         }
 
-        private List<int> GetPossibleMoves(int position)
+        private FieldMask[] GetPossibleMoves(FieldMask position)
         {
-            var moves = new List<int>(4);
-            foreach (var direction in directions)
-            {
-                if (TryGetPosition(position, direction, out var targetPosition))
-                {
-                    moves.Add(targetPosition);
-                }
-            }
-            return moves;
-        }
-
-        private bool TryGetPosition(int position, Direction direction, out int targetPosition)
-        {
-            var (y, x) = field.Nested(position);
-            var (yOffset, xOffset) = moveOffsets[direction];
-            var targetX = x + 2 * xOffset;
-            var targetY = y + 2 * yOffset;
-            targetPosition = field.Flatten(targetY, targetX);
-            if (!IsValid(targetY, targetX))
-            {
-                return false;
-            }
-            var moveMask = GetMask(y, x, yOffset, xOffset);
-            return field.CanMove(ref moveMask);
-        }
-
-        
-        private bool IsValid(int y, int x)
-        {
-            return FieldMask.IsInRange(y, x);
-        }
-
-        private FieldMask GetMask(int y, int x, int yOffset, int xOffset)
-        {
-            var moveMask = new FieldMask();
-            moveMask.SetBit(y, x, true);
-            moveMask.SetBit(y + yOffset, x + xOffset, true);
-            moveMask.SetBit(y + 2 * yOffset, x + 2 * xOffset, true);
-            return moveMask;
-        }
-
-        private class Comparer : IComparer<int>
-        {
-            private readonly Dictionary<int, int> distances;
-
-            public Comparer(Dictionary<int, int> distances)
-            {
-                this.distances = distances;
-            }
-
-            public int Compare(int x, int y)
-            {
-                return distances[x].CompareTo(distances[y]);
-            }
+            return moveProvider.GetAvailableMoves(game.Field, in position, enemy.Position);
         }
     }
 }

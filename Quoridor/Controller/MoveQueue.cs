@@ -5,9 +5,9 @@ namespace Quoridor.Controller
 
     public class MoveQueue
     {
-        private readonly Stack<Move> stack = new();
+        private readonly Stack<IMove> stack = new();
 
-        public void Add(Move move)
+        public void Add(IMove move)
         {
             stack.Push(move);
         }

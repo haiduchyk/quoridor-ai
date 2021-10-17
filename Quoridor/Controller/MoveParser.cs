@@ -7,7 +7,7 @@ namespace Quoridor.Controller
 
     public interface IMoveParser
     {
-        Move Parse(Field field, Player player, Player enemy, string input);
+        IMove Parse(Field field, Player player, Player enemy, string input);
     }
 
     public class MoveParser : IMoveParser
@@ -21,29 +21,31 @@ namespace Quoridor.Controller
 
         private readonly IMoveProvider moveProvider;
         private readonly IWallProvider wallProvider;
+        private readonly ISearch search;
 
-        public MoveParser(IMoveProvider moveProvider, IWallProvider wallProvider)
+        public MoveParser(IMoveProvider moveProvider, IWallProvider wallProvider, ISearch search)
         {
             this.moveProvider = moveProvider;
             this.wallProvider = wallProvider;
+            this.search = search;
         }
 
-        public Move Parse(Field field, Player player, Player enemy, string input)
+        public IMove Parse(Field field, Player player, Player enemy, string input)
         {
             if (TryParseAsPlayerMove(field, player, enemy, input, out var move) ||
-                TryParseAsWallMove(field, player, input, out move))
+                TryParseAsWallMove(field, player, enemy, input, out move))
             {
                 return move;
             }
-            return new DefaultMove(field, player, new FieldMask());
+            return new DefaultMove();
         }
 
-        private bool TryParseAsPlayerMove(Field field, Player player, Player enemy, string input, out Move move)
+        private bool TryParseAsPlayerMove(Field field, Player player, Player enemy, string input, out IMove move)
         {
             var (from, to, isValid) = ParsePlayerMove(input);
             if (isValid && !player.Position.And(in from).IsZero() && CanMoveTo(field, player, enemy, to))
             {
-                move = new PlayerMove(field, player, to);
+                move = new PlayerMove(player, to);
                 return true;
             }
 
@@ -81,17 +83,17 @@ namespace Quoridor.Controller
         {
             var playerPosition = player.Position;
             var enemyPosition = enemy.Position;
-            var moves = moveProvider.GetAvailableMoves(field, ref playerPosition, enemyPosition);
+            var moves = moveProvider.GetAvailableMoves(field, in playerPosition, in enemyPosition);
             return moves.Any(m => !m.And(in to).IsZero());
         }
 
-        private bool TryParseAsWallMove(Field field, Player player, string input, out Move move)
+        private bool TryParseAsWallMove(Field field, Player player, Player enemy, string input, out IMove move)
         {
             var (y, x, orientation, isValid) = ParseWallMove(input);
             if (isValid && CanPlace(field, y, x, orientation))
             {
                 var wall = wallProvider.GenerateWall(y, x, orientation);
-                move = new WallMove(field, player, wall);
+                move = new WallMove(field, player, enemy, search, wall);
                 return true;
             }
 

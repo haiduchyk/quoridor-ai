@@ -1,7 +1,11 @@
 namespace Quoridor.Model
 {
+    using Players;
+
     public interface ISearch
     {
-        bool HasPath(int position, Direction direction, out Path path);
+        bool HasPath(Player player, FieldMask position, out FieldMask path);
+
+        void Initialize(Game game);
     }
 }

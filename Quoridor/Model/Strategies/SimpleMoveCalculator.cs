@@ -19,11 +19,11 @@ namespace Quoridor.Model.Strategies
             CreateSimplePlayerMoves();
         }
 
-        public FieldMask[] GetAvailableMoves(Field field, ref FieldMask playerMask)
+        public FieldMask[] GetAvailableMoves(Field field, in FieldMask playerMask)
         {
             var moves = simplePlayersMoves[playerMask];
             var wallMask = simplePlayersMovesMasks[playerMask];
-            var currentWallMask = field.GetWallsForMask(ref wallMask);
+            var currentWallMask = field.GetWallsForMask(in wallMask);
             return moves[currentWallMask];
         }
 

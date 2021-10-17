@@ -5,7 +5,7 @@ namespace Quoridor.Model
         public int Size { get; }
 
         private FieldMask availableWalls;
-        private FieldMask walls;
+        public FieldMask walls;
 
         public Field(int size)
         {
@@ -44,9 +44,9 @@ namespace Quoridor.Model
             return availableWalls.Nor(in walls);
         }
 
-        public bool CanMove(ref FieldMask moveMask)
+        public FieldMask GetWallsForMask(in FieldMask wallMask)
         {
-            return walls.And(in moveMask).IsZero();
+            return walls.And(in wallMask);
         }
 
         public int Flatten(int y, int x)
@@ -59,11 +59,6 @@ namespace Quoridor.Model
             var i = position / Size;
             var j = position % Size;
             return (i, j);
-        }
-
-        public FieldMask GetWallsForMask(ref FieldMask wallMask)
-        {
-            return wallMask.And(in walls);
         }
     }
 }
