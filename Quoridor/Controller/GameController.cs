@@ -2,6 +2,7 @@ namespace Quoridor.Controller
 {
     using Model;
     using Model.Moves;
+    using Model.Players;
     using View;
 
     public class GameController
@@ -54,6 +55,7 @@ namespace Quoridor.Controller
                 var mover = GetMover();
                 MakeMove(mover);
                 DrawField();
+                PrintPlayerInfo();
                 moveCount++;
             }
         }
@@ -61,11 +63,6 @@ namespace Quoridor.Controller
         private PlayerMover GetMover()
         {
             return moveCount % 2 == 0 ? bluePlayerMover : redPlayerMover;
-        }
-
-        private void DrawField()
-        {
-            fieldView.Draw(gameProvider.Game.Field, gameProvider.Game.BluePlayer, gameProvider.Game.RedPlayer);
         }
 
         private void MakeMove(PlayerMover playerMover)
@@ -87,6 +84,22 @@ namespace Quoridor.Controller
         {
             move.Execute();
             moveQueue.Add(move);
+        }
+
+        private void DrawField()
+        {
+            fieldView.Draw(gameProvider.Game.Field, gameProvider.Game.BluePlayer, gameProvider.Game.RedPlayer);
+        }
+
+        private void PrintPlayerInfo()
+        {
+            PrintWallInfo(gameProvider.Game.BluePlayer);
+            PrintWallInfo(gameProvider.Game.RedPlayer);
+        }
+
+        private void PrintWallInfo(Player player)
+        {
+            ioWorker.WriteLine($"{player.Name} walls: {player.AmountOfWalls}");
         }
 
         private void PrintInvalidMessage()

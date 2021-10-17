@@ -17,7 +17,7 @@ namespace Quoridor.Model
         public static readonly FieldMask RedPlayerPosition =
             new(new[] { 1L << (FieldMask.BitsBlockSize - FieldMask.BitboardCenter), 0, 0, 0, 0 });
 
-        public static readonly string RedPlayerName = "Blue";
+        public static readonly string RedPlayerName = "Red";
 
         public static readonly FieldMask RedEndPositions =
             new(new[] { 0, 0, 0, 0, 1431650304L });
