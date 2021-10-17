@@ -46,7 +46,7 @@ namespace Quoridor.Controller
         private bool TryParseAsPlayerMove(Field field, Player player, Player enemy, string input, out Move move)
         {
             var (from, to, isValid) = ParsePlayerMove(input);
-            if (isValid && !player.Position.And(ref from).IsZero() && CanMoveTo(field, player, enemy, to))
+            if (isValid && !player.Position.And(in from).IsZero() && CanMoveTo(field, player, enemy, to))
             {
                 move = new PlayerMove(field, player, to);
                 return true;
@@ -87,7 +87,7 @@ namespace Quoridor.Controller
             var playerPosition = player.Position;
             var enemyPosition = enemy.Position;
             var moves = moveProvider.GetAvailableMoves(field, ref playerPosition, enemyPosition);
-            return moves.Any(m => !m.And(ref to).IsZero());
+            return moves.Any(m => !m.And(in to).IsZero());
         }
 
         private bool TryParseAsWallMove(Field field, Player player, string input, out Move move)
