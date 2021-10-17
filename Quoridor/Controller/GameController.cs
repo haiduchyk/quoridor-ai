@@ -1,10 +1,14 @@
 namespace Quoridor.Controller
 {
-    using System;
+    using Model;
+    using Model.Moves;
     using View;
 
     public class GameController
     {
+        private const string ExampleMove = "8g 8e";
+        private const string ExampleWall = "11 h or 11 v";
+
         private readonly IGameProvider gameProvider;
         private readonly IMoveParser moveParser;
         private readonly IIoWorker ioWorker;
@@ -13,6 +17,7 @@ namespace Quoridor.Controller
 
         private PlayerMover bluePlayerMover;
         private PlayerMover redPlayerMover;
+        private int moveCount;
 
         public GameController(IGameProvider gameProvider, IMoveParser moveParser, IIoWorker ioWorker)
         {
@@ -23,37 +28,39 @@ namespace Quoridor.Controller
             fieldView = new FieldView();
         }
 
-        public void StartGame()
+        public GameResult StartGame()
+        {
+            PrepareComponents();
+            DrawField();
+            PrintHelpMessage();
+            ProcessGame();
+            return GatherGameResults();
+        }
+
+        private void PrepareComponents()
         {
             moveQueue.Clear();
             bluePlayerMover = new PlayerMover(gameProvider, gameProvider.Game.BluePlayer, gameProvider.Game.RedPlayer,
                 moveParser, ioWorker);
             redPlayerMover = new PlayerMover(gameProvider, gameProvider.Game.RedPlayer, gameProvider.Game.BluePlayer,
                 moveParser, ioWorker);
-            ProcessGame();
+            moveCount = 0;
         }
 
         private void ProcessGame()
         {
-            var moveCount = 0;
             while (!gameProvider.Game.HasFinished())
             {
-                var mover = GetMover(moveCount);
-                Update(mover);
+                var mover = GetMover();
+                MakeMove(mover);
+                DrawField();
                 moveCount++;
             }
-            EndGame(moveCount);
         }
 
-        private PlayerMover GetMover(int moveCount)
+        private PlayerMover GetMover()
         {
             return moveCount % 2 == 0 ? bluePlayerMover : redPlayerMover;
-        }
-
-        private void Update(PlayerMover mover)
-        {
-            DrawField();
-            MakeMove(mover);
         }
 
         private void DrawField()
@@ -63,27 +70,40 @@ namespace Quoridor.Controller
 
         private void MakeMove(PlayerMover playerMover)
         {
-            var move = playerMover.WaitForMove();
-            while (!move.IsValid())
+            while (true)
             {
-                PrintMessage();
-                move = playerMover.WaitForMove();
+                var move = playerMover.WaitForMove();
+                if (move.IsValid())
+                {
+                    Execute(move);
+                    return;
+                }
+                PrintInvalidMessage();
+                PrintHelpMessage();
             }
+        }
+
+        private void Execute(Move move)
+        {
             move.Execute();
             moveQueue.Add(move);
         }
 
-        private void PrintMessage()
+        private void PrintInvalidMessage()
         {
-            // Console.WriteLine("Invalid move");
+            ioWorker.WriteLine("Invalid move");
         }
 
-        private void EndGame(int moveCount)
+        private void PrintHelpMessage()
         {
-            DrawField();
-            var winner = (moveCount - 1) % 2 == 0 ? "Blue" : "Red";
-            Console.WriteLine($"Winner: {winner} player");
-            Console.WriteLine($"Number of moves: {moveCount}");
+            ioWorker.WriteLine($"Move example: {ExampleMove}");
+            ioWorker.WriteLine($"Walls example: {ExampleWall}");
+        }
+
+        private GameResult GatherGameResults()
+        {
+            var winner = (moveCount - 1) % 2 == 0 ? gameProvider.Game.BluePlayer : gameProvider.Game.RedPlayer;
+            return new GameResult(winner, moveCount);
         }
     }
 }

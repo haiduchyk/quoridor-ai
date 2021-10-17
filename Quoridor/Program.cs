@@ -10,7 +10,7 @@
         {
             Console.OutputEncoding = Encoding.UTF8;
             var gameContainer = new GameContainer();
-            gameContainer.MenuController.StartNewGame();
+            gameContainer.FlowController.StartNewGame();
         }
     }
 }

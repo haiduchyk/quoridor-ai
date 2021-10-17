@@ -30,16 +30,11 @@ namespace Quoridor.Controller
 
         public Move Parse(Field field, Player player, Player enemy, string input)
         {
-            if (TryParseAsPlayerMove(field, player, enemy, input, out var move))
+            if (TryParseAsPlayerMove(field, player, enemy, input, out var move) ||
+                TryParseAsWallMove(field, player, input, out move))
             {
                 return move;
             }
-
-            if (TryParseAsWallMove(field, player, input, out move))
-            {
-                return move;
-            }
-
             return new DefaultMove(field, player, new FieldMask());
         }
 

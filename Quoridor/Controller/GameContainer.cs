@@ -4,11 +4,7 @@ namespace Quoridor.Controller
 
     public class GameContainer
     {
-        public IGameProvider GameProvider { get; }
-
-        public MenuController MenuController { get; }
-
-        public GameController GameController { get; }
+        public FlowController FlowController { get; }
 
         public GameContainer()
         {
@@ -18,9 +14,9 @@ namespace Quoridor.Controller
             var moveParser = new MoveParser(moveProvider, wallProvider);
             var gameProvider = new GameProvider(botCreator);
             var ioWorker = new ConsoleWorker();
-            GameProvider = gameProvider;
-            GameController = new GameController(gameProvider, moveParser, ioWorker);
-            MenuController = new MenuController(gameProvider, GameController, ioWorker);
+            var menuController = new MenuController(ioWorker);
+            var gameController = new GameController(gameProvider, moveParser, ioWorker);
+            FlowController = new FlowController(menuController, gameController, gameProvider, ioWorker);
         }
     }
 }

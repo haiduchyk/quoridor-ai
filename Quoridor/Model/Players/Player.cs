@@ -9,12 +9,15 @@ namespace Quoridor.Model.Players
 
         public int AmountOfWalls { get; private set; }
 
+        public string Name { get; }
+
         private readonly IMoveStrategy moveStrategy;
 
-        public Player(FieldMask position, int amountOfWalls, IMoveStrategy moveStrategy)
+        public Player(FieldMask position, int amountOfWalls, string name, IMoveStrategy moveStrategy)
         {
             Position = position;
             AmountOfWalls = amountOfWalls;
+            Name = name;
             this.moveStrategy = moveStrategy;
         }
 

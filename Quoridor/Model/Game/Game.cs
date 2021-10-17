@@ -14,29 +14,29 @@ namespace Quoridor.Model
         public Game(GameOptions gameOptions, IBotCreator botCreator)
         {
             Field = new Field(FieldMask.BitboardSize);
-            BluePlayer = CreateFirstPlayer(gameOptions, botCreator);
+            BluePlayer = CreateFirstPlayer();
             RedPlayer = CreateSecondPlayer(gameOptions, botCreator);
         }
 
-        private Player CreateFirstPlayer(GameOptions gameOptions, IBotCreator botCreator)
+        private Player CreateFirstPlayer()
         {
             var position = Constants.BluePlayerPosition;
-            return gameOptions.gameMode == GameMode.VersusPlayer
-                ? new Player(position, Constants.WallsPerGame, new ManualStrategy())
-                : botCreator.CreateBotFor(position, gameOptions.botDifficulty);
+            var name = Constants.BluePlayerName;
+            return new Player(position, Constants.WallsPerGame, name, new ManualStrategy());
         }
 
         private Player CreateSecondPlayer(GameOptions gameOptions, IBotCreator botCreator)
         {
             var position = Constants.RedPlayerPosition;
+            var name = Constants.RedPlayerName;
             return gameOptions.gameMode == GameMode.VersusPlayer
-                ? new Player(position, Constants.WallsPerGame, new ManualStrategy())
-                : botCreator.CreateBotFor(position, gameOptions.botDifficulty);
+                ? new Player(position, Constants.WallsPerGame, name, new ManualStrategy())
+                : botCreator.CreateBotFor(position, name, gameOptions.botDifficulty);
         }
 
         public bool HasFinished()
         {
-            return BluePlayer.Position.And(in Constants.BlueEndPositions).IsNotZero() &&
+            return BluePlayer.Position.And(in Constants.BlueEndPositions).IsNotZero() ||
                    RedPlayer.Position.And(in Constants.RedEndPositions).IsNotZero();
         }
     }

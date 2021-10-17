@@ -5,7 +5,7 @@ namespace Quoridor.Model
 
     public interface IBotCreator
     {
-        Player CreateBotFor(FieldMask position, BotDifficulty botDifficulty);
+        Player CreateBotFor(FieldMask position, string name, BotDifficulty botDifficulty);
     }
 
     public class BotCreator : IBotCreator
@@ -19,10 +19,14 @@ namespace Quoridor.Model
             this.wallProvider = wallProvider;
         }
 
-        public Player CreateBotFor(FieldMask position, BotDifficulty botDifficulty)
+        public Player CreateBotFor(FieldMask position, string name, BotDifficulty botDifficulty)
         {
-            return new Player(position, Constants.WallsPerGame,
-                new RandomMoveStrategy(moveProvider, wallProvider));
+            return new Player(position, Constants.WallsPerGame, name, GetStrategyFor(botDifficulty));
+        }
+
+        private IMoveStrategy GetStrategyFor(BotDifficulty botDifficulty)
+        {
+            return new RandomMoveStrategy(moveProvider, wallProvider);
         }
     }
 }
