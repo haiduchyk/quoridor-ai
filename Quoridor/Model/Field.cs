@@ -51,13 +51,13 @@ namespace Quoridor.Model
 
         public int Flatten(int y, int x)
         {
-            return x + y * FieldMask.BitboardSize;
+            return x + y * Size;
         }
 
         public (int i, int j) Nested(int position)
         {
-            var i = position / FieldMask.BitboardSize;
-            var j = position % FieldMask.BitboardSize;
+            var i = position / Size;
+            var j = position % Size;
             return (i, j);
         }
 

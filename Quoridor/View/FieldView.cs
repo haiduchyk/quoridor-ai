@@ -18,18 +18,16 @@ namespace Quoridor.View
         public void Draw(Field field, Player bluePlayer, Player redPlayer)
         {
             RenderBoardLine();
-            for (var y = 0; y < FieldMask.BitboardSize; y++)
+            for (var y = 0; y < field.Size; y++)
             {
                 RenderBoardNumber(y);
-                for (var x = 0; x < FieldMask.BitboardSize; x++)
+                for (var x = 0; x < field.Size; x++)
                 {
                     if (field.HasWall(y, x))
                     {
                         RenderWall(y, x, bluePlayer, redPlayer);
-                        continue;
                     }
-
-                    if (IsPlayerPosition(y, x))
+                    else if (IsPlayerPosition(y, x))
                     {
                         RenderPlayer(y, x, bluePlayer, redPlayer);
                     }
