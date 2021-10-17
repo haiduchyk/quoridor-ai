@@ -24,14 +24,14 @@ namespace Quoridor.Model
             }
         }
 
-        public void PlaceWall(ref FieldMask wall)
+        public void PlaceWall(in FieldMask wall)
         {
-            walls = walls.Or(ref wall);
+            walls = walls.Or(in wall);
         }
 
-        public void RemoveWall(ref FieldMask wall)
+        public void RemoveWall(in FieldMask wall)
         {
-            walls = walls.Nor(ref wall);
+            walls = walls.Nor(in wall);
         }
 
         public bool HasWall(int y, int x)
@@ -41,12 +41,12 @@ namespace Quoridor.Model
 
         public FieldMask GetPossibleWallsMask()
         {
-            return availableWalls.Nor(ref walls);
+            return availableWalls.Nor(in walls);
         }
 
         public bool CanMove(ref FieldMask moveMask)
         {
-            return walls.And(ref moveMask).IsZero();
+            return walls.And(in moveMask).IsZero();
         }
 
         public int Flatten(int y, int x)
@@ -63,7 +63,7 @@ namespace Quoridor.Model
 
         public FieldMask GetWallsForMask(ref FieldMask wallMask)
         {
-            return wallMask.And(ref walls);
+            return wallMask.And(in walls);
         }
     }
 }

@@ -17,9 +17,10 @@ namespace Quoridor.Controller
             var botCreator = new BotCreator(moveProvider, wallProvider);
             var moveParser = new MoveParser(moveProvider, wallProvider);
             var gameProvider = new GameProvider(botCreator);
+            var ioWorker = new ConsoleWorker();
             GameProvider = gameProvider;
-            GameController = new GameController(gameProvider, moveParser);
-            MenuController = new MenuController(gameProvider, GameController);
+            GameController = new GameController(gameProvider, moveParser, ioWorker);
+            MenuController = new MenuController(gameProvider, GameController, ioWorker);
         }
     }
 }

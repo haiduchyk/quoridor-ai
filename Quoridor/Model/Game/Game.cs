@@ -11,8 +11,6 @@ namespace Quoridor.Model
 
         public Player RedPlayer { get; }
 
-        public bool IsFinished => BluePlayer.HasReachedEnd() || RedPlayer.HasReachedEnd();
-
         public Game(GameOptions gameOptions, IBotCreator botCreator)
         {
             Field = new Field(FieldMask.BitboardSize);
@@ -20,22 +18,26 @@ namespace Quoridor.Model
             RedPlayer = CreateSecondPlayer(gameOptions, botCreator);
         }
 
-        private Player CreateSecondPlayer(GameOptions gameOptions, IBotCreator botCreator)
-        {
-            var position = Constants.RedPlayerPosition;
-            var endPosition = new FieldMask();
-            return gameOptions.gameMode == GameMode.VersusPlayer
-                ? new Player(position, endPosition, Constants.WallsPerGame, new ManualStrategy())
-                : botCreator.CreateBotFor(position, endPosition, gameOptions.botDifficulty);
-        }
-        
         private Player CreateFirstPlayer(GameOptions gameOptions, IBotCreator botCreator)
         {
             var position = Constants.BluePlayerPosition;
-            var endPosition = new FieldMask();
             return gameOptions.gameMode == GameMode.VersusPlayer
-                ? new Player(position, endPosition, Constants.WallsPerGame, new ManualStrategy())
-                : botCreator.CreateBotFor(position, endPosition, gameOptions.botDifficulty);
+                ? new Player(position, Constants.WallsPerGame, new ManualStrategy())
+                : botCreator.CreateBotFor(position, gameOptions.botDifficulty);
+        }
+
+        private Player CreateSecondPlayer(GameOptions gameOptions, IBotCreator botCreator)
+        {
+            var position = Constants.RedPlayerPosition;
+            return gameOptions.gameMode == GameMode.VersusPlayer
+                ? new Player(position, Constants.WallsPerGame, new ManualStrategy())
+                : botCreator.CreateBotFor(position, gameOptions.botDifficulty);
+        }
+
+        public bool HasFinished()
+        {
+            return BluePlayer.Position.And(in Constants.BlueEndPositions).IsNotZero() &&
+                   RedPlayer.Position.And(in Constants.RedEndPositions).IsNotZero();
         }
     }
 }

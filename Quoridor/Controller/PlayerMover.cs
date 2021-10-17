@@ -8,16 +8,17 @@ namespace Quoridor.Controller
         private readonly IGameProvider gameProvider;
         private readonly Player player;
         private readonly Player enemy;
-        private readonly ConsoleReader consoleReader;
         private readonly IMoveParser moveParser;
+        private readonly IInputReader inputReader;
 
-        public PlayerMover(IGameProvider gameProvider, Player player, Player enemy, IMoveParser moveParser)
+        public PlayerMover(IGameProvider gameProvider, Player player, Player enemy, IMoveParser moveParser,
+            IInputReader inputReader)
         {
             this.gameProvider = gameProvider;
             this.player = player;
             this.enemy = enemy;
             this.moveParser = moveParser;
-            consoleReader = new ConsoleReader();
+            this.inputReader = inputReader;
         }
 
         public Move WaitForMove()
@@ -27,7 +28,7 @@ namespace Quoridor.Controller
 
         private Move ReadMoveFromConsole()
         {
-            var input = consoleReader.WaitForInput();
+            var input = inputReader.ReadInput();
             var move = moveParser.Parse(gameProvider.Game.Field, player, enemy, input);
             return move;
         }

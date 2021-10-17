@@ -10,20 +10,12 @@ namespace Quoridor.Model.Players
         public int AmountOfWalls { get; private set; }
 
         private readonly IMoveStrategy moveStrategy;
-        private readonly FieldMask endPosition;
 
-        public Player(FieldMask position, FieldMask endPosition, int amountOfWalls, IMoveStrategy moveStrategy)
+        public Player(FieldMask position, int amountOfWalls, IMoveStrategy moveStrategy)
         {
             Position = position;
             AmountOfWalls = amountOfWalls;
             this.moveStrategy = moveStrategy;
-            this.endPosition = endPosition;
-        }
-
-        public bool HasReachedEnd()
-        {
-            var position = Position;
-            return !endPosition.And(ref position).IsZero();
         }
 
         public void ChangePosition(FieldMask position)

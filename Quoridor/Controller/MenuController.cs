@@ -7,7 +7,7 @@ namespace Quoridor.Controller
 
     public class MenuController
     {
-        public Options Options { get; } = new()
+        private Options Options { get; } = new()
         {
             Items = new OptionItem[]
             {
@@ -18,30 +18,37 @@ namespace Quoridor.Controller
 
         private readonly IGameStarter gameStarter;
         private readonly GameController gameController;
-        private readonly ConsoleReader consoleReader;
+        private readonly IInputReader inputReader;
         private readonly MenuView menuView;
 
-        public MenuController(IGameStarter gameStarter, GameController gameController)
+        public MenuController(IGameStarter gameStarter, GameController gameController, IInputReader inputReader)
         {
             this.gameStarter = gameStarter;
             this.gameController = gameController;
-            consoleReader = new ConsoleReader();
+            this.inputReader = inputReader;
             menuView = new MenuView();
         }
 
         public void StartNewGame()
         {
             menuView.PrintOptions(Options);
-            var input = consoleReader.WaitForInput();
-            OptionItem option;
-            while (!TryGetOption(input, out option))
-            {
-                menuView.PrintErrorMessage();
-                input = consoleReader.WaitForInput();
-            }
+            var option = WaitForOption();
             var gameOptions = GetOptionsFor(option);
             gameStarter.StartNewGame(gameOptions);
-            gameController.ProcessGame();
+            gameController.StartGame();
+        }
+
+        private OptionItem WaitForOption()
+        {
+            while (true)
+            {
+                var input = inputReader.ReadInput();
+                if (TryGetOption(input, out var option))
+                {
+                    return option;
+                }
+                menuView.PrintErrorMessage();
+            }
         }
 
         private bool TryGetOption(string input, out OptionItem optionItem)

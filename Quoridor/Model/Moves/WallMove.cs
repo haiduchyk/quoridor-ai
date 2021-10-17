@@ -17,13 +17,13 @@ namespace Quoridor.Model.Moves
         public override void Execute()
         {
             player.UseWall();
-            field.PlaceWall(ref fieldMask);
+            field.PlaceWall(in fieldMask);
         }
 
         public override void Undo()
         {
             player.RestoreWall();
-            field.RemoveWall(ref fieldMask);
+            field.RemoveWall(in fieldMask);
         }
     }
 }

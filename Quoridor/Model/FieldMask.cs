@@ -67,7 +67,7 @@ namespace Quoridor.Model
             this[i] = block;
         }
 
-        public FieldMask And(ref FieldMask mask)
+        public FieldMask And(in FieldMask mask)
         {
             var result = new FieldMask();
             for (var i = 0; i < BitBlocksAmount; i++)
@@ -77,7 +77,7 @@ namespace Quoridor.Model
             return result;
         }
 
-        public FieldMask Or(ref FieldMask mask)
+        public FieldMask Or(in FieldMask mask)
         {
             var result = new FieldMask();
             for (var i = 0; i < BitBlocksAmount; i++)
@@ -87,7 +87,7 @@ namespace Quoridor.Model
             return result;
         }
 
-        public FieldMask Nor(ref FieldMask mask)
+        public FieldMask Nor(in FieldMask mask)
         {
             var result = new FieldMask();
             for (var i = 0; i < BitBlocksAmount; i++)
@@ -116,12 +116,11 @@ namespace Quoridor.Model
         {
             return block0 == 0 && block1 == 0 && block2 == 0 && block3 == 0 && block4 == 0;
         }
-        
+
         public bool IsNotZero()
         {
             return block0 != 0 || block1 != 0 || block2 != 0 || block3 != 0 || block4 != 0;
         }
-
 
         private long this[int index]
         {
