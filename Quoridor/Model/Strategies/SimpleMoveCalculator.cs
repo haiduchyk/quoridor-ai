@@ -77,7 +77,7 @@ namespace Quoridor.Model.Strategies
         {
             var result = new Dictionary<FieldMask, FieldMask[]>();
 
-            var uniqueVariants = Math.Pow(4, 2);
+            var uniqueVariants = Math.Pow(4, 2) - 1;
 
             for (var unique = 0; unique < uniqueVariants; unique++)
             {

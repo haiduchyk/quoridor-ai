@@ -11,7 +11,7 @@ namespace Quoridor.Model
 
     public class MoveProvider : IMoveProvider
     {
-        //  <playerPosition 81, <enemyPlayerPosition, wallInBetweenPosition> ~3-4>
+        //  <playerPosition 81, <enemyPlayerPosition ~3-4, wallInBetweenPosition>>
         private Dictionary<FieldMask, Dictionary<FieldMask, FieldMask>> withEnemyMoveMasks = new();
 
         private SimpleMoveCalculator simpleMoveCalculator;
@@ -29,17 +29,16 @@ namespace Quoridor.Model
             var enemyMoveMasks = withEnemyMoveMasks[playerMask];
             if (enemyMoveMasks.TryGetValue(enemyMask, out var wallMask))
             {
-                var isBetweenWalls = field.GetWallsForMask(in wallMask).IsNotZero();
+                var isBetweenWalls = field.GetWallsForMask(wallMask).IsNotZero();
                 if (isBetweenWalls)
                 {
-                    return simpleMoveCalculator.GetAvailableMoves(field, in playerMask);
+                    return simpleMoveCalculator.GetAvailableMoves(field, playerMask);
                 }
-                return simpleMoveCalculator.GetAvailableMoves(field, in playerMask);
-                // return withEnemyMoveCalculator.GetAvailableMoves(field, ref playerMask, enemyMask);
+
+                return withEnemyMoveCalculator.GetAvailableMoves(field, playerMask, enemyMask);
             }
-            
-            
-            return simpleMoveCalculator.GetAvailableMoves(field, in playerMask);
+
+            return simpleMoveCalculator.GetAvailableMoves(field, playerMask);
         }
 
         private void CreateEnemyPlayerMasks()
@@ -66,7 +65,7 @@ namespace Quoridor.Model
             {
                 var enemyPosition = new FieldMask();
                 var wallPosition = new FieldMask();
-                
+
                 var wallY = y + yDelta;
                 var wallX = x + xDelta;
 
