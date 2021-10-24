@@ -14,13 +14,21 @@ namespace Quoridor.Model.Players
         public string Name { get; }
 
         private readonly IMoveStrategy moveStrategy;
+        private readonly FieldMask endPosition;
 
-        public Player(FieldMask position, int amountOfWalls, string name, IMoveStrategy moveStrategy)
+        public Player(FieldMask position, int amountOfWalls, string name, IMoveStrategy moveStrategy,
+            FieldMask endPosition)
         {
             Position = position;
             AmountOfWalls = amountOfWalls;
             Name = name;
             this.moveStrategy = moveStrategy;
+            this.endPosition = endPosition;
+        }
+
+        public bool HasReachedFinish()
+        {
+            return Position.And(in endPosition).IsNotZero();
         }
 
         public void ChangePosition(FieldMask position)
@@ -33,9 +41,9 @@ namespace Quoridor.Model.Players
             return moveStrategy.IsManual;
         }
 
-        public IMove MakeMove(Field field, Player enemy)
+        public IMove FindMove(Field field, Player enemy)
         {
-            return moveStrategy.MakeMove(field, this, enemy);
+            return moveStrategy.FindMove(field, this, enemy);
         }
 
         public bool HasWalls()
@@ -53,6 +61,17 @@ namespace Quoridor.Model.Players
         {
             Walls = Walls.And(wall.Not());
             AmountOfWalls++;
+        }
+
+        public Player Copy()
+        {
+            return new Player(Position, AmountOfWalls, Name, moveStrategy, endPosition);
+        }
+
+        public void Update(Player player)
+        {
+            Position = player.Position;
+            AmountOfWalls = player.AmountOfWalls;
         }
     }
 }

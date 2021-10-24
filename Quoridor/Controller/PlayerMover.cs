@@ -28,7 +28,7 @@ namespace Quoridor.Controller
 
         public IMove WaitForMove()
         {
-            return player.ShouldWaitForMove() ? ReadMoveFromConsole() : player.MakeMove(game.Field, enemy);
+            return player.ShouldWaitForMove() ? ReadMoveFromConsole() : player.FindMove(game.Field, enemy);
         }
 
         private IMove ReadMoveFromConsole()

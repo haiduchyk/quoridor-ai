@@ -1,12 +1,12 @@
 namespace Quoridor.Model
 {
-    using System.Collections.Generic;
+    using System.Linq;
 
     public interface IWallProvider
     {
-        List<FieldMask> GenerateWallMoves(Field field);
+        FieldMask[] GenerateWallMoves(Field field);
 
-        bool CanPlaceWall(ref FieldMask mask, int y, int x, WallOrientation wallOrientation);
+        bool CanPlaceWall(Field field, FieldMask wall);
 
         FieldMask GenerateWall(int y, int x, WallOrientation wallOrientation);
     }
@@ -16,36 +16,25 @@ namespace Quoridor.Model
         private const int MaxWallCount = 128;
         private const int WallSize = 3;
 
-        public List<FieldMask> GenerateWallMoves(Field field)
-        {
-            var possibleWalls = field.GetPossibleWallsMask();
-            var generatedWalls = new List<FieldMask>(MaxWallCount);
-            for (var i = 1; i < field.Size; i += 2)
-            {
-                for (var j = 1; j < field.Size; j += 2)
-                {
-                    if (CanPlaceWall(ref possibleWalls, i, j, WallOrientation.Horizontal))
-                    {
-                        var wall = GenerateWall(i, j, WallOrientation.Horizontal);
-                        generatedWalls.Add(wall);
-                    }
-                    if (CanPlaceWall(ref possibleWalls, i, j, WallOrientation.Vertical))
-                    {
-                        var wall = GenerateWall(i, j, WallOrientation.Vertical);
-                        generatedWalls.Add(wall);
-                    }
-                }
-            }
+        private FieldMask[] allWalls;
 
-            return generatedWalls;
+        public WallProvider()
+        {
+            GenerateAllWallMoves();
         }
 
-        public bool CanPlaceWall(ref FieldMask mask, int y, int x, WallOrientation wallOrientation)
+        public void GenerateAllWallMoves()
         {
-            var (yOffset, xOffset) = GetOffset(wallOrientation);
-            return mask.GetBit(y, x) &&
-                   !mask.GetBit(y + yOffset, x + xOffset) &&
-                   !mask.GetBit(y - yOffset, x - xOffset);
+            allWalls = new FieldMask[MaxWallCount];
+            var count = 0;
+            for (var i = 1; i < FieldMask.BitboardSize; i += 2)
+            {
+                for (var j = 1; j < FieldMask.BitboardSize; j += 2)
+                {
+                    allWalls[count++] = GenerateWall(i, j, WallOrientation.Horizontal);
+                    allWalls[count++] = GenerateWall(i, j, WallOrientation.Vertical);
+                }
+            }
         }
 
         public FieldMask GenerateWall(int y, int x, WallOrientation wallOrientation)
@@ -67,6 +56,18 @@ namespace Quoridor.Model
             var yOffset = wallOrientation == WallOrientation.Vertical ? 1 : 0;
             var xOffset = wallOrientation == WallOrientation.Horizontal ? 1 : 0;
             return (yOffset, xOffset);
+        }
+
+        public FieldMask[] GenerateWallMoves(Field field)
+        {
+            var walls = field.GetWallsMask();
+            return allWalls.Where(w => walls.And(in w).IsZero()).ToArray();
+        }
+
+        public bool CanPlaceWall(Field field, FieldMask wall)
+        {
+            var walls = field.GetWallsMask();
+            return walls.And(in wall).IsZero();
         }
     }
 }

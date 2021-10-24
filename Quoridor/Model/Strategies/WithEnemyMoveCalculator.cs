@@ -9,15 +9,17 @@ namespace Quoridor.Model.Strategies
         private Dictionary<FieldMask, Dictionary<FieldMask, Dictionary<FieldMask, FieldMask[]>>> withEnemyPlayersMoves =
             new();
 
-        //  <playerPosition 81, <enemyPosition 4, wallMaskForThisPlayerAndEnemyPosition>
+        //  <playerPosition 81, <enemyPosition 4, wallMaskForThisPlayerAndEnemyPosition>83 8
         private Dictionary<FieldMask, Dictionary<FieldMask, FieldMask>> withEnemyPlayersMovesMasks = new();
 
         public FieldMask[] GetAvailableMoves(Field field, FieldMask playerMask, FieldMask enemyMask)
         {
-            var moves = withEnemyPlayersMoves[playerMask][enemyMask];
-            var wallMask = withEnemyPlayersMovesMasks[playerMask][enemyMask];
-            var currentWallMask = field.GetWallsForMask(wallMask);
-            return moves[currentWallMask];
+            // Actual code but we optimize these shit
+            // var moves = withEnemyPlayersMoves[playerMask][enemyMask];
+            // var wallMask = withEnemyPlayersMovesMasks[playerMask][enemyMask];
+            // var currentWallMask = field.GetWallsForMask(wallMask);
+            // return moves[currentWallMask];
+            return withEnemyPlayersMoves[playerMask][enemyMask][field.GetWallsForMask(withEnemyPlayersMovesMasks[playerMask][enemyMask])];
         }
 
         public WithEnemyMoveCalculator()
@@ -141,7 +143,7 @@ namespace Quoridor.Model.Strategies
         {
             var result = new Dictionary<FieldMask, FieldMask[]>();
 
-            var uniqueVariants = Math.Pow(2, 6) - 1;
+            var uniqueVariants = Math.Pow(2, 6);
 
             for (var unique = 0; unique < uniqueVariants; unique++)
             {

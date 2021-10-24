@@ -1,5 +1,7 @@
 namespace Quoridor.Model.Moves
 {
+    using Players;
+
     public class DefaultMove : IMove
     {
         public bool IsValid()
@@ -12,6 +14,10 @@ namespace Quoridor.Model.Moves
         }
 
         public void Undo()
+        {
+        }
+
+        public void Apply(Field field, Player player, Player enemy)
         {
         }
     }

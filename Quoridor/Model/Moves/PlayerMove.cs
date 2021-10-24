@@ -5,9 +5,9 @@ namespace Quoridor.Model.Moves
 
     public class PlayerMove : IMove
     {
-        private readonly Player player;
         private readonly FieldMask position;
         private readonly FieldMask previousPosition;
+        private Player player;
 
         public PlayerMove(Player player, FieldMask position)
         {
@@ -29,6 +29,11 @@ namespace Quoridor.Model.Moves
         public void Undo()
         {
             player.ChangePosition(previousPosition);
+        }
+
+        public void Apply(Field field, Player player, Player enemy)
+        {
+            this.player = player;
         }
     }
 }

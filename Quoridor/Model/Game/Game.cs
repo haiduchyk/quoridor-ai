@@ -22,16 +22,18 @@ namespace Quoridor.Model
         {
             var position = Constants.BluePlayerPosition;
             var name = Constants.BluePlayerName;
-            return new Player(position, Constants.WallsPerGame, name, new ManualStrategy());
+            var endPosition = Constants.BlueEndPositions;
+            return new Player(position, Constants.WallsPerGame, name, new ManualStrategy(), endPosition);
         }
 
         private Player CreateSecondPlayer(GameOptions gameOptions, IBotCreator botCreator)
         {
             var position = Constants.RedPlayerPosition;
             var name = Constants.RedPlayerName;
+            var endPosition = Constants.RedEndPositions;
             return gameOptions.gameMode == GameMode.VersusPlayer
-                ? new Player(position, Constants.WallsPerGame, name, new ManualStrategy())
-                : botCreator.CreateBotFor(position, name, gameOptions.botDifficulty);
+                ? new Player(position, Constants.WallsPerGame, name, new ManualStrategy(), endPosition)
+                : botCreator.CreateBotFor(position, name, gameOptions.botDifficulty, endPosition);
         }
 
         public bool HasFinished()

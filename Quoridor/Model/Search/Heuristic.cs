@@ -42,9 +42,10 @@ namespace Quoridor.Model
 
         public int Compare(FieldMask first, FieldMask second)
         {
-            var firstHeuristic = distances[first] + heuristic[endPosition][rows[first]];
-            var secondHeuristic = distances[second] + heuristic[endPosition][rows[second]];
-            return firstHeuristic - secondHeuristic;
+            // Actual shit
+            // var firstHeuristic = distances[first] + heuristic[endPosition][rows[first]];
+            // var secondHeuristic = distances[second] + heuristic[endPosition][rows[second]];
+            return distances[first] + heuristic[endPosition][rows[first]] - distances[second] + heuristic[endPosition][rows[second]];
         }
     }
 }

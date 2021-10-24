@@ -119,8 +119,8 @@ namespace Quoridor.Controller
 
         private bool CanPlace(Field field, int y, int x, WallOrientation orientation)
         {
-            var possibleWalls = field.GetPossibleWallsMask();
-            return wallProvider.CanPlaceWall(ref possibleWalls, y, x, orientation);
+            var wall = wallProvider.GenerateWall(y, x, orientation);
+            return wallProvider.CanPlaceWall(field, wall);
         }
 
         private bool TryParseCell(string input, out FieldMask mask)

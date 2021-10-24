@@ -21,10 +21,12 @@ namespace Quoridor.Model.Strategies
 
         public FieldMask[] GetAvailableMoves(Field field, in FieldMask playerMask)
         {
-            var moves = simplePlayersMoves[playerMask];
-            var wallMask = simplePlayersMovesMasks[playerMask];
-            var currentWallMask = field.GetWallsForMask(in wallMask);
-            return moves[currentWallMask];
+            // Actual code but we optimize these shit
+            // var moves = simplePlayersMoves[playerMask];
+            // var wallMask = simplePlayersMovesMasks[playerMask];
+            // var currentWallMask = field.GetWallsForMask(in wallMask);
+            // return moves[currentWallMask];
+            return simplePlayersMoves[playerMask][field.GetWallsForMask(simplePlayersMovesMasks[playerMask])];
         }
 
         private void CreateSimplePlayerMovesMasks()
@@ -77,7 +79,7 @@ namespace Quoridor.Model.Strategies
         {
             var result = new Dictionary<FieldMask, FieldMask[]>();
 
-            var uniqueVariants = Math.Pow(4, 2) - 1;
+            var uniqueVariants = Math.Pow(4, 2);
 
             for (var unique = 0; unique < uniqueVariants; unique++)
             {

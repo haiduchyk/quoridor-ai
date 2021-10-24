@@ -26,8 +26,7 @@ namespace Quoridor.Model
 
         public FieldMask[] GetAvailableMoves(Field field, in FieldMask playerMask, in FieldMask enemyMask)
         {
-            var enemyMoveMasks = withEnemyMoveMasks[playerMask];
-            if (enemyMoveMasks.TryGetValue(enemyMask, out var wallMask))
+            if (withEnemyMoveMasks[playerMask].TryGetValue(enemyMask, out var wallMask))
             {
                 var isBetweenWalls = field.GetWallsForMask(wallMask).IsNotZero();
                 if (isBetweenWalls)

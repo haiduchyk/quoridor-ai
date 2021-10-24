@@ -21,9 +21,13 @@ namespace Quoridor.Model.Strategies
             this.search = search;
         }
 
-        public IMove MakeMove(Field field, Player player, Player enemy)
+        public IMove FindMove(Field field, Player player, Player enemy)
         {
-            return random.NextDouble() < 0.5
+            if (!player.HasWalls())
+            {
+                return GetRandomPlayerMove(field, player, enemy);
+            }
+            return random.NextDouble() < 0.7
                 ? GetRandomPlayerMove(field, player, enemy)
                 : GetRandomWallMove(field, player, enemy);
         }
@@ -40,7 +44,7 @@ namespace Quoridor.Model.Strategies
         private IMove GetRandomWallMove(Field field, Player player, Player enemy)
         {
             var walls = wallProvider.GenerateWallMoves(field);
-            var wall = walls[random.Next(0, walls.Count)];
+            var wall = walls[random.Next(0, walls.Length)];
             return new WallMove(field, player, enemy, search, wall);
         }
     }

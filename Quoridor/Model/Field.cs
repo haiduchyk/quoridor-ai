@@ -4,24 +4,11 @@ namespace Quoridor.Model
     {
         public int Size { get; }
 
-        private FieldMask availableWalls;
-        public FieldMask walls;
+        private FieldMask walls;
 
         public Field(int size)
         {
             Size = size;
-            CreateAvailableWallsMask();
-        }
-
-        private void CreateAvailableWallsMask()
-        {
-            for (var i = 1; i < Size; i += 2)
-            {
-                for (var j = 1; j < Size; j += 2)
-                {
-                    availableWalls.SetBit(i, j, true);
-                }
-            }
         }
 
         public void PlaceWall(in FieldMask wall)
@@ -39,9 +26,9 @@ namespace Quoridor.Model
             return walls.GetBit(y, x);
         }
 
-        public FieldMask GetPossibleWallsMask()
+        public FieldMask GetWallsMask()
         {
-            return availableWalls.Nor(in walls);
+            return walls;
         }
 
         public FieldMask GetWallsForMask(in FieldMask wallMask)
@@ -59,6 +46,19 @@ namespace Quoridor.Model
             var i = position / Size;
             var j = position % Size;
             return (i, j);
+        }
+
+        public Field Copy()
+        {
+            return new Field(Size)
+            {
+                walls = walls
+            };
+        }
+
+        public void Update(Field field)
+        {
+            walls = field.walls;
         }
     }
 }

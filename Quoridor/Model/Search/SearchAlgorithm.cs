@@ -16,6 +16,7 @@ namespace Quoridor.Model
 
         protected FieldMask endMask;
         private Game game;
+        private Field field;
         private Player enemy;
 
         public SearchAlgorithm(IMoveProvider moveProvider)
@@ -51,8 +52,9 @@ namespace Quoridor.Model
             this.game = game;
         }
 
-        public bool HasPath(Player player, FieldMask position, out FieldMask path)
+        public bool HasPath(Field field, Player player, FieldMask position, out FieldMask path)
         {
+            this.field = field;
             endMask = GetEndMask(player);
             enemy = GetEnemy(player);
             Prepare(position);
@@ -129,7 +131,7 @@ namespace Quoridor.Model
 
         private FieldMask[] GetPossibleMoves(FieldMask position)
         {
-            return moveProvider.GetAvailableMoves(game.Field, in position, enemy.Position);
+            return moveProvider.GetAvailableMoves(field, in position, enemy.Position);
         }
     }
 }

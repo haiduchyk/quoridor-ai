@@ -13,7 +13,6 @@ namespace Quoridor.Controller
         private readonly IGameProvider gameProvider;
         private readonly IMoveParser moveParser;
         private readonly IIoWorker ioWorker;
-        private readonly MoveQueue moveQueue;
         private readonly FieldView fieldView;
 
         private PlayerMover bluePlayerMover;
@@ -25,7 +24,6 @@ namespace Quoridor.Controller
             this.gameProvider = gameProvider;
             this.moveParser = moveParser;
             this.ioWorker = ioWorker;
-            moveQueue = new MoveQueue();
             fieldView = new FieldView();
         }
 
@@ -40,7 +38,6 @@ namespace Quoridor.Controller
 
         private void PrepareComponents()
         {
-            moveQueue.Clear();
             bluePlayerMover = new PlayerMover(gameProvider.Game, gameProvider.Game.BluePlayer, moveParser, ioWorker);
             redPlayerMover = new PlayerMover(gameProvider.Game, gameProvider.Game.RedPlayer, moveParser, ioWorker);
             moveCount = 0;
@@ -81,7 +78,6 @@ namespace Quoridor.Controller
         private void Execute(IMove move)
         {
             move.Execute();
-            moveQueue.Add(move);
         }
 
         private void DrawField()
