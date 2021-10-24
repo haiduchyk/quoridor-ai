@@ -27,17 +27,18 @@ namespace Quoridor.Model.Moves
 
         private bool CheckPath()
         {
+            field.PlaceWall(in wall);
             Execute();
             var hasPathForEnemy = search.HasPath(field, enemy, enemy.Position, out _);
             var hasPathForPlayer = search.HasPath(field, player, player.Position, out _);
-            Undo();
+            field.RemoveWall(in wall);
             return hasPathForPlayer && hasPathForEnemy;
         }
 
         public void Execute()
         {
             player.UseWall(wall);
-            field.PlaceWall(in wall);
+            field.PlaceWallAndUpdateMoves(in wall);
         }
 
         public void Undo()

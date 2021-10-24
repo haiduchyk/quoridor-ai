@@ -44,7 +44,7 @@ namespace Quoridor.Model.Strategies
         private IMove GetRandomWallMove(Field field, Player player, Player enemy)
         {
             var walls = wallProvider.GenerateWallMoves(field);
-            var wall = walls[random.Next(0, walls.Length)];
+            var wall = walls[random.Next(0, walls.Count)];
             return new WallMove(field, player, enemy, search, wall);
         }
     }

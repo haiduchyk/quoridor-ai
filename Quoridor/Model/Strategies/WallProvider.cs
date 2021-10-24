@@ -6,9 +6,11 @@ namespace Quoridor.Model
 
     public interface IWallProvider
     {
-        FieldMask[] GenerateWallMoves(Field field);
+        FieldMask[] GetAllMoves();
 
-        FieldMask[] GenerateWallMoves(Field field, Player player, Player enemy);
+        List<FieldMask> GenerateWallMoves(Field field);
+
+        List<FieldMask> GenerateWallMoves(Field field, Player player, Player enemy);
 
         bool CanPlaceWall(Field field, FieldMask wall);
 
@@ -129,26 +131,29 @@ namespace Quoridor.Model
             return (yOffset, xOffset);
         }
 
-        public FieldMask[] GenerateWallMoves(Field field)
+        public FieldMask[] GetAllMoves()
         {
-            var walls = field.GetWallsMask();
-            return allWalls.Where(w => walls.And(in w).IsZero()).ToArray();
+            return allWalls;
         }
 
-        public FieldMask[] GenerateWallMoves(Field field, Player player, Player enemy)
+        public List<FieldMask> GenerateWallMoves(Field field)
         {
-            var moves = GenerateWallMoves(field);
+            return field.PossibleWalls;
+        }
+
+        public List<FieldMask> GenerateWallMoves(Field field, Player player, Player enemy)
+        {
+            var moves = field.PossibleWalls;
             var nearWallMask = GetNearWallMask(field);
             var nearPlayer = nearPlayerWalls[player.Position];
             var nearEnemy = nearPlayerWalls[enemy.Position];
-            var possibleMoves = moves
+            return moves
                 .Where(w =>
                     w.And(in nearEdgeWallMask).IsNotZero() ||
                     w.And(in nearPlayer).IsNotZero() ||
                     w.And(in nearEnemy).IsNotZero() ||
                     w.And(in nearWallMask).IsNotZero())
-                .ToArray();
-            return possibleMoves;
+                .ToList();
         }
 
         private FieldMask GetNearWallMask(Field field)

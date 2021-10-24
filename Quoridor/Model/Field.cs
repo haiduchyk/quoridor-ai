@@ -1,14 +1,33 @@
 namespace Quoridor.Model
 {
+    using System.Collections.Generic;
+    using System.Linq;
+
     public class Field
     {
         public int Size { get; }
+
+        public List<FieldMask> PossibleWalls { get; private init; }
 
         private FieldMask walls;
 
         public Field(int size)
         {
             Size = size;
+            PossibleWalls = new List<FieldMask>();
+        }
+
+        public void PlaceWallAndUpdateMoves(in FieldMask wall)
+        {
+            walls = walls.Or(in wall);
+            for (var i = 0; i < PossibleWalls.Count; i++)
+            {
+                if (PossibleWalls[i].And(in wall).IsNotZero())
+                {
+                    PossibleWalls.RemoveAt(i);
+                    i--;
+                }
+            }
         }
 
         public void PlaceWall(in FieldMask wall)
@@ -52,13 +71,16 @@ namespace Quoridor.Model
         {
             return new Field(Size)
             {
-                walls = walls
+                walls = walls,
+                PossibleWalls = PossibleWalls.ToList(),
             };
         }
 
         public void Update(Field field)
         {
             walls = field.walls;
+            PossibleWalls.Clear();
+            PossibleWalls.AddRange(field.PossibleWalls);
         }
     }
 }
