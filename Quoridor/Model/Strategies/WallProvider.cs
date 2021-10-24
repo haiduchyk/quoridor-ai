@@ -1,10 +1,14 @@
 namespace Quoridor.Model
 {
+    using System.Collections.Generic;
     using System.Linq;
+    using Players;
 
     public interface IWallProvider
     {
         FieldMask[] GenerateWallMoves(Field field);
+
+        FieldMask[] GenerateWallMoves(Field field, Player player, Player enemy);
 
         bool CanPlaceWall(Field field, FieldMask wall);
 
@@ -17,10 +21,16 @@ namespace Quoridor.Model
         private const int WallSize = 3;
 
         private FieldMask[] allWalls;
+        private FieldMask nearEdgeWallMask;
+        private readonly Dictionary<FieldMask, FieldMask> nearPlayerWalls = new();
+        private readonly Dictionary<FieldMask, FieldMask> nearWalls = new();
 
         public WallProvider()
         {
             GenerateAllWallMoves();
+            GenerateNearEdgeWallMask();
+            GenerateNearPlayerWalls();
+            GenerateNearWall();
         }
 
         public void GenerateAllWallMoves()
@@ -33,6 +43,67 @@ namespace Quoridor.Model
                 {
                     allWalls[count++] = GenerateWall(i, j, WallOrientation.Horizontal);
                     allWalls[count++] = GenerateWall(i, j, WallOrientation.Vertical);
+                }
+            }
+        }
+
+        private void GenerateNearEdgeWallMask()
+        {
+            for (var i = 1; i < FieldMask.BitboardSize; i += 2)
+            {
+                nearEdgeWallMask.SetBit(i, 0, true);
+                nearEdgeWallMask.SetBit(i, FieldMask.BitboardSize - 1, true);
+            }
+        }
+
+        private void GenerateNearPlayerWalls()
+        {
+            for (var i = 0; i < FieldMask.BitboardSize; i += 2)
+            {
+                for (var j = 0; j < FieldMask.BitboardSize; j += 2)
+                {
+                    var position = new FieldMask();
+                    position.SetBit(i, j, true);
+                    nearPlayerWalls[position] = GetWallMask(i, j);
+                }
+            }
+        }
+
+        private FieldMask GetWallMask(int i, int j)
+        {
+            var wallMask = new FieldMask();
+            foreach (var (offsetY, offsetX) in Constants.Directions)
+            {
+                var y = i + offsetY;
+                var x = j + offsetX;
+                wallMask.TrySetBit(y, x, true);
+            }
+            return wallMask;
+        }
+
+        private void GenerateNearWall()
+        {
+            var count = 0;
+            for (var i = 1; i < FieldMask.BitboardSize; i += 2)
+            {
+                for (var j = 1; j < FieldMask.BitboardSize; j += 2)
+                {
+                    var wall = allWalls[count++];
+                    var mask = new FieldMask();
+                    foreach (var (offsetY, offsetX) in Constants.Directions)
+                    {
+                        mask.TrySetBit(i + offsetY, j + 2 * offsetX, true);
+                        mask.TrySetBit(i + 2 * offsetY, j + 3 * offsetX, true);
+                    }
+                    nearWalls[wall] = mask;
+                    wall = allWalls[count++];
+                    mask = new FieldMask();
+                    foreach (var (offsetY, offsetX) in Constants.Directions)
+                    {
+                        mask.TrySetBit(i + 2 * offsetY, j + offsetX, true);
+                        mask.TrySetBit(i + 3 * offsetY, j + 2 * offsetX, true);
+                    }
+                    nearWalls[wall] = mask;
                 }
             }
         }
@@ -62,6 +133,30 @@ namespace Quoridor.Model
         {
             var walls = field.GetWallsMask();
             return allWalls.Where(w => walls.And(in w).IsZero()).ToArray();
+        }
+
+        public FieldMask[] GenerateWallMoves(Field field, Player player, Player enemy)
+        {
+            var moves = GenerateWallMoves(field);
+            var nearWallMask = GetNearWallMask(field);
+            var nearPlayer = nearPlayerWalls[player.Position];
+            var nearEnemy = nearPlayerWalls[enemy.Position];
+            var possibleMoves = moves
+                .Where(w =>
+                    w.And(in nearEdgeWallMask).IsNotZero() ||
+                    w.And(in nearPlayer).IsNotZero() ||
+                    w.And(in nearEnemy).IsNotZero() ||
+                    w.And(in nearWallMask).IsNotZero())
+                .ToArray();
+            return possibleMoves;
+        }
+
+        private FieldMask GetNearWallMask(Field field)
+        {
+            var walls = field.GetWallsMask();
+            return allWalls.Where(w => Equals(walls.And(in w), w))
+                .Select(w => nearWalls[w])
+                .Aggregate(new FieldMask(), (agg, cur) => agg.Or(cur));
         }
 
         public bool CanPlaceWall(Field field, FieldMask wall)
