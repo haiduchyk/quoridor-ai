@@ -4,7 +4,8 @@ namespace Quoridor.Model
 
     public class DijkstraSearchAlgorithm : SearchAlgorithm
     {
-        public DijkstraSearchAlgorithm(IMoveProvider moveProvider) : base(moveProvider)
+        public DijkstraSearchAlgorithm(IMoveProvider moveProvider, PathWithWallsRetriever pathRetriever)
+            : base(moveProvider, pathRetriever)
         {
         }
 

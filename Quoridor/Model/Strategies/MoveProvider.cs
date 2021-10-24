@@ -6,7 +6,8 @@ namespace Quoridor.Model
 
     public interface IMoveProvider
     {
-        FieldMask[] GetAvailableMoves(Field field, in FieldMask playerMask, in FieldMask enemyMask);
+        FieldMask[] GetAvailableMoves(Field field, FieldMask playerMask, FieldMask enemyMask);
+        (FieldMask[] mask, bool isSimple) GetAvailableMovesWithType(Field field, FieldMask playerMask, FieldMask enemyMask);
     }
 
     public class MoveProvider : IMoveProvider
@@ -24,7 +25,7 @@ namespace Quoridor.Model
             withEnemyMoveCalculator = new WithEnemyMoveCalculator();
         }
 
-        public FieldMask[] GetAvailableMoves(Field field, in FieldMask playerMask, in FieldMask enemyMask)
+        public FieldMask[] GetAvailableMoves(Field field, FieldMask playerMask, FieldMask enemyMask)
         {
             if (withEnemyMoveMasks[playerMask].TryGetValue(enemyMask, out var wallMask))
             {
@@ -37,8 +38,25 @@ namespace Quoridor.Model
                 return withEnemyMoveCalculator.GetAvailableMoves(field, playerMask, enemyMask);
             }
 
-            return simpleMoveCalculator.GetAvailableMoves(field, playerMask);
+            return simpleMoveCalculator.GetAvailableMoves(field, playerMask); 
         }
+        
+        public (FieldMask[] mask, bool isSimple) GetAvailableMovesWithType(Field field, FieldMask playerMask, FieldMask enemyMask)
+        {
+            if (withEnemyMoveMasks[playerMask].TryGetValue(enemyMask, out var wallMask))
+            {
+                var isBetweenWalls = field.GetWallsForMask(wallMask).IsNotZero();
+                if (isBetweenWalls)
+                {
+                    return (simpleMoveCalculator.GetAvailableMoves(field, playerMask), true);
+                }
+
+                return (withEnemyMoveCalculator.GetAvailableMoves(field, playerMask, enemyMask), false);
+            }
+
+            return (simpleMoveCalculator.GetAvailableMoves(field, playerMask), true);
+        }
+
 
         private void CreateEnemyPlayerMasks()
         {

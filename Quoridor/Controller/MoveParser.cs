@@ -83,7 +83,7 @@ namespace Quoridor.Controller
         {
             var playerPosition = player.Position;
             var enemyPosition = enemy.Position;
-            var moves = moveProvider.GetAvailableMoves(field, in playerPosition, in enemyPosition);
+            var moves = moveProvider.GetAvailableMoves(field, playerPosition, enemyPosition);
             return moves.Any(m => !m.And(in to).IsZero());
         }
 
