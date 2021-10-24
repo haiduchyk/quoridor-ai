@@ -39,6 +39,7 @@ namespace Quoridor.Model.Strategies
             var startTime = GetCurrentTime();
             var root = new MonteNode();
             root.SetChild(FindChildren(root));
+            var count = 0;
 
             while (HasTime(startTime))
             {
@@ -48,9 +49,11 @@ namespace Quoridor.Model.Strategies
                 var node = Select(root);
                 var result = Simulate(node);
                 Backpropagate(node, result);
+                count++;
             }
             var move = FindBest(root);
             move.Apply(field, player, enemy);
+            Console.WriteLine($"Count => {count}");
             return move;
         }
 
