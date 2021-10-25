@@ -90,7 +90,7 @@ namespace Quoridor.Model
                         playerMask.SetBit(y, x, true);
 
                         var moves = CreateWithEnemyMoveMask(y, x);
-                        withEnemyMoveMasks[playerMask] = moves;
+                        // withEnemyMoveMasks[playerMask] = moves;
                     }
                 }
             }

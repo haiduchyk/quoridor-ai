@@ -31,6 +31,11 @@ namespace Quoridor.Model
 
         public bool GetBit(int y, int x)
         {
+            // TODO: remove check for release
+            if (!IsInRange(y, x))
+            {
+                throw new Exception($"Out of range [y:{y}, x:{x}]");
+            }
             var index = x + y * BitboardSize;
             return GetBit(index);
         }

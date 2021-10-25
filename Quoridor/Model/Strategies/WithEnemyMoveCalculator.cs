@@ -100,11 +100,6 @@ namespace Quoridor.Model.Strategies
             {
                 for (var x = 0; x < FieldMask.BitboardSize; x++)
                 {
-                    // if (y != 8 || x != 8)
-                    // {
-                    //     continue;
-                    // }
-
                     if (y % 2 == 0 && x % 2 == 0)
                     {
                         var playerMask = new FieldMask();
@@ -200,7 +195,7 @@ namespace Quoridor.Model.Strategies
                         {
                             if (isBigJump)
                             {
-                                if (wallMask.GetBit(importantY, importantX))
+                                if (!FieldMask.IsInRange(importantY, importantX) || wallMask.GetBit(importantY, importantX))
                                 {
                                     SimpleUpdate();
                                 }

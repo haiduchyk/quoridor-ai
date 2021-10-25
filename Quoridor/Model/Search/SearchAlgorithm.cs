@@ -94,7 +94,7 @@ namespace Quoridor.Model
 
                 if (IsDestinationReached(position))
                 {
-                    path = pathRetriever.RetrievePath(position, prevNodes, enemy);
+                    path = pathRetriever.RetrievePath(position, prevNodes, enemy.Position);
                     return true;
                 }
 
