@@ -9,6 +9,7 @@ namespace Quoridor.Model
         // <playerPosition <nextPLayerPosition, mask>>
         private Dictionary<FieldMask, Dictionary<FieldMask, FieldMask>> simpleMoveMasks = new();
 
+        // <playerPosition <enemyPosition <nextPLayerPosition, mask>>>
         private Dictionary<FieldMask, Dictionary<FieldMask, Dictionary<FieldMask, FieldMask>>> withEnemyMoveMasks
             = new();
 
