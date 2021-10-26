@@ -2,23 +2,37 @@ namespace Quoridor.Model
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     public class PathWithWallsRetriever
     {
+        // <playerPosition <nextPLayerPosition, mask>>
         private Dictionary<FieldMask, Dictionary<FieldMask, FieldMask>> simpleMoveMasks = new();
 
-        private Dictionary<FieldMask, Dictionary<FieldMask, Dictionary<FieldMask, FieldMask>>> withEnemyMoveMasks 
+        private Dictionary<FieldMask, Dictionary<FieldMask, Dictionary<FieldMask, FieldMask>>> withEnemyMoveMasks
             = new();
 
-        public FieldMask RetrievePath(FieldMask position,
-            Dictionary<FieldMask, (FieldMask mask, bool isSimple)> prevNodes, FieldMask enemy)
+        public FieldMask RetrievePath(FieldMask playerPosition,
+            Dictionary<FieldMask, (FieldMask mask, bool isSimple)> prevNodes, FieldMask enemyPosition)
         {
             var path = new FieldMask();
-            while (!position.Equals(Constants.EmptyField))
+            path = path.Or(playerPosition);
+            
+            while (!playerPosition.Equals(Constants.EmptyField))
             {
-                path = path.Or(position);
-                var prevNode = prevNodes[position];
-                position = prevNode.mask;
+                var prevNode = prevNodes[playerPosition];
+                var nextPosition = prevNode.mask;
+
+                if (prevNode.isSimple)
+                {
+                    path = simpleMoveMasks[playerPosition][nextPosition].Or(path);
+                }
+                else
+                {
+                    path = withEnemyMoveMasks[playerPosition][enemyPosition][nextPosition].Or(path);
+                }
+
+                playerPosition = nextPosition;
             }
 
             return path;
@@ -60,17 +74,17 @@ namespace Quoridor.Model
                 var wallY = y + yDelta;
                 var wallX = x + xDelta;
 
-                var enemyMask = new FieldMask();
+                var playerNextMask = new FieldMask();
                 var resultMask = new FieldMask();
 
                 if (FieldMask.IsInRange(nextY, nextX))
                 {
-                    enemyMask.SetBit(nextY, nextX, true);
+                    playerNextMask.SetBit(nextY, nextX, true);
 
                     resultMask.SetBit(nextY, nextX, true);
                     resultMask.SetBit(wallY, wallX, true);
 
-                    result[enemyMask] = resultMask;
+                    result[playerNextMask] = resultMask;
                 }
             }
 
@@ -88,17 +102,16 @@ namespace Quoridor.Model
                     {
                         var playerMask = new FieldMask();
                         playerMask.SetBit(y, x, true);
-
                         var moves = CreateWithEnemyMoveMask(y, x);
-                        // withEnemyMoveMasks[playerMask] = moves;
+                        withEnemyMoveMasks[playerMask] = moves;
                     }
                 }
             }
         }
 
-        private Dictionary<FieldMask, FieldMask> CreateWithEnemyMoveMask(int y, int x)
+        private Dictionary<FieldMask, Dictionary<FieldMask, FieldMask>> CreateWithEnemyMoveMask(int y, int x)
         {
-            var result = new Dictionary<FieldMask, FieldMask>();
+            var result = new Dictionary<FieldMask, Dictionary<FieldMask, FieldMask>>();
             foreach (var (yDelta, xDelta) in Constants.Directions)
             {
                 var curY = y + yDelta * 2;
@@ -109,8 +122,8 @@ namespace Quoridor.Model
                 if (FieldMask.IsInRange(curY, curX))
                 {
                     enemyMask.SetBit(curY, curX, true);
-                    var wallMask = CalculateUniqueVariantFor(y, x, curY, curX);
-                    result[enemyMask] = enemyMask.Or(wallMask);
+                    var wallMasks = CalculateUniqueVariantFor(y, x, curY, curX);
+                    result[enemyMask] = wallMasks;
                 }
             }
 
@@ -118,17 +131,10 @@ namespace Quoridor.Model
         }
 
 
-        private FieldMask CalculateUniqueVariantFor(int yPlayer, int xPlayer, int yEnemy, int xEnemy)
+        private Dictionary<FieldMask, FieldMask> CalculateUniqueVariantFor(int yPlayer, int xPlayer, int yEnemy,
+            int xEnemy)
         {
-            var result = new FieldMask();
-
-            var uniqueVariants = Math.Pow(2, 6);
-
-
-            var playerMoveMasks = new List<FieldMask>();
-            var wallMask = new FieldMask();
-
-            var uniquePosition = 0;
+            var result = new Dictionary<FieldMask, FieldMask>();
 
             var blockedY = (yEnemy - yPlayer) / 2 + yPlayer;
             var blockedX = (xEnemy - xPlayer) / 2 + xPlayer;
@@ -136,70 +142,66 @@ namespace Quoridor.Model
             var importantY = (yEnemy - yPlayer) + blockedY;
             var importantX = (xEnemy - xPlayer) + blockedX;
 
+            // three simple moves
             foreach (var (yDelta, xDelta) in Constants.Directions)
             {
                 var wallNearPlayerY = yPlayer + yDelta;
                 var wallNearPlayerX = xPlayer + xDelta;
+                
+                var nextPlayerY = yPlayer + yDelta * 2;
+                var nextPlayerX = xPlayer + xDelta * 2;
 
-                UpdateFieldMask(yPlayer, xPlayer, wallNearPlayerY, wallNearPlayerX, yDelta, xDelta, false);
+                if (wallNearPlayerY != blockedY || wallNearPlayerX != blockedX)
+                {
+                    var wallMask = new FieldMask();
+                    var playerMask = new FieldMask();
+                    if (FieldMask.IsInRange(wallNearPlayerY, wallNearPlayerX))
+                    {
+                        wallMask.SetBit(wallNearPlayerY, wallNearPlayerX, true);
+                        playerMask.SetBit(nextPlayerY, nextPlayerX, true);
+                        result[playerMask] = wallMask.Or(playerMask);
+                    }
+                }
             }
 
-            UpdateFieldMask(yEnemy, xEnemy, importantY, importantX, (yEnemy - yPlayer) / 2,
-                (xEnemy - xPlayer) / 2, false);
+            // one long jump
+            {
+                var nextPlayerX = xEnemy + (xEnemy - xPlayer);
+                var nextPlayerY = yEnemy + (yEnemy - yPlayer);
+                
+                var wallMask = new FieldMask();
+                var playerMask = new FieldMask();
+                
+                if (FieldMask.IsInRange(nextPlayerY, nextPlayerX))
+                {
+                    wallMask.SetBit(blockedY, blockedX, true);
+                    wallMask.SetBit(importantY, importantX, true);
+                    playerMask.SetBit(nextPlayerY, nextPlayerX, true);
+                    result[playerMask] = wallMask.Or(playerMask);
+                }
+            }
 
-
+            // two diagonal jumps
             foreach (var (yDelta, xDelta) in Constants.Directions)
             {
                 var wallNearEnemyY = yEnemy + yDelta;
                 var wallNearEnemyX = xEnemy + xDelta;
-                if (importantX != wallNearEnemyX && importantY != wallNearEnemyY)
+                
+                var nextPlayerY = yEnemy + yDelta * 2;
+                var nextPlayerX = xEnemy + xDelta * 2;
+                
+                if ((importantX != wallNearEnemyX || importantY != wallNearEnemyY) &&
+                    (wallNearEnemyY != blockedY || wallNearEnemyX != blockedX))
                 {
-                    UpdateFieldMask(yEnemy, xEnemy, wallNearEnemyY, wallNearEnemyX, yDelta, xDelta, true);
-                }
-            }
-
-            void UpdateFieldMask(int playerY, int playerX, int wallY, int wallX, int yDelta, int xDelta,
-                bool isBigJump)
-            {
-                if (wallY == blockedY && wallX == blockedX)
-                {
-                    return;
-                }
-
-                var isTrue = (1 << uniquePosition) != 0;
-
-                uniquePosition++;
-
-                if (FieldMask.IsInRange(wallY, wallX))
-                {
-                    wallMask.SetBit(wallY, wallX, isTrue);
-
-                    if (!isTrue)
+                    if (FieldMask.IsInRange(nextPlayerY, nextPlayerX))
                     {
-                        if (isBigJump)
-                        {
-                            if (wallMask.GetBit(importantY, importantX))
-                            {
-                                SimpleUpdate();
-                            }
-                        }
-                        else
-                        {
-                            SimpleUpdate();
-                        }
-                    }
-                }
-
-                void SimpleUpdate()
-                {
-                    var newPlayerX = playerX + xDelta * 2;
-                    var newPlayerY = playerY + yDelta * 2;
-
-                    if (FieldMask.IsInRange(newPlayerY, newPlayerX))
-                    {
+                        var wallMask = new FieldMask();
                         var playerMask = new FieldMask();
-                        playerMask.SetBit(newPlayerY, newPlayerX, true);
-                        playerMoveMasks.Add(playerMask);
+
+                        wallMask.SetBit(wallNearEnemyY, wallNearEnemyX, true);
+                        wallMask.SetBit(blockedY, blockedX, true);
+                        playerMask.SetBit(nextPlayerY, nextPlayerX, true);
+                        result[playerMask] = wallMask.Or(playerMask);
                     }
                 }
             }
