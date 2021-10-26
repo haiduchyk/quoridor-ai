@@ -18,12 +18,11 @@ namespace Quoridor.Model
         {
             var path = new FieldMask();
             path = path.Or(playerPosition);
+            var prevNode = prevNodes[playerPosition];
+            var nextPosition = prevNode.mask;
             
-            while (!playerPosition.Equals(Constants.EmptyField))
+            while (!nextPosition.Equals(Constants.EmptyField))
             {
-                var prevNode = prevNodes[playerPosition];
-                var nextPosition = prevNode.mask;
-
                 if (prevNode.isSimple)
                 {
                     path = simpleMoveMasks[playerPosition][nextPosition].Or(path);
@@ -34,6 +33,8 @@ namespace Quoridor.Model
                 }
 
                 playerPosition = nextPosition;
+                prevNode = prevNodes[playerPosition];
+                nextPosition = prevNode.mask;
             }
 
             return path;
@@ -123,7 +124,7 @@ namespace Quoridor.Model
                 if (FieldMask.IsInRange(curY, curX))
                 {
                     enemyMask.SetBit(curY, curX, true);
-                    var wallMasks = CalculateUniqueVariantFor(y, x, curY, curX);
+                    var wallMasks = CalculateVariantFor(y, x, curY, curX);
                     result[enemyMask] = wallMasks;
                 }
             }
@@ -132,7 +133,7 @@ namespace Quoridor.Model
         }
 
 
-        private Dictionary<FieldMask, FieldMask> CalculateUniqueVariantFor(int yPlayer, int xPlayer, int yEnemy,
+        private Dictionary<FieldMask, FieldMask> CalculateVariantFor(int yPlayer, int xPlayer, int yEnemy,
             int xEnemy)
         {
             var result = new Dictionary<FieldMask, FieldMask>();
@@ -166,6 +167,8 @@ namespace Quoridor.Model
             }
 
             // one long jump
+            CheckLongJump();
+            void CheckLongJump()
             {
                 var nextPlayerX = xEnemy + (xEnemy - xPlayer);
                 var nextPlayerY = yEnemy + (yEnemy - yPlayer);
