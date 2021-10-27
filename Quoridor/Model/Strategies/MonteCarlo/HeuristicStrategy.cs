@@ -37,7 +37,7 @@ namespace Quoridor.Model.Strategies
         {
             var playerPosition = player.Position;
             var enemyPosition = enemy.Position;
-            var availableMoves = moveProvider.GetAvailableMoves(field, in playerPosition, in enemyPosition);
+            var availableMoves = moveProvider.GetAvailableMoves(field, playerPosition, enemyPosition);
             var move = availableMoves.First(m => m.And(in path).IsNotZero());
             return new PlayerMove(player, move);
         }
