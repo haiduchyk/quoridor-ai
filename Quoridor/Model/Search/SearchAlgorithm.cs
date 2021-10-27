@@ -8,20 +8,21 @@ namespace Quoridor.Model
         protected readonly Dictionary<FieldMask, int> distances = new(81);
 
         private readonly FieldMask[] possiblePositions = new FieldMask[81];
-        private readonly Dictionary<FieldMask, FieldMask> prevNodes = new(81);
+        private readonly Dictionary<FieldMask, (FieldMask mask, bool isSimple)> prevNodes = new(81);
         private readonly PriorityQueue<FieldMask> queue;
-        private readonly FieldMask nullPosition = new();
 
         private readonly IMoveProvider moveProvider;
+        private readonly PathWithWallsRetriever pathRetriever;
 
         protected FieldMask endMask;
         private Game game;
         private Field field;
         private Player enemy;
 
-        public SearchAlgorithm(IMoveProvider moveProvider)
+        public SearchAlgorithm(IMoveProvider moveProvider, PathWithWallsRetriever pathRetriever)
         {
             this.moveProvider = moveProvider;
+            this.pathRetriever = pathRetriever;
             var comparer = GetComparer();
             queue = new PriorityQueue<FieldMask>(comparer);
             FindPossiblePositions();
@@ -77,8 +78,9 @@ namespace Quoridor.Model
             {
                 var pos = possiblePositions[i];
                 distances[pos] = int.MaxValue;
-                prevNodes[pos] = nullPosition;
+                prevNodes[pos] = (Constants.EmptyField, false);
             }
+
             distances[position] = 0;
             queue.Clear();
             queue.Enqueue(position);
@@ -92,24 +94,27 @@ namespace Quoridor.Model
 
                 if (IsDestinationReached(position))
                 {
-                    path = RetrievePath(position);
+                    path = pathRetriever.RetrievePath(position, prevNodes, enemy.Position);
                     return true;
                 }
 
                 var traversedDistance = distances[position];
-                foreach (var pos in GetPossibleMoves(position))
+
+                var moves = GetPossibleMoves(position);
+                
+                foreach (var pos in moves.masks)
                 {
                     var distance = traversedDistance + 1;
                     if (distance < distances[pos])
                     {
                         distances[pos] = distance;
-                        prevNodes[pos] = position;
+                        prevNodes[pos] = (position, moves.isSimple);
                         queue.Enqueue(pos);
                     }
                 }
             }
 
-            path = default;
+            path = Constants.EmptyField;
             return false;
         }
 
@@ -118,20 +123,9 @@ namespace Quoridor.Model
             return endMask.And(position).IsNotZero();
         }
 
-        private FieldMask RetrievePath(FieldMask position)
+        private (FieldMask[] masks, bool isSimple) GetPossibleMoves(FieldMask position)
         {
-            var path = new FieldMask();
-            while (!position.Equals(nullPosition))
-            {
-                path = path.Or(position);
-                position = prevNodes[position];
-            }
-            return path;
-        }
-
-        private FieldMask[] GetPossibleMoves(FieldMask position)
-        {
-            return moveProvider.GetAvailableMoves(field, in position, enemy.Position);
+            return moveProvider.GetAvailableMovesWithType(field, position, enemy.Position);
         }
     }
 }
