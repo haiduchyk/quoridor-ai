@@ -1,7 +1,6 @@
 namespace Quoridor.Model.Strategies
 {
     using System;
-    using System.Linq;
     using Moves;
     using Players;
 
@@ -22,36 +21,29 @@ namespace Quoridor.Model.Strategies
             this.search = search;
         }
 
-        public IMove FindMove(Field field, Player player, Player enemy, FieldMask path)
+        public IMove FindMove(Field field, Player player)
         {
             if (!player.HasWalls())
             {
-                return GetMoveOnPath(field, player, enemy, path);
+                return GetMoveOnPath(field, player);
             }
             return random.NextDouble() < 0.7
-                ? GetMoveOnPath(field, player, enemy, path)
-                : GetRandomWallMove(field, player, enemy);
+                ? GetMoveOnPath(field, player)
+                : GetRandomWallMove(field, player);
         }
 
-        private IMove GetMoveOnPath(Field field, Player player, Player enemy, FieldMask path)
+        private IMove GetMoveOnPath(Field field, Player player)
         {
-            var playerPosition = player.Position;
-            var enemyPosition = enemy.Position;
-            var availableMoves = moveProvider.GetAvailableMoves(field, playerPosition, enemyPosition);
-            var move = availableMoves.First(m => m.And(in path).IsNotZero());
+            var availableMoves = moveProvider.GetAvailableMoves(field, in player.Position, in player.Enemy.Position);
+            var move = availableMoves[random.Next(0, availableMoves.Length)];
             return new PlayerMove(player, move);
         }
 
-        public IMove FindMove(Field field, Player player, Player enemy)
+        private IMove GetRandomWallMove(Field field, Player player)
         {
-            return new DefaultMove();
-        }
-
-        private IMove GetRandomWallMove(Field field, Player player, Player enemy)
-        {
-            var walls = wallProvider.GenerateWallMoves(field, player, enemy);
+            var walls = wallProvider.GenerateWallMoves(field, player);
             var wall = walls[random.Next(0, walls.Count)];
-            return new WallMove(field, player, enemy, search, wall);
+            return new WallMove(field, player, search, wall);
         }
     }
 }

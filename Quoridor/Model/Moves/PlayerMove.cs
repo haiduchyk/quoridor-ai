@@ -31,7 +31,7 @@ namespace Quoridor.Model.Moves
             player.ChangePosition(previousPosition);
         }
 
-        public void Apply(Field field, Player player, Player enemy)
+        public void Apply(Field field, Player player)
         {
             this.player = player;
         }

@@ -9,13 +9,11 @@ namespace Quoridor.Model.Moves
         private readonly FieldMask wall;
         private Field field;
         private Player player;
-        private Player enemy;
 
-        public WallMove(Field field, Player player, Player enemy, ISearch search, FieldMask wall)
+        public WallMove(Field field, Player player, ISearch search, FieldMask wall)
         {
             this.field = field;
             this.player = player;
-            this.enemy = enemy;
             this.search = search;
             this.wall = wall;
         }
@@ -29,8 +27,8 @@ namespace Quoridor.Model.Moves
         {
             field.PlaceWall(in wall);
             Execute();
-            var hasPathForEnemy = search.HasPath(field, enemy, enemy.Position, out _);
-            var hasPathForPlayer = search.HasPath(field, player, player.Position, out _);
+            var hasPathForEnemy = search.HasPath(field, player.Enemy, in player.Enemy.Position, out _);
+            var hasPathForPlayer = search.HasPath(field, player, in player.Position, out _);
             field.RemoveWall(in wall);
             return hasPathForPlayer && hasPathForEnemy;
         }
@@ -47,11 +45,10 @@ namespace Quoridor.Model.Moves
             field.RemoveWall(in wall);
         }
 
-        public void Apply(Field field, Player player, Player enemy)
+        public void Apply(Field field, Player player)
         {
             this.field = field;
             this.player = player;
-            this.enemy = enemy;
         }
     }
 }

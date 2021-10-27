@@ -7,7 +7,7 @@ namespace Quoridor.Controller
 
     public interface IMoveParser
     {
-        IMove Parse(Field field, Player player, Player enemy, string input);
+        IMove Parse(Field field, Player player, string input);
     }
 
     public class MoveParser : IMoveParser
@@ -30,20 +30,20 @@ namespace Quoridor.Controller
             this.search = search;
         }
 
-        public IMove Parse(Field field, Player player, Player enemy, string input)
+        public IMove Parse(Field field, Player player, string input)
         {
-            if (TryParseAsPlayerMove(field, player, enemy, input, out var move) ||
-                TryParseAsWallMove(field, player, enemy, input, out move))
+            if (TryParseAsPlayerMove(field, player, input, out var move) ||
+                TryParseAsWallMove(field, player, input, out move))
             {
                 return move;
             }
             return new DefaultMove();
         }
 
-        private bool TryParseAsPlayerMove(Field field, Player player, Player enemy, string input, out IMove move)
+        private bool TryParseAsPlayerMove(Field field, Player player, string input, out IMove move)
         {
             var (from, to, isValid) = ParsePlayerMove(input);
-            if (isValid && !player.Position.And(in from).IsZero() && CanMoveTo(field, player, enemy, to))
+            if (isValid && !player.Position.And(in from).IsZero() && CanMoveTo(field, player, to))
             {
                 move = new PlayerMove(player, to);
                 return true;
@@ -79,21 +79,19 @@ namespace Quoridor.Controller
             };
         }
 
-        private bool CanMoveTo(Field field, Player player, Player enemy, FieldMask to)
+        private bool CanMoveTo(Field field, Player player, FieldMask to)
         {
-            var playerPosition = player.Position;
-            var enemyPosition = enemy.Position;
-            var moves = moveProvider.GetAvailableMoves(field, playerPosition, enemyPosition);
+            var moves = moveProvider.GetAvailableMoves(field, in player.Position, in player.Enemy.Position);
             return moves.Any(m => !m.And(in to).IsZero());
         }
 
-        private bool TryParseAsWallMove(Field field, Player player, Player enemy, string input, out IMove move)
+        private bool TryParseAsWallMove(Field field, Player player, string input, out IMove move)
         {
             var (y, x, orientation, isValid) = ParseWallMove(input);
             if (isValid && CanPlace(field, y, x, orientation))
             {
                 var wall = wallProvider.GenerateWall(y, x, orientation);
-                move = new WallMove(field, player, enemy, search, wall);
+                move = new WallMove(field, player, search, wall);
                 return true;
             }
 

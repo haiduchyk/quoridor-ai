@@ -1,6 +1,7 @@
 namespace Quoridor.Model
 {
     using System.Collections.Generic;
+    using Players;
 
     public class AStarSearchAlgorithm : SearchAlgorithm
     {
@@ -16,10 +17,10 @@ namespace Quoridor.Model
             return heuristic = new Heuristic(distances);
         }
 
-        protected override void Prepare(FieldMask position)
+        protected override void Prepare(Player player, in FieldMask position)
         {
-            base.Prepare(position);
-            heuristic.SetEndPosition(endMask);
+            base.Prepare(player, position);
+            heuristic.SetEndPosition(player.EndPosition);
         }
     }
 }

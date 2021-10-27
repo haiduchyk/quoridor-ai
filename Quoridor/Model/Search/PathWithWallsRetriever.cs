@@ -29,7 +29,7 @@ namespace Quoridor.Model
                 }
                 else
                 {
-                    path = withEnemyMoveMasks[playerPosition][enemyPosition][nextPosition].Or(path);
+                    // path = withEnemyMoveMasks[playerPosition][enemyPosition][nextPosition].Or(path);
                 }
 
                 playerPosition = nextPosition;

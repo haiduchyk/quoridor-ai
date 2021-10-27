@@ -17,6 +17,8 @@ namespace Quoridor.Model
             Field.PossibleWalls.AddRange(wallProvider.GetAllMoves());
             BluePlayer = CreateFirstPlayer();
             RedPlayer = CreateSecondPlayer(gameOptions, botCreator);
+            BluePlayer.SetEnemy(RedPlayer);
+            RedPlayer.SetEnemy(BluePlayer);
         }
 
         private Player CreateFirstPlayer()

@@ -21,31 +21,29 @@ namespace Quoridor.Model.Strategies
             this.search = search;
         }
 
-        public IMove FindMove(Field field, Player player, Player enemy)
+        public IMove FindMove(Field field, Player player)
         {
             if (!player.HasWalls())
             {
-                return GetRandomPlayerMove(field, player, enemy);
+                return GetRandomPlayerMove(field, player);
             }
             return random.NextDouble() < 0.7
-                ? GetRandomPlayerMove(field, player, enemy)
-                : GetRandomWallMove(field, player, enemy);
+                ? GetRandomPlayerMove(field, player)
+                : GetRandomWallMove(field, player);
         }
 
-        private IMove GetRandomPlayerMove(Field field, Player player, Player enemy)
+        private IMove GetRandomPlayerMove(Field field, Player player)
         {
-            var playerPosition = player.Position;
-            var enemyPosition = enemy.Position;
-            var availableMoves = moveProvider.GetAvailableMoves(field, playerPosition, enemyPosition);
+            var availableMoves = moveProvider.GetAvailableMoves(field, in player.Position, in player.Enemy.Position);
             var move = availableMoves[random.Next(0, availableMoves.Length)];
             return new PlayerMove(player, move);
         }
 
-        private IMove GetRandomWallMove(Field field, Player player, Player enemy)
+        private IMove GetRandomWallMove(Field field, Player player)
         {
             var walls = wallProvider.GenerateWallMoves(field);
             var wall = walls[random.Next(0, walls.Count)];
-            return new WallMove(field, player, enemy, search, wall);
+            return new WallMove(field, player, search, wall);
         }
     }
 }

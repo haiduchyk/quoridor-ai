@@ -7,7 +7,7 @@ namespace Quoridor.Model.Strategies
     {
         public bool IsManual => true;
 
-        public IMove FindMove(Field field, Player player, Player enemy)
+        public IMove FindMove(Field field, Player player)
         {
             return new DefaultMove();
         }

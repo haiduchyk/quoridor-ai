@@ -18,12 +18,17 @@ namespace Quoridor.Model.Strategies
         private readonly HeuristicStrategy strategy;
         private readonly Random random;
 
-        private Field fieldCopy;
-        private Player playerCopy;
-        private Player enemyCopy;
+        private readonly Field fieldCopy;
+        private readonly Player playerCopy;
+        private readonly Player enemyCopy;
 
         public MonteCarloStrategy(IMoveProvider moveProvider, IWallProvider wallProvider, ISearch search)
         {
+            fieldCopy = new Field();
+            playerCopy = new Player();
+            enemyCopy = new Player();
+            playerCopy.SetEnemy(enemyCopy);
+            enemyCopy.SetEnemy(playerCopy);
             this.moveProvider = moveProvider;
             this.wallProvider = wallProvider;
             this.search = search;
@@ -31,11 +36,11 @@ namespace Quoridor.Model.Strategies
             random = new Random();
         }
 
-        public IMove FindMove(Field field, Player player, Player enemy)
+        public IMove FindMove(Field field, Player player)
         {
-            fieldCopy = field.Copy();
-            playerCopy = player.Copy();
-            enemyCopy = enemy.Copy();
+            fieldCopy.Update(field);
+            playerCopy.Update(player);
+            enemyCopy.Update(player.Enemy);
             var startTime = GetCurrentTime();
             var root = new MonteNode();
             root.SetChild(FindChildren(root));
@@ -45,14 +50,14 @@ namespace Quoridor.Model.Strategies
             {
                 fieldCopy.Update(field);
                 playerCopy.Update(player);
-                enemyCopy.Update(enemy);
+                enemyCopy.Update(player.Enemy);
                 var node = Select(root);
                 var result = Simulate(node);
                 Backpropagate(node, result);
                 count++;
             }
             var move = FindBest(root);
-            move.Apply(field, player, enemy);
+            move.Apply(field, player);
             Console.WriteLine($"Count => {count}");
             return move;
         }
@@ -66,11 +71,11 @@ namespace Quoridor.Model.Strategies
         {
             var turnPlayer = node.IsPlayerMove ? playerCopy : enemyCopy;
             var turnEnemy = node.IsPlayerMove ? enemyCopy : playerCopy;
-            var moves = moveProvider.GetAvailableMoves(fieldCopy, turnPlayer.Position, turnEnemy.Position);
+            var moves = moveProvider.GetAvailableMoves(fieldCopy, in turnPlayer.Position, in turnEnemy.Position);
             var playerMoves = moves.Select<FieldMask, IMove>(m => new PlayerMove(turnPlayer, m));
-            var walls = wallProvider.GenerateWallMoves(fieldCopy, playerCopy, enemyCopy);
+            var walls = wallProvider.GenerateWallMoves(fieldCopy, playerCopy);
             var wallMoves =
-                walls.Select<FieldMask, IMove>(w => new WallMove(fieldCopy, turnPlayer, turnEnemy, search, w));
+                walls.Select<FieldMask, IMove>(w => new WallMove(fieldCopy, turnPlayer, search, w));
             var possibleMoves = playerMoves.Concat(wallMoves);
             return possibleMoves.Select(m => new MonteNode(node, m, node.level + 1)).ToArray();
         }
@@ -115,9 +120,7 @@ namespace Quoridor.Model.Strategies
             while (!firstPlayer.HasReachedFinish() && !secondPlayer.HasReachedFinish() && moveCount < 100)
             {
                 var player = moveCount % 2 == 0 ? firstPlayer : secondPlayer;
-                var enemy = moveCount % 2 == 0 ? secondPlayer : firstPlayer;
-                search.HasPath(fieldCopy, player, player.Position, out var path);
-                var move = strategy.FindMove(fieldCopy, player, enemy, path);
+                var move = strategy.FindMove(fieldCopy, player);
                 if (move.IsValid())
                 {
                     move.Execute();

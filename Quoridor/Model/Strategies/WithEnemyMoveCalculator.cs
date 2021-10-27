@@ -12,7 +12,7 @@ namespace Quoridor.Model.Strategies
         //  <playerPosition 81, <enemyPosition 4, wallMaskForThisPlayerAndEnemyPosition>83 8
         private Dictionary<FieldMask, Dictionary<FieldMask, FieldMask>> withEnemyPlayersMovesMasks = new();
 
-        public FieldMask[] GetAvailableMoves(Field field, FieldMask playerMask, FieldMask enemyMask)
+        public FieldMask[] GetAvailableMoves(Field field, in FieldMask playerMask, in FieldMask enemyMask)
         {
             // Actual code but we optimize these shit
             // var moves = withEnemyPlayersMoves[playerMask][enemyMask];

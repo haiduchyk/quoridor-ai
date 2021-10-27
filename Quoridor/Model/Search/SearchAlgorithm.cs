@@ -14,10 +14,7 @@ namespace Quoridor.Model
         private readonly IMoveProvider moveProvider;
         private readonly PathWithWallsRetriever pathRetriever;
 
-        protected FieldMask endMask;
-        private Game game;
         private Field field;
-        private Player enemy;
 
         public SearchAlgorithm(IMoveProvider moveProvider, PathWithWallsRetriever pathRetriever)
         {
@@ -48,31 +45,14 @@ namespace Quoridor.Model
             }
         }
 
-        public void Initialize(Game game)
-        {
-            this.game = game;
-        }
-
-        public bool HasPath(Field field, Player player, FieldMask position, out FieldMask path)
+        public bool HasPath(Field field, Player player, in FieldMask position, out FieldMask path)
         {
             this.field = field;
-            endMask = GetEndMask(player);
-            enemy = GetEnemy(player);
-            Prepare(position);
-            return Search(out path);
+            Prepare(player, in position);
+            return Search(player, out path);
         }
 
-        private FieldMask GetEndMask(Player player)
-        {
-            return player == game.BluePlayer ? Constants.BlueEndPositions : Constants.RedEndPositions;
-        }
-
-        private Player GetEnemy(Player player)
-        {
-            return player == game.BluePlayer ? game.RedPlayer : game.BluePlayer;
-        }
-
-        protected virtual void Prepare(FieldMask position)
+        protected virtual void Prepare(Player player, in FieldMask position)
         {
             for (var i = 0; i < 81; i++)
             {
@@ -86,29 +66,29 @@ namespace Quoridor.Model
             queue.Enqueue(position);
         }
 
-        private bool Search(out FieldMask path)
+        private bool Search(Player player, out FieldMask path)
         {
             while (queue.Count > 0)
             {
                 var position = queue.Dequeue();
 
-                if (IsDestinationReached(position))
+                if (IsDestinationReached(player, position))
                 {
-                    path = pathRetriever.RetrievePath(position, prevNodes, enemy.Position);
+                    path = pathRetriever.RetrievePath(position, prevNodes, player.Enemy.Position);
                     return true;
                 }
 
                 var traversedDistance = distances[position];
 
-                var moves = GetPossibleMoves(position);
-                
-                foreach (var pos in moves.masks)
+                var (masks, isSimple) = GetPossibleMoves(player, in position);
+
+                foreach (var pos in masks)
                 {
                     var distance = traversedDistance + 1;
                     if (distance < distances[pos])
                     {
                         distances[pos] = distance;
-                        prevNodes[pos] = (position, moves.isSimple);
+                        prevNodes[pos] = (position, isSimple: isSimple);
                         queue.Enqueue(pos);
                     }
                 }
@@ -118,14 +98,14 @@ namespace Quoridor.Model
             return false;
         }
 
-        private bool IsDestinationReached(FieldMask position)
+        private bool IsDestinationReached(Player player, FieldMask position)
         {
-            return endMask.And(position).IsNotZero();
+            return player.IsEndPosition(position);
         }
 
-        private (FieldMask[] masks, bool isSimple) GetPossibleMoves(FieldMask position)
+        private (FieldMask[] masks, bool isSimple) GetPossibleMoves(Player player, in FieldMask position)
         {
-            return moveProvider.GetAvailableMovesWithType(field, position, enemy.Position);
+            return moveProvider.GetAvailableMovesWithType(field, in position, in player.Enemy.Position);
         }
     }
 }

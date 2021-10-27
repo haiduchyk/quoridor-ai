@@ -5,7 +5,11 @@ namespace Quoridor.Model.Players
 
     public class Player
     {
-        public FieldMask Position { get; private set; }
+        public Player Enemy { get; private set; }
+
+        public ref readonly FieldMask Position => ref position;
+
+        public ref readonly FieldMask EndPosition => ref endPosition;
 
         public FieldMask Walls { get; private set; }
 
@@ -14,26 +18,41 @@ namespace Quoridor.Model.Players
         public string Name { get; }
 
         private readonly IMoveStrategy moveStrategy;
-        private readonly FieldMask endPosition;
+        private FieldMask endPosition;
+        private FieldMask position;
+
+        public Player()
+        {
+        }
 
         public Player(FieldMask position, int amountOfWalls, string name, IMoveStrategy moveStrategy,
             FieldMask endPosition)
         {
-            Position = position;
+            this.position = position;
             AmountOfWalls = amountOfWalls;
             Name = name;
             this.moveStrategy = moveStrategy;
             this.endPosition = endPosition;
         }
 
-        public bool HasReachedFinish()
+        public void SetEnemy(Player enemy)
         {
-            return Position.And(in endPosition).IsNotZero();
+            Enemy = enemy;
         }
 
-        public void ChangePosition(FieldMask position)
+        public bool HasReachedFinish()
         {
-            Position = position;
+            return position.And(in endPosition).IsNotZero();
+        }
+
+        public bool IsEndPosition(in FieldMask checkPosition)
+        {
+            return checkPosition.And(in endPosition).IsNotZero();
+        }
+
+        public void ChangePosition(in FieldMask position)
+        {
+            this.position = position;
         }
 
         public bool ShouldWaitForMove()
@@ -41,9 +60,9 @@ namespace Quoridor.Model.Players
             return moveStrategy.IsManual;
         }
 
-        public IMove FindMove(Field field, Player enemy)
+        public IMove FindMove(Field field)
         {
-            return moveStrategy.FindMove(field, this, enemy);
+            return moveStrategy.FindMove(field, this);
         }
 
         public bool HasWalls()
@@ -51,26 +70,22 @@ namespace Quoridor.Model.Players
             return AmountOfWalls > 0;
         }
 
-        public void UseWall(FieldMask wall)
+        public void UseWall(in FieldMask wall)
         {
             Walls = Walls.Or(in wall);
             AmountOfWalls--;
         }
 
-        public void RestoreWall(FieldMask wall)
+        public void RestoreWall(in FieldMask wall)
         {
             Walls = Walls.And(wall.Not());
             AmountOfWalls++;
         }
 
-        public Player Copy()
-        {
-            return new Player(Position, AmountOfWalls, Name, moveStrategy, endPosition);
-        }
-
         public void Update(Player player)
         {
-            Position = player.Position;
+            endPosition = player.EndPosition;
+            position = player.Position;
             AmountOfWalls = player.AmountOfWalls;
         }
     }

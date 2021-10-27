@@ -4,8 +4,6 @@ namespace Quoridor.Model
 
     public interface ISearch
     {
-        bool HasPath(Field field, Player player, FieldMask position, out FieldMask path);
-
-        void Initialize(Game game);
+        bool HasPath(Field field, Player player, in FieldMask position, out FieldMask path);
     }
 }

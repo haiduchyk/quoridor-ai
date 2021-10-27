@@ -10,9 +10,9 @@ namespace Quoridor.Model
 
         List<FieldMask> GenerateWallMoves(Field field);
 
-        List<FieldMask> GenerateWallMoves(Field field, Player player, Player enemy);
+        List<FieldMask> GenerateWallMoves(Field field, Player player);
 
-        bool CanPlaceWall(Field field, FieldMask wall);
+        bool CanPlaceWall(Field field, in FieldMask wall);
 
         FieldMask GenerateWall(int y, int x, WallOrientation wallOrientation);
     }
@@ -141,12 +141,12 @@ namespace Quoridor.Model
             return field.PossibleWalls;
         }
 
-        public List<FieldMask> GenerateWallMoves(Field field, Player player, Player enemy)
+        public List<FieldMask> GenerateWallMoves(Field field, Player player)
         {
             var moves = field.PossibleWalls;
             var nearWallMask = GetNearWallMask(field);
             var nearPlayer = nearPlayerWalls[player.Position];
-            var nearEnemy = nearPlayerWalls[enemy.Position];
+            var nearEnemy = nearPlayerWalls[player.Enemy.Position];
             return moves
                 .Where(w =>
                     w.And(in nearEdgeWallMask).IsNotZero() ||
@@ -158,16 +158,13 @@ namespace Quoridor.Model
 
         private FieldMask GetNearWallMask(Field field)
         {
-            var walls = field.GetWallsMask();
-            return allWalls.Where(w => Equals(walls.And(in w), w))
-                .Select(w => nearWalls[w])
-                .Aggregate(new FieldMask(), (agg, cur) => agg.Or(cur));
+            return allWalls.Where(w => w == field.Walls)
+                .Aggregate(new FieldMask(), (agg, w) => nearWalls[w].Or(in agg));
         }
 
-        public bool CanPlaceWall(Field field, FieldMask wall)
+        public bool CanPlaceWall(Field field, in FieldMask wall)
         {
-            var walls = field.GetWallsMask();
-            return walls.And(in wall).IsZero();
+            return field.Walls.And(in wall).IsZero();
         }
     }
 }

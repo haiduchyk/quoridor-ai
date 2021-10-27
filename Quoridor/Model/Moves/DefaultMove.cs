@@ -17,7 +17,7 @@ namespace Quoridor.Model.Moves
         {
         }
 
-        public void Apply(Field field, Player player, Player enemy)
+        public void Apply(Field field, Player player)
         {
         }
     }

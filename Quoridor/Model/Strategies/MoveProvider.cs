@@ -6,8 +6,8 @@ namespace Quoridor.Model
 
     public interface IMoveProvider
     {
-        FieldMask[] GetAvailableMoves(Field field, FieldMask playerMask, FieldMask enemyMask);
-        (FieldMask[] mask, bool isSimple) GetAvailableMovesWithType(Field field, FieldMask playerMask, FieldMask enemyMask);
+        FieldMask[] GetAvailableMoves(Field field, in FieldMask playerMask, in FieldMask enemyMask);
+        (FieldMask[] mask, bool isSimple) GetAvailableMovesWithType(Field field, in FieldMask playerMask, in FieldMask enemyMask);
     }
 
     public class MoveProvider : IMoveProvider
@@ -25,23 +25,23 @@ namespace Quoridor.Model
             withEnemyMoveCalculator = new WithEnemyMoveCalculator();
         }
 
-        public FieldMask[] GetAvailableMoves(Field field, FieldMask playerMask, FieldMask enemyMask)
+        public FieldMask[] GetAvailableMoves(Field field, in FieldMask playerMask, in FieldMask enemyMask)
         {
             if (withEnemyMoveMasks[playerMask].TryGetValue(enemyMask, out var wallMask))
             {
-                var isBetweenWalls = field.GetWallsForMask(wallMask).IsNotZero();
+                var isBetweenWalls = field.GetWallsForMask(in wallMask).IsNotZero();
                 if (isBetweenWalls)
                 {
-                    return simpleMoveCalculator.GetAvailableMoves(field, playerMask);
+                    return simpleMoveCalculator.GetAvailableMoves(field, in playerMask);
                 }
 
-                return withEnemyMoveCalculator.GetAvailableMoves(field, playerMask, enemyMask);
+                return withEnemyMoveCalculator.GetAvailableMoves(field, in playerMask, in enemyMask);
             }
 
-            return simpleMoveCalculator.GetAvailableMoves(field, playerMask); 
+            return simpleMoveCalculator.GetAvailableMoves(field, in playerMask); 
         }
         
-        public (FieldMask[] mask, bool isSimple) GetAvailableMovesWithType(Field field, FieldMask playerMask, FieldMask enemyMask)
+        public (FieldMask[] mask, bool isSimple) GetAvailableMovesWithType(Field field, in FieldMask playerMask, in FieldMask enemyMask)
         {
             if (withEnemyMoveMasks[playerMask].TryGetValue(enemyMask, out var wallMask))
             {

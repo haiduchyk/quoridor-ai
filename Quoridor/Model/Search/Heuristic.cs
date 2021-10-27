@@ -35,7 +35,7 @@ namespace Quoridor.Model
             }
         }
 
-        public void SetEndPosition(FieldMask endPosition)
+        public void SetEndPosition(in FieldMask endPosition)
         {
             this.endPosition = endPosition;
         }

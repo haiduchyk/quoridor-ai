@@ -10,6 +10,6 @@ namespace Quoridor.Model.Moves
 
         void Undo();
 
-        void Apply(Field field, Player player, Player enemy);
+        void Apply(Field field, Player player);
     }
 }

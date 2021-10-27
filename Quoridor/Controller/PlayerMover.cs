@@ -8,7 +8,6 @@ namespace Quoridor.Controller
     {
         private readonly Game game;
         private readonly Player player;
-        private readonly Player enemy;
         private readonly IMoveParser moveParser;
         private readonly IInputReader inputReader;
 
@@ -16,25 +15,19 @@ namespace Quoridor.Controller
         {
             this.game = game;
             this.player = player;
-            enemy = GetEnemy();
             this.moveParser = moveParser;
             this.inputReader = inputReader;
         }
 
-        private Player GetEnemy()
-        {
-            return player == game.BluePlayer ? game.RedPlayer : game.BluePlayer;
-        }
-
         public IMove WaitForMove()
         {
-            return player.ShouldWaitForMove() ? ReadMoveFromConsole() : player.FindMove(game.Field, enemy);
+            return player.ShouldWaitForMove() ? ReadMoveFromConsole() : player.FindMove(game.Field);
         }
 
         private IMove ReadMoveFromConsole()
         {
             var input = inputReader.ReadInput();
-            var move = moveParser.Parse(game.Field, player, enemy, input);
+            var move = moveParser.Parse(game.Field, player, input);
             return move;
         }
     }
