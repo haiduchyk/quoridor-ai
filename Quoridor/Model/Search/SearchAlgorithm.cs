@@ -58,7 +58,7 @@ namespace Quoridor.Model
             {
                 var pos = possiblePositions[i];
                 distances[pos] = int.MaxValue;
-                prevNodes[pos] = (Constants.EmptyField, false);
+                prevNodes[pos] = (Constants.EmptyField, default);
             }
 
             distances[position] = 0;
@@ -88,12 +88,11 @@ namespace Quoridor.Model
                     if (distance < distances[pos])
                     {
                         distances[pos] = distance;
-                        prevNodes[pos] = (position, isSimple: isSimple);
+                        prevNodes[pos] = (position, isSimple);
                         queue.Enqueue(pos);
                     }
                 }
             }
-
             path = Constants.EmptyField;
             return false;
         }
