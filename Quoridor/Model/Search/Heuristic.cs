@@ -45,7 +45,7 @@ namespace Quoridor.Model
             // Actual shit
             // var firstHeuristic = distances[first] + heuristic[endPosition][rows[first]];
             // var secondHeuristic = distances[second] + heuristic[endPosition][rows[second]];
-            return distances[first] + heuristic[endPosition][rows[first]] - distances[second] + heuristic[endPosition][rows[second]];
+            return distances[first] + heuristic[endPosition][rows[first]] - (distances[second] + heuristic[endPosition][rows[second]]);
         }
     }
 }
