@@ -71,6 +71,11 @@ namespace Quoridor
             return res.ToString();
         }
 
+        public static void Log(this FieldMask bitboard)
+        {
+            bitboard.ToStr().Log();
+        }
+
         public static string ToStr(this FieldMask bitboard, FieldMask blueBitboard, FieldMask redBitboard)
         {
             var res = new StringBuilder();
