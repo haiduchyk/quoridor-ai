@@ -1,13 +1,12 @@
 namespace Quoridor.Model.Strategies
 {
-    using System.Linq;
     using Moves;
 
     public class MonteNode
     {
         public bool IsPlayerMove => level % 2 == 0;
 
-        public bool IsFullyExpanded => children.All(n => n.IsVisited);
+        public bool IsFullyExpanded => games >= children.Length + (parent == null ? 0 : 1);
 
         public bool IsVisited => games > 0;
 

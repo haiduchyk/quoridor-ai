@@ -13,10 +13,6 @@ namespace Quoridor.Model.Moves
         {
         }
 
-        public void Undo()
-        {
-        }
-
         public void Apply(Field field, Player player)
         {
         }

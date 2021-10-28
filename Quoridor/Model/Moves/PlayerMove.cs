@@ -26,11 +26,6 @@ namespace Quoridor.Model.Moves
             player.ChangePosition(position);
         }
 
-        public void Undo()
-        {
-            player.ChangePosition(previousPosition);
-        }
-
         public void Apply(Field field, Player player)
         {
             this.player = player;

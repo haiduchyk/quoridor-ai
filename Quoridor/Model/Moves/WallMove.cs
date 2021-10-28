@@ -26,7 +26,6 @@ namespace Quoridor.Model.Moves
         private bool CheckPath()
         {
             field.PlaceWall(in wall);
-            Execute();
             var hasPathForEnemy = search.HasPath(field, player.Enemy, in player.Enemy.Position, out _);
             var hasPathForPlayer = search.HasPath(field, player, in player.Position, out _);
             field.RemoveWall(in wall);
@@ -37,12 +36,6 @@ namespace Quoridor.Model.Moves
         {
             player.UseWall(wall);
             field.PlaceWallAndUpdateMoves(in wall);
-        }
-
-        public void Undo()
-        {
-            player.RestoreWall(wall);
-            field.RemoveWall(in wall);
         }
 
         public void Apply(Field field, Player player)

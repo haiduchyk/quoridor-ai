@@ -1,6 +1,7 @@
 namespace Quoridor.Model.Strategies
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using Moves;
     using Players;
@@ -59,6 +60,10 @@ namespace Quoridor.Model.Strategies
             var move = FindBest(root);
             move.Apply(field, player);
             Console.WriteLine($"Count => {count}");
+            Console.WriteLine($"Time => {GetTime(startTime)}");
+            Console.WriteLine($"Depth => {GetDepth(root)}");
+            var (branching, nodes) = GetNodeStatistic(root);
+            Console.WriteLine($"Average branching => {(float)branching / nodes}");
             return move;
         }
 
@@ -71,13 +76,19 @@ namespace Quoridor.Model.Strategies
         {
             var turnPlayer = node.IsPlayerMove ? playerCopy : enemyCopy;
             var turnEnemy = node.IsPlayerMove ? enemyCopy : playerCopy;
-            var moves = moveProvider.GetAvailableMoves(fieldCopy, in turnPlayer.Position, in turnEnemy.Position);
-            var playerMoves = moves.Select<FieldMask, IMove>(m => new PlayerMove(turnPlayer, m));
-            var walls = wallProvider.GenerateWallMoves(fieldCopy, playerCopy);
-            var wallMoves =
-                walls.Select<FieldMask, IMove>(w => new WallMove(fieldCopy, turnPlayer, search, w));
-            var possibleMoves = playerMoves.Concat(wallMoves);
-            return possibleMoves.Select(m => new MonteNode(node, m, node.level + 1)).ToArray();
+            var shifts = moveProvider.GetAvailableMoves(fieldCopy, in turnPlayer.Position, in turnEnemy.Position);
+            var moves = shifts.Select<FieldMask, IMove>(m => new PlayerMove(turnPlayer, m)).ToList();
+            if (turnPlayer.AmountOfWalls > 0)
+            {
+                moves.AddRange(GetWallMoves(turnPlayer));
+            }
+            return moves.Select(m => new MonteNode(node, m, node.level + 1)).ToArray();
+        }
+
+        private IEnumerable<IMove> GetWallMoves(Player player)
+        {
+            var walls = wallProvider.GenerateWallMoves(fieldCopy, player);
+            return walls.Select<FieldMask, IMove>(w => new WallMove(fieldCopy, player, search, w));
         }
 
         private MonteNode Select(MonteNode node)
@@ -94,12 +105,32 @@ namespace Quoridor.Model.Strategies
 
         private MonteNode FindBestUct(MonteNode node)
         {
-            return node.children.OrderByDescending(CalculateUct).First();
+            var bestUtc = double.NegativeInfinity;
+            var bestNodes = new List<MonteNode>(node.children.Length);
+            foreach (var child in node.children)
+            {
+                var utc = CalculateUct(child);
+                if (utc > bestUtc)
+                {
+                    bestUtc = utc;
+                    bestNodes.Clear();
+                }
+                if (utc == bestUtc)
+                {
+                    bestNodes.Add(child);
+                }
+            }
+            return bestNodes[random.Next(0, bestNodes.Count)];
         }
 
         private double CalculateUct(MonteNode node)
         {
+            if (node.games == 0)
+            {
+                return double.PositiveInfinity;
+            }
             var expand = (double)node.wins / node.games;
+            expand = node.IsPlayerMove ? expand : 1 - expand;
             var explore = C * Math.Sqrt(Math.Log10(node.parent.games) / node.games);
             return expand + explore;
         }
@@ -137,6 +168,7 @@ namespace Quoridor.Model.Strategies
                 node.Update(result);
                 node = node.parent;
             }
+            node.Update(result);
         }
 
         private long GetCurrentTime()
@@ -147,6 +179,34 @@ namespace Quoridor.Model.Strategies
         private bool HasTime(long startTime)
         {
             return GetCurrentTime() - startTime < ComputeTime;
+        }
+
+        private float GetTime(long startTime)
+        {
+            var milliseconds = GetCurrentTime() - startTime;
+            return milliseconds / 1000f;
+        }
+
+        private int GetDepth(MonteNode node)
+        {
+            return node.children == null ? node.level : node.children.Select(GetDepth).Max();
+        }
+
+        private (int brancing, int nodes) GetNodeStatistic(MonteNode node)
+        {
+            if (node.children != null)
+            {
+                var branching = node.children.Length;
+                var nodes = 1;
+                foreach (var child in node.children)
+                {
+                    var (childBranching, childNodes) = GetNodeStatistic(child);
+                    branching += childBranching;
+                    nodes += childNodes;
+                }
+                return (branching, nodes);
+            }
+            return (0, 0);
         }
     }
 }
