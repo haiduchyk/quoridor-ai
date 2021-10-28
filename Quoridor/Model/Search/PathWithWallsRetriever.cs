@@ -25,17 +25,19 @@ namespace Quoridor.Model
             {
                 if (prevNode.isSimple)
                 {
-                    path = simpleMoveMasks[playerPosition][nextPosition].Or(path);
+                    path = simpleMoveMasks[nextPosition][playerPosition].Or(path);
                 }
                 else
                 {
-                    // path = withEnemyMoveMasks[playerPosition][enemyPosition][nextPosition].Or(path);
+                    path = withEnemyMoveMasks[nextPosition][enemyPosition][playerPosition].Or(path);
                 }
 
                 playerPosition = nextPosition;
                 prevNode = prevNodes[playerPosition];
                 nextPosition = prevNode.mask;
             }
+
+            path = path.Or(playerPosition);
 
             return path;
         }
