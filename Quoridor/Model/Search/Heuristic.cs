@@ -30,8 +30,8 @@ namespace Quoridor.Model
                     mask.SetBit(i, j, true);
                     rows[mask] = rowMask;
                 }
-                heuristic[Constants.BlueEndPositions][rowMask] = i;
-                heuristic[Constants.RedEndPositions][rowMask] = 8 - i;
+                heuristic[Constants.BlueEndPositions][rowMask] = i / 2;
+                heuristic[Constants.RedEndPositions][rowMask] = (FieldMask.BitboardSize - 1 - i) / 2;
             }
         }
 
