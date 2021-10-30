@@ -20,17 +20,7 @@ namespace Quoridor.Model.Moves
 
         public bool IsValid()
         {
-            if (!player.HasWalls())
-            {
-                return false;
-            }
-
-            if (!IsOnShortestPath())
-            {
-                return true;
-            }
-            
-            return CheckPath();
+            return player.HasWalls() && CheckPath();
         }
 
         private bool IsOnShortestPath()
