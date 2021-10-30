@@ -10,7 +10,7 @@ namespace Quoridor.Model
 
         List<FieldMask> GenerateWallMoves(Field field);
 
-        List<FieldMask> GenerateWallMoves(Field field, Player player);
+        FieldMask[] GenerateWallMoves(Field field, Player player);
 
         bool CanPlaceWall(Field field, in FieldMask wall);
 
@@ -26,6 +26,7 @@ namespace Quoridor.Model
         private FieldMask nearEdgeWallMask;
         private readonly Dictionary<FieldMask, FieldMask> nearPlayerWalls = new();
         private readonly Dictionary<FieldMask, FieldMask> nearWalls = new();
+        private readonly Dictionary<FieldMask, FieldMask[]> cached = new();
 
         public WallProvider()
         {
@@ -141,19 +142,31 @@ namespace Quoridor.Model
             return field.PossibleWalls;
         }
 
-        public List<FieldMask> GenerateWallMoves(Field field, Player player)
+        public FieldMask[] GenerateWallMoves(Field field, Player player)
+        {
+            var combined = field.Walls.Or(in player.Position).Or(in player.Enemy.Position);
+            if (cached.TryGetValue(combined, out var walls))
+            {
+                return walls;
+            }
+            walls = CreateWallMoves(field, player);
+            cached[combined] = walls;
+            return walls;
+        }
+
+        private FieldMask[] CreateWallMoves(Field field, Player player)
         {
             var moves = field.PossibleWalls;
-            var nearWallMask = GetNearWallMask(field);
             var nearPlayer = nearPlayerWalls[player.Position];
             var nearEnemy = nearPlayerWalls[player.Enemy.Position];
+            var nearWallMask = GetNearWallMask(field);
             return moves
                 .Where(w =>
                     w.And(in nearEdgeWallMask).IsNotZero() ||
                     w.And(in nearPlayer).IsNotZero() ||
                     w.And(in nearEnemy).IsNotZero() ||
                     w.And(in nearWallMask).IsNotZero())
-                .ToList();
+                .ToArray();
         }
 
         private FieldMask GetNearWallMask(Field field)

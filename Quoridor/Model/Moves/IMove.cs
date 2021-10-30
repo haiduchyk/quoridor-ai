@@ -8,8 +8,6 @@ namespace Quoridor.Model.Moves
 
         void Execute();
 
-        void Undo();
-
         void Apply(Field field, Player player);
     }
 }
