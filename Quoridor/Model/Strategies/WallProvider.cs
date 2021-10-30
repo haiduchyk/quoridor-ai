@@ -12,9 +12,11 @@ namespace Quoridor.Model
 
         FieldMask[] GenerateWallMoves(Field field, Player player);
 
-        bool CanPlaceWall(Field field, in FieldMask wall);
+        bool CanPlaceWall(Field field, FieldMask wall);
 
         FieldMask GenerateWall(int y, int x, WallOrientation wallOrientation);
+
+        bool TryGetWallBehind(Field field, Player player, out FieldMask wall);
     }
 
     public class WallProvider : IWallProvider
@@ -24,12 +26,16 @@ namespace Quoridor.Model
 
         private FieldMask[] allWalls;
         private FieldMask nearEdgeWallMask;
+        private readonly Dictionary<(FieldMask position, FieldMask endPosition), FieldMask> behindPlayerWall = new();
         private readonly Dictionary<FieldMask, FieldMask> nearPlayerWalls = new();
         private readonly Dictionary<FieldMask, FieldMask> nearWalls = new();
-        private readonly Dictionary<FieldMask, FieldMask[]> cached = new();
+        private readonly Dictionary<(FieldMask walls, FieldMask player, FieldMask enemy), FieldMask[]> cached = new();
 
-        public WallProvider()
+        private readonly IMoveProvider moveProvider;
+
+        public WallProvider(IMoveProvider moveProvider)
         {
+            this.moveProvider = moveProvider;
             GenerateAllWallMoves();
             GenerateNearEdgeWallMask();
             GenerateNearPlayerWalls();
@@ -68,6 +74,8 @@ namespace Quoridor.Model
                     var position = new FieldMask();
                     position.SetBit(i, j, true);
                     nearPlayerWalls[position] = GetWallMask(i, j);
+                    SetUpWallMask(i, j, position);
+                    SetDownWallMask(i, j, position);
                 }
             }
         }
@@ -82,6 +90,30 @@ namespace Quoridor.Model
                 wallMask.TrySetBit(y, x, true);
             }
             return wallMask;
+        }
+
+        private void SetUpWallMask(int i, int j, FieldMask position)
+        {
+            if (i == 0)
+            {
+                return;
+            }
+            j = j == 0 ? 1 : j - 1;
+            i -= 1;
+            var wallMask = GenerateWall(i, j, WallOrientation.Horizontal);
+            behindPlayerWall[(position, Constants.RedEndPositions)] = wallMask;
+        }
+
+        private void SetDownWallMask(int i, int j, FieldMask position)
+        {
+            if (i == 16)
+            {
+                return;
+            }
+            j = j == 0 ? 1 : j - 1;
+            i += 1;
+            var wallMask = GenerateWall(i, j, WallOrientation.Horizontal);
+            behindPlayerWall[(position, Constants.BlueEndPositions)] = wallMask;
         }
 
         private void GenerateNearWall()
@@ -109,6 +141,11 @@ namespace Quoridor.Model
                     nearWalls[wall] = mask;
                 }
             }
+        }
+
+        public bool CanPlaceWall(Field field, FieldMask wall)
+        {
+            return field.PossibleWalls.Any(w => w == wall);
         }
 
         public FieldMask GenerateWall(int y, int x, WallOrientation wallOrientation)
@@ -144,7 +181,7 @@ namespace Quoridor.Model
 
         public FieldMask[] GenerateWallMoves(Field field, Player player)
         {
-            var combined = field.Walls.Or(in player.Position).Or(in player.Enemy.Position);
+            var combined = (field.Walls, player.Position, player.Enemy.Position);
             if (cached.TryGetValue(combined, out var walls))
             {
                 return walls;
@@ -175,8 +212,16 @@ namespace Quoridor.Model
                 .Aggregate(new FieldMask(), (agg, w) => nearWalls[w].Or(in agg));
         }
 
-        public bool CanPlaceWall(Field field, in FieldMask wall)
+        public bool TryGetWallBehind(Field field, Player player, out FieldMask wall)
         {
+            var row = moveProvider.GetRow(in player.Position);
+            if (row == 0 && player.EndPosition == Constants.RedEndPositions ||
+                row == 16 && player.EndPosition == Constants.BlueEndPositions)
+            {
+                wall = Constants.EmptyField;
+                return false;
+            }
+            wall = behindPlayerWall[(player.Position, player.EndPosition)];
             return field.Walls.And(in wall).IsZero();
         }
     }

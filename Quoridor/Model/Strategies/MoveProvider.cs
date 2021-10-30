@@ -8,8 +8,11 @@ namespace Quoridor.Model
     {
         FieldMask[] GetAvailableMoves(Field field, in FieldMask playerMask, in FieldMask enemyMask);
 
-        (FieldMask[] mask, bool isSimple) GetAvailableMovesWithType(Field field, in FieldMask playerMask,
-            in FieldMask enemyMask);
+        (FieldMask[] mask, bool isSimple) GetAvailableMovesWithType(Field field, in FieldMask playerMask, in FieldMask enemyMask);
+
+        int GetRow(in FieldMask moveMask);
+
+        bool TryMoveForward(Field field, in FieldMask playerMask, out FieldMask moveMask);
     }
 
     public class MoveProvider : IMoveProvider
@@ -17,6 +20,8 @@ namespace Quoridor.Model
         //  <playerPosition 81, <enemyPosition ~3-4, wallInBetweenPosition>>
         private Dictionary<(FieldMask playerPosition, FieldMask enemyPosition), FieldMask> withEnemyMoveMasks =
             new();
+
+        private readonly Dictionary<FieldMask, int> rows = new();
 
         private SimpleMoveCalculator simpleMoveCalculator;
         private WithEnemyMoveCalculator withEnemyMoveCalculator;
@@ -61,6 +66,18 @@ namespace Quoridor.Model
             return (simpleMoveCalculator.GetAvailableMoves(field, playerMask), true);
         }
 
+        public int GetRow(in FieldMask moveMask)
+        {
+            return rows[moveMask];
+        }
+
+        public bool TryMoveForward(Field field, in FieldMask playerMask, out FieldMask moveMask)
+        {
+            moveMask = simpleMoveCalculator.GetAvailableMoves(field, in playerMask)[0];
+            var playerRow = GetRow(in playerMask);
+            var moveRow = GetRow(in moveMask);
+            return Math.Abs(playerRow - moveRow) == 1;
+        }
 
         private void CreateEnemyPlayerMasks()
         {
@@ -75,6 +92,7 @@ namespace Quoridor.Model
                     {
                         withEnemyMoveMasks[(playerMask, variant.enemyPosition)] = variant.wallMaks;
                     }
+                    rows[playerMask] = y / 2;
                 }
             }
         }

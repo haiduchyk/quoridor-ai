@@ -15,6 +15,8 @@ namespace Quoridor.Model.Players
 
         public int AmountOfWalls { get; private set; }
 
+        public int NumberOfMoves { get; private set; }
+
         public string Name { get; }
         
         public FieldMask CurrentPath { get; set; }
@@ -55,6 +57,7 @@ namespace Quoridor.Model.Players
         public void ChangePosition(in FieldMask position)
         {
             this.position = position;
+            NumberOfMoves++;
         }
 
         public bool ShouldWaitForMove()
@@ -76,6 +79,7 @@ namespace Quoridor.Model.Players
         {
             Walls = Walls.Or(in wall);
             AmountOfWalls--;
+            NumberOfMoves++;
         }
 
         public void RestoreWall(in FieldMask wall)
@@ -89,6 +93,7 @@ namespace Quoridor.Model.Players
             endPosition = player.EndPosition;
             position = player.Position;
             AmountOfWalls = player.AmountOfWalls;
+            NumberOfMoves = player.NumberOfMoves;
         }
     }
 }
