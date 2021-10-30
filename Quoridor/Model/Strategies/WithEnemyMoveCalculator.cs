@@ -6,20 +6,21 @@ namespace Quoridor.Model.Strategies
     public class WithEnemyMoveCalculator
     {
         // <playerPosition 81 <enemyPosition 4 <wallMask 64, possibleMoves>>>
-        private Dictionary<FieldMask, Dictionary<FieldMask, Dictionary<FieldMask, FieldMask[]>>> withEnemyPlayersMoves =
-            new();
+        private Dictionary<(FieldMask playerPosition, FieldMask enemyPosition, FieldMask wallMask), FieldMask[]>
+            withEnemyPlayersMoves =
+                new();
 
-        //  <playerPosition 81, <enemyPosition 4, wallMaskForThisPlayerAndEnemyPosition>83 8
-        private Dictionary<FieldMask, Dictionary<FieldMask, FieldMask>> withEnemyPlayersMovesMasks = new();
+        //  <playerPosition 81, <enemyPosition 4, wallMaskForThisPlayerAndEnemyPosition>
+        private Dictionary<(FieldMask, FieldMask), FieldMask> withEnemyPlayersMovesMasks = new();
 
         public FieldMask[] GetAvailableMoves(Field field, in FieldMask playerMask, in FieldMask enemyMask)
         {
-            // Actual code but we optimize these shit
-            // var moves = withEnemyPlayersMoves[playerMask][enemyMask];
-            // var wallMask = withEnemyPlayersMovesMasks[playerMask][enemyMask];
+            // Actual code 
+            // var wallMask = withEnemyPlayersMovesMasks[(playerMask, enemyMask)];
             // var currentWallMask = field.GetWallsForMask(wallMask);
-            // return moves[currentWallMask];
-            return withEnemyPlayersMoves[playerMask][enemyMask][field.GetWallsForMask(withEnemyPlayersMovesMasks[playerMask][enemyMask])];
+            // return withEnemyPlayersMoves[(playerMask, enemyMask, currentWallMask)];
+            return withEnemyPlayersMoves[
+                (playerMask, enemyMask, field.GetWallsForMask(withEnemyPlayersMovesMasks[(playerMask, enemyMask)]))];
         }
 
         public WithEnemyMoveCalculator()
@@ -30,23 +31,24 @@ namespace Quoridor.Model.Strategies
 
         private void CreateWithEnemyPlayerMovesMasks()
         {
-            for (var y = 0; y < FieldMask.BitboardSize; y++)
+            for (var y = 0; y < FieldMask.BitboardSize; y += 2)
             {
-                for (var x = 0; x < FieldMask.BitboardSize; x++)
+                for (var x = 0; x < FieldMask.BitboardSize; x += 2)
                 {
-                    if (y % 2 == 0 && x % 2 == 0)
+                    var playerMask = new FieldMask();
+                    playerMask.SetBit(y, x, true);
+                    var variants = CreateWithEnemyPlayerMovesMaskFor(y, x);
+                    foreach (var (enemyPosition, wallMask) in variants)
                     {
-                        var playerMask = new FieldMask();
-                        playerMask.SetBit(y, x, true);
-                        withEnemyPlayersMovesMasks[playerMask] = CreateWithEnemyPlayerMovesMaskFor(y, x);
+                        withEnemyPlayersMovesMasks[(playerMask, enemyPosition)] = wallMask;
                     }
                 }
             }
         }
 
-        private Dictionary<FieldMask, FieldMask> CreateWithEnemyPlayerMovesMaskFor(int y, int x)
+        private List<(FieldMask enemyPosition, FieldMask wallMask)> CreateWithEnemyPlayerMovesMaskFor(int y, int x)
         {
-            var result = new Dictionary<FieldMask, FieldMask>();
+            var result = new List<(FieldMask enemyPosition, FieldMask wallMask)>();
             foreach (var (yDelta, xDelta) in Constants.Directions)
             {
                 var curY = y + yDelta * 2;
@@ -57,7 +59,7 @@ namespace Quoridor.Model.Strategies
                 if (FieldMask.IsInRange(curY, curX))
                 {
                     enemyMask.SetBit(curY, curX, true);
-                    result[enemyMask] = GetWallMaskFor(y, x, curY, curX);
+                    result.Add((enemyMask, GetWallMaskFor(y, x, curY, curX)));
                 }
             }
 
@@ -96,25 +98,30 @@ namespace Quoridor.Model.Strategies
 
         private void CreateWithEnemyPlayerMoves()
         {
-            for (var y = 0; y < FieldMask.BitboardSize; y++)
+            for (var y = 0; y < FieldMask.BitboardSize; y += 2)
             {
-                for (var x = 0; x < FieldMask.BitboardSize; x++)
+                for (var x = 0; x < FieldMask.BitboardSize; x += 2)
                 {
-                    if (y % 2 == 0 && x % 2 == 0)
-                    {
-                        var playerMask = new FieldMask();
-                        playerMask.SetBit(y, x, true);
+                    var playerMask = new FieldMask();
+                    playerMask.SetBit(y, x, true);
 
-                        var moves = CreateWithEnemyPlayerMovesFor(y, x);
-                        withEnemyPlayersMoves[playerMask] = moves;
+                    var moves = CreateWithEnemyPlayerMovesFor(y, x);
+                    foreach (var (enemyPosition, wallMoves) in moves)
+                    {
+                        foreach (var (wallMask, movesPositions) in wallMoves)
+                        {
+                            withEnemyPlayersMoves[(playerMask, enemyPosition, wallMask)] =
+                                movesPositions;
+                        }
                     }
                 }
             }
         }
 
-        private Dictionary<FieldMask, Dictionary<FieldMask, FieldMask[]>> CreateWithEnemyPlayerMovesFor(int y, int x)
+        private List<(FieldMask enemyPosition, List<(FieldMask wallMask, FieldMask[] movesPositions)> wallMoves)>
+            CreateWithEnemyPlayerMovesFor(int y, int x)
         {
-            var result = new Dictionary<FieldMask, Dictionary<FieldMask, FieldMask[]>>();
+            var result = new List<(FieldMask, List<(FieldMask, FieldMask[])>)>();
             foreach (var (yDelta, xDelta) in Constants.Directions)
             {
                 var curY = y + yDelta * 2;
@@ -125,7 +132,7 @@ namespace Quoridor.Model.Strategies
                 if (FieldMask.IsInRange(curY, curX))
                 {
                     enemyMask.SetBit(curY, curX, true);
-                    result[enemyMask] = CalculateUniqueVariantFor(y, x, curY, curX);
+                    result.Add((enemyMask, CalculateUniqueVariantFor(y, x, curY, curX)));
                 }
             }
 
@@ -133,10 +140,10 @@ namespace Quoridor.Model.Strategies
         }
 
 
-        private Dictionary<FieldMask, FieldMask[]> CalculateUniqueVariantFor(int yPlayer, int xPlayer, int yEnemy,
+        private List<(FieldMask, FieldMask[])> CalculateUniqueVariantFor(int yPlayer, int xPlayer, int yEnemy,
             int xEnemy)
         {
-            var result = new Dictionary<FieldMask, FieldMask[]>();
+            var result = new List<(FieldMask, FieldMask[])>();
 
             var uniqueVariants = Math.Pow(2, 6);
 
@@ -195,7 +202,8 @@ namespace Quoridor.Model.Strategies
                         {
                             if (isBigJump)
                             {
-                                if (!FieldMask.IsInRange(importantY, importantX) || wallMask.GetBit(importantY, importantX))
+                                if (!FieldMask.IsInRange(importantY, importantX) ||
+                                    wallMask.GetBit(importantY, importantX))
                                 {
                                     SimpleUpdate();
                                 }
@@ -221,7 +229,7 @@ namespace Quoridor.Model.Strategies
                     }
                 }
 
-                result[wallMask] = playerMoveMasks.ToArray();
+                result.Add((wallMask, playerMoveMasks.ToArray()));
             }
 
             return result;
