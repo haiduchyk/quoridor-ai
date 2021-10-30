@@ -126,13 +126,10 @@ namespace Quoridor.Model
                     var horizontal = allWalls[count++];
                     var nearWallsMask = GenerateNearWallsForHorizontal(i, j);
                     nearWalls[horizontal] = nearWallsMask;
-                    nearWallsMask.Log();
-
                     
                     var vertical = allWalls[count++];
                     nearWallsMask = GenerateNearWallsForVertical(i, j);
                     nearWalls[vertical] = nearWallsMask;
-                    nearWallsMask.Log();
                 }
             }
         }
