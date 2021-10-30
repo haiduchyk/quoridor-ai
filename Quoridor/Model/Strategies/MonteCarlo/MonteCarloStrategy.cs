@@ -8,7 +8,7 @@ namespace Quoridor.Model.Strategies
 
     public class MonteCarloStrategy : IMoveStrategy
     {
-        private const long ComputeTime = 2000;
+        private const long ComputeTime = 10_00;
         private const double C = 1.4142135;
 
         public bool IsManual => false;
@@ -20,6 +20,7 @@ namespace Quoridor.Model.Strategies
         private readonly Field monteField;
         private readonly Player montePlayer;
         private readonly Player monteEnemy;
+        private MonteNode root;
 
         public MonteCarloStrategy(IMoveProvider moveProvider, IWallProvider wallProvider, ISearch search)
         {
@@ -31,31 +32,56 @@ namespace Quoridor.Model.Strategies
             monteCarloMoveProvider =
                 new MonteCarloMoveProvider(moveProvider, wallProvider, search, monteField, montePlayer);
             strategy = new HeuristicStrategy(moveProvider, wallProvider, search);
-            random = new Random();
+            random = new Random(1);
         }
 
         public IMove FindMove(Field field, Player player)
         {
-            monteField.Update(field);
-            montePlayer.Update(player);
-            monteEnemy.Update(player.Enemy);
+            UpdateFields(field, player);
+
+            if (root == null)
+            {
+                root = new MonteNode();
+                root.SetChild(FindChildren(root));
+            }
+            else
+            {
+                var nextRoot = root.GetNextRoot();
+
+                if (nextRoot == null)
+                {
+                    root = new MonteNode();
+                    root.SetChild(FindChildren(root));
+                }
+                else
+                {
+                    root = nextRoot;
+                    if (root.children == null)
+                    {
+                        root.SetChild(FindChildren(root));
+                    }
+                }
+            }
+
+
             var startTime = GetCurrentTime();
-            var root = new MonteNode();
-            root.SetChild(FindChildren(root));
+
             var count = 0;
 
-            while (HasTime(startTime))
+            while (count < 1000)
             {
-                monteField.Update(field);
-                montePlayer.Update(player);
-                monteEnemy.Update(player.Enemy);
+                UpdateFields(field, player);
                 var node = Select(root);
                 var result = Simulate(node);
                 Backpropagate(node, result);
                 count++;
             }
-            var move = FindBest(root);
+
+            var bestNode = FindBest(root);
+            var move = bestNode.move;
             move.Apply(field, player);
+            root = bestNode;
+
             Console.WriteLine($"Count => {count}");
             Console.WriteLine($"Time => {GetTime(startTime)}");
             Console.WriteLine($"Depth => {GetDepth(root)}");
@@ -64,9 +90,16 @@ namespace Quoridor.Model.Strategies
             return move;
         }
 
-        private IMove FindBest(MonteNode node)
+        private void UpdateFields(Field field, Player player)
         {
-            return node.children.OrderByDescending(n => n.WinRate).First().move;
+            monteField.Update(field);
+            montePlayer.Update(player);
+            monteEnemy.Update(player.Enemy);
+        }
+
+        private MonteNode FindBest(MonteNode node)
+        {
+            return node.children.OrderByDescending(n => n.WinRate).First();
         }
 
         private MonteNode[] FindChildren(MonteNode node)
@@ -83,6 +116,7 @@ namespace Quoridor.Model.Strategies
                 node = FindBestUct(node);
                 node.move.Execute();
             }
+
             var chosenNode = PickUnvisited(node);
             chosenNode.move.Execute();
             return chosenNode;
@@ -100,11 +134,13 @@ namespace Quoridor.Model.Strategies
                     bestUtc = utc;
                     bestNodes.Clear();
                 }
+
                 if (utc == bestUtc)
                 {
                     bestNodes.Add(child);
                 }
             }
+
             return bestNodes[random.Next(0, bestNodes.Count)];
         }
 
@@ -114,6 +150,7 @@ namespace Quoridor.Model.Strategies
             {
                 return double.PositiveInfinity;
             }
+
             var expand = (double)node.wins / node.games;
             expand = node.IsPlayerMove ? expand : 1 - expand;
             var explore = C * Math.Sqrt(Math.Log10(node.parent.games) / node.games);
@@ -143,6 +180,7 @@ namespace Quoridor.Model.Strategies
                     moveCount++;
                 }
             }
+
             return montePlayer.HasReachedFinish() ? 1 : 0;
         }
 
@@ -153,6 +191,7 @@ namespace Quoridor.Model.Strategies
                 node.Update(result);
                 node = node.parent;
             }
+
             node.Update(result);
         }
 
@@ -191,8 +230,10 @@ namespace Quoridor.Model.Strategies
                     branching += childBranching;
                     nodes += childNodes;
                 }
+
                 return (branching, nodes);
             }
+
             return (0, 0);
         }
     }

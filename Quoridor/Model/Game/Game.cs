@@ -14,7 +14,7 @@ namespace Quoridor.Model
         public Game(GameOptions gameOptions, IBotCreator botCreator, IWallProvider wallProvider)
         {
             Field = new Field(FieldMask.BitboardSize);
-            Field.PossibleWalls.AddRange(wallProvider.GetAllMoves());
+            Field.ValidWalls.AddRange(wallProvider.GetAllMoves());
             BluePlayer = CreateFirstPlayer();
             RedPlayer = CreateSecondPlayer(gameOptions, botCreator);
             BluePlayer.SetEnemy(RedPlayer);

@@ -16,5 +16,10 @@ namespace Quoridor.Model.Moves
         public void Apply(Field field, Player player)
         {
         }
+
+        public FieldMask GetIdentifier()
+        {
+            return Constants.EmptyField;
+        }
     }
 }

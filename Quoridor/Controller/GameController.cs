@@ -18,6 +18,7 @@ namespace Quoridor.Controller
         private PlayerMover bluePlayerMover;
         private PlayerMover redPlayerMover;
         private int moveCount;
+        public static IMove lastMove;
 
         public GameController(IGameProvider gameProvider, IMoveParser moveParser, IIoWorker ioWorker)
         {
@@ -64,10 +65,10 @@ namespace Quoridor.Controller
         {
             while (true)
             {
-                var move = playerMover.WaitForMove();
-                if (move.IsValid())
+                lastMove = playerMover.WaitForMove();
+                if (lastMove.IsValid())
                 {
-                    Execute(move);
+                    Execute(lastMove);
                     return;
                 }
                 PrintInvalidMessage();

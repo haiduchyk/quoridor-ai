@@ -30,5 +30,10 @@ namespace Quoridor.Model.Moves
         {
             this.player = player;
         }
+
+        public FieldMask GetIdentifier()
+        {
+            return position;
+        }
     }
 }

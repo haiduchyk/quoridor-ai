@@ -12,7 +12,7 @@ namespace Quoridor.Model.Strategies
         private readonly IWallProvider wallProvider;
         private readonly ISearch search;
 
-        private readonly Random random = new();
+        private readonly Random random = new(1);
 
         public HeuristicStrategy(IMoveProvider moveProvider, IWallProvider wallProvider, ISearch search)
         {
@@ -35,7 +35,8 @@ namespace Quoridor.Model.Strategies
         private IMove GetMoveOnPath(Field field, Player player)
         {
             var availableMoves = moveProvider.GetAvailableMoves(field, in player.Position, in player.Enemy.Position);
-            var move = availableMoves[random.Next(0, availableMoves.Length)];
+            
+            var move = availableMoves.Length == 0 ? player.Position : availableMoves[random.Next(0, availableMoves.Length)];
             return new PlayerMove(player, move);
         }
 

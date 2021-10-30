@@ -81,8 +81,12 @@ namespace Quoridor.Model.Strategies
         private List<IMove> Shifts(MonteNode node)
         {
             var turnPlayer = node.IsPlayerMove ? player : player.Enemy;
-            var shifts = moveProvider.GetAvailableMoves(field, in turnPlayer.Position, in turnPlayer.Enemy.Position);
-            return shifts.Select<FieldMask, IMove>(m => new PlayerMove(turnPlayer, m)).ToList();
+            var shifts = moveProvider.GetAvailableMovesWithType(field, in turnPlayer.Position, in turnPlayer.Enemy.Position);
+            if (!shifts.isSimple)
+            {
+                Console.WriteLine($" = {1}");
+            }
+            return shifts.masks.Select<FieldMask, IMove>(m => new PlayerMove(turnPlayer, m)).ToList();
         }
 
         private IEnumerable<IMove> GetWallMoves(MonteNode node)

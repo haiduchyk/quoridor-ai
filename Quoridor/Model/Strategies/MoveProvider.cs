@@ -8,7 +8,7 @@ namespace Quoridor.Model
     {
         FieldMask[] GetAvailableMoves(Field field, in FieldMask playerMask, in FieldMask enemyMask);
 
-        (FieldMask[] mask, bool isSimple) GetAvailableMovesWithType(Field field, in FieldMask playerMask, in FieldMask enemyMask);
+        (FieldMask[] masks, bool isSimple) GetAvailableMovesWithType(Field field, in FieldMask playerMask, in FieldMask enemyMask);
 
         int GetRow(in FieldMask moveMask);
 
@@ -49,7 +49,7 @@ namespace Quoridor.Model
             return simpleMoveCalculator.GetAvailableMoves(field, in playerMask);
         }
 
-        public (FieldMask[] mask, bool isSimple) GetAvailableMovesWithType(Field field, in FieldMask playerMask,
+        public (FieldMask[] masks, bool isSimple) GetAvailableMovesWithType(Field field, in FieldMask playerMask,
             in FieldMask enemyMask)
         {
             if (withEnemyMoveMasks.TryGetValue((playerMask, enemyMask), out var wallMask))

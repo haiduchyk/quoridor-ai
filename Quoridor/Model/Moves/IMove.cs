@@ -9,5 +9,7 @@ namespace Quoridor.Model.Moves
         void Execute();
 
         void Apply(Field field, Player player);
+
+        FieldMask GetIdentifier();
     }
 }

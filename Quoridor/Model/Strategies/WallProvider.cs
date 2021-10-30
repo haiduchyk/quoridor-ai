@@ -28,6 +28,7 @@ namespace Quoridor.Model
         private FieldMask nearEdgeWallMask;
         private readonly Dictionary<(FieldMask position, FieldMask endPosition), FieldMask> behindPlayerWall = new();
         private readonly Dictionary<FieldMask, FieldMask> nearPlayerWalls = new();
+        private readonly Dictionary<FieldMask, FieldMask> nearWallsMasks = new();
         private readonly Dictionary<FieldMask, FieldMask> nearWalls = new();
         private readonly Dictionary<(FieldMask walls, FieldMask player, FieldMask enemy), FieldMask[]> cached = new();
 
@@ -125,18 +126,18 @@ namespace Quoridor.Model
                 {
                     var horizontal = allWalls[count++];
                     var nearWallsMask = GenerateNearWallsForHorizontal(i, j);
-                    nearWalls[horizontal] = nearWallsMask;
+                    nearWallsMasks[horizontal] = nearWallsMask;
                     
                     var vertical = allWalls[count++];
                     nearWallsMask = GenerateNearWallsForVertical(i, j);
-                    nearWalls[vertical] = nearWallsMask;
+                    nearWallsMasks[vertical] = nearWallsMask;
                 }
             }
         }
 
         public bool CanPlaceWall(Field field, FieldMask wall)
         {
-            return field.PossibleWalls.Any(w => w == wall);
+            return field.ValidWalls.Any(w => w == wall);
         }
         
         // TODO how fast this flag on and off
@@ -207,7 +208,7 @@ namespace Quoridor.Model
 
         public List<FieldMask> GenerateWallMoves(Field field)
         {
-            return field.PossibleWalls;
+            return field.ValidWalls;
         }
 
         public FieldMask[] GenerateWallMoves(Field field, Player player)
@@ -224,7 +225,7 @@ namespace Quoridor.Model
 
         private FieldMask[] CreateWallMoves(Field field, Player player)
         {
-            var moves = field.PossibleWalls;
+            var moves = field.ValidWalls;
             var nearPlayer = nearPlayerWalls[player.Position];
             var nearEnemy = nearPlayerWalls[player.Enemy.Position];
             var nearWallMask = GetNearWallMask(field);
@@ -240,7 +241,7 @@ namespace Quoridor.Model
         private FieldMask GetNearWallMask(Field field)
         {
             return allWalls.Where(w => w == field.Walls)
-                .Aggregate(new FieldMask(), (agg, w) => nearWalls[w].Or(in agg));
+                .Aggregate(new FieldMask(), (agg, w) => nearWallsMasks[w].Or(in agg));
         }
 
         public bool TryGetWallBehind(Field field, Player player, out FieldMask wall)

@@ -22,12 +22,7 @@ namespace Quoridor.Model.Moves
         {
             return player.HasWalls() && CheckPath();
         }
-
-        private bool IsOnShortestPath()
-        {
-            return player.CurrentPath.And(wall).IsNotZero();
-        }
-
+        
         private bool CheckPath()
         {
             field.PlaceWall(in wall);
@@ -40,13 +35,18 @@ namespace Quoridor.Model.Moves
         public void Execute()
         {
             player.UseWall(wall);
-            field.PlaceWallAndUpdateMoves(in wall);
+            field.PlaceWallAndUpdateMoves(in wall, player);
         }
 
         public void Apply(Field field, Player player)
         {
             this.field = field;
             this.player = player;
+        }
+
+        public FieldMask GetIdentifier()
+        {
+            return wall;
         }
     }
 }

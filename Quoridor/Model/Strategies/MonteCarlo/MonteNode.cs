@@ -1,12 +1,16 @@
 namespace Quoridor.Model.Strategies
 {
+    using System;
+    using System.Linq;
+    using Controller;
     using Moves;
+    using Players;
 
     public class MonteNode
     {
         public bool IsPlayerMove => level % 2 == 0;
 
-        public bool IsFullyExpanded => games >= children.Length + (parent == null ? 0 : 1);
+        public bool IsFullyExpanded => children.Sum(c => c.games) >= children.Length;
 
         public bool IsVisited => games > 0;
 
@@ -15,7 +19,7 @@ namespace Quoridor.Model.Strategies
         public int wins;
         public int games;
 
-        public readonly MonteNode parent;
+        public MonteNode parent;
         public readonly IMove move;
         public readonly int level;
 
@@ -37,10 +41,29 @@ namespace Quoridor.Model.Strategies
             this.children = children;
         }
 
+        public MonteNode GetNextRoot()
+        {
+            foreach (var child in children)
+            {
+                if (child.move.GetIdentifier() == GameController.lastMove.GetIdentifier())
+                {
+                    child.SetParentInNull();
+                    return child;
+                }
+            }
+
+            return null;
+        }
+
         public void Update(int result)
         {
             wins += result;
             games++;
+        }
+
+        private void SetParentInNull()
+        {
+            parent = null;
         }
     }
 }
