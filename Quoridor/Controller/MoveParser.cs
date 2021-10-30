@@ -37,11 +37,19 @@ namespace Quoridor.Controller
             {
                 return move;
             }
+
             return new DefaultMove();
         }
 
         private bool TryParseAsPlayerMove(Field field, Player player, string input, out IMove move)
         {
+            if (string.IsNullOrEmpty(input))
+            {
+                var toDefault = moveProvider.GetAvailableMoves(field, player.Position, player.Enemy.Position).First();
+                move = new PlayerMove(player, toDefault);
+                return true;
+            }
+
             var (from, to, isValid) = ParsePlayerMove(input);
             if (isValid && !player.Position.And(in from).IsZero() && CanMoveTo(field, player, to))
             {
