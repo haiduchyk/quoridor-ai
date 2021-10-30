@@ -123,22 +123,16 @@ namespace Quoridor.Model
             {
                 for (var j = 1; j < FieldMask.BitboardSize; j += 2)
                 {
-                    var wall = allWalls[count++];
-                    var mask = new FieldMask();
-                    foreach (var (offsetY, offsetX) in Constants.Directions)
-                    {
-                        mask.TrySetBit(i + offsetY, j + 2 * offsetX, true);
-                        mask.TrySetBit(i + 2 * offsetY, j + 3 * offsetX, true);
-                    }
-                    nearWalls[wall] = mask;
-                    wall = allWalls[count++];
-                    mask = new FieldMask();
-                    foreach (var (offsetY, offsetX) in Constants.Directions)
-                    {
-                        mask.TrySetBit(i + 2 * offsetY, j + offsetX, true);
-                        mask.TrySetBit(i + 3 * offsetY, j + 2 * offsetX, true);
-                    }
-                    nearWalls[wall] = mask;
+                    var horizontal = allWalls[count++];
+                    var nearWallsMask = GenerateNearWallsForHorizontal(i, j);
+                    nearWalls[horizontal] = nearWallsMask;
+                    nearWallsMask.Log();
+
+                    
+                    var vertical = allWalls[count++];
+                    nearWallsMask = GenerateNearWallsForVertical(i, j);
+                    nearWalls[vertical] = nearWallsMask;
+                    nearWallsMask.Log();
                 }
             }
         }
@@ -147,7 +141,47 @@ namespace Quoridor.Model
         {
             return field.PossibleWalls.Any(w => w == wall);
         }
-
+        
+        // TODO how fast this flag on and off
+        private bool needUpPoint = false;
+        private FieldMask GenerateNearWallsForHorizontal(int i, int j)
+        {
+            var mask = new FieldMask();
+            foreach (var (offsetY, offsetX) in Constants.Directions)
+            {
+                mask.TrySetBit(i + offsetY, j + 2 * offsetX, true);
+                if (needUpPoint || offsetY == 0)
+                {
+                    mask.TrySetBit(i + 2 * offsetY, j + 3 * offsetX, true);
+                } 
+            }
+                    
+            foreach (var (offsetY, offsetX) in Constants.Diagonals)
+            {
+                mask.TrySetBit(i + offsetY, j + 2 * offsetX, true);
+            }
+            return mask;
+        }
+        
+        private FieldMask GenerateNearWallsForVertical(int i, int j)
+        {
+            var mask = new FieldMask();
+            foreach (var (offsetY, offsetX) in Constants.Directions)
+            {
+                mask.TrySetBit(i + 2 * offsetY, j + offsetX, true);
+                if (needUpPoint || offsetX == 0)
+                {
+                    mask.TrySetBit(i + 3 * offsetY, j + 2 * offsetX, true);
+                }
+            }
+                    
+            foreach (var (offsetY, offsetX) in Constants.Diagonals)
+            {
+                mask.TrySetBit(i + 2 * offsetY, j + offsetX, true);
+            }
+            return mask;
+        }
+        
         public FieldMask GenerateWall(int y, int x, WallOrientation wallOrientation)
         {
             var (yOffset, xOffset) = GetOffset(wallOrientation);
