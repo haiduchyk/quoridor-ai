@@ -49,7 +49,9 @@ namespace Quoridor.Model
         {
             this.field = field;
             Prepare(player, in position);
-            return Search(player, out path);
+            var result = Search(player, out path);
+            player.CurrentPath = path;
+            return result;
         }
 
         protected virtual void Prepare(Player player, in FieldMask position)

@@ -16,6 +16,8 @@ namespace Quoridor.Model.Players
         public int AmountOfWalls { get; private set; }
 
         public string Name { get; }
+        
+        public FieldMask CurrentPath { get; set; }
 
         private readonly IMoveStrategy moveStrategy;
         private FieldMask endPosition;
