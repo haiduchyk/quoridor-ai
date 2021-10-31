@@ -1,5 +1,6 @@
 namespace Quoridor.Controller.Moves
 {
+    using System.Linq;
     using Model;
     using Model.Moves;
     using Model.Players;
@@ -26,6 +27,11 @@ namespace Quoridor.Controller.Moves
 
         public IMove ParseMove(Field field, Player player, string input)
         {
+            if (string.IsNullOrEmpty(input))
+            {
+                var masks = moveProvider.GetAvailableMoves(field, in player.Position, in player.Enemy.Position);
+                return new PlayerMove(player, masks.First());
+            }
             var commands = input.Split(" ");
             if (commands.Length != 2)
             {
