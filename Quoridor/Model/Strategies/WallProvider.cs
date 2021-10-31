@@ -35,7 +35,9 @@ namespace Quoridor.Model
 
         public bool CanPlaceWall(Field field, FieldMask wall)
         {
-            return field.PossibleWalls.Any(w => w == wall);
+            // TODO index
+            // return field.PossibleWalls.Any(w => w == wall);
+            return false;
         }
 
         public FieldMask GenerateWall(int y, int x, WallOrientation wallOrientation)
@@ -46,12 +48,14 @@ namespace Quoridor.Model
 
         public FieldMask[] GetAllMoves()
         {
-            return WallConstants.allWalls;
+            return WallConstants.indexToMask;
         }
 
         public List<FieldMask> GenerateWallMoves(Field field)
         {
-            return field.PossibleWalls;
+            // TODO index
+            // return field.PossibleWalls;
+            return null;
         }
 
         public FieldMask[] GenerateWallMoves(Field field, Player player)
@@ -73,18 +77,22 @@ namespace Quoridor.Model
             var nearPlayer = WallConstants.nearPlayerWallsMasks[player.Position];
             var nearEnemy = WallConstants.nearPlayerWallsMasks[player.Enemy.Position];
             var nearWallMask = GetNearWallMask(field);
-            return moves
-                .Where(w =>
-                    // w.And(in WallConstants.nearEdgeWallMask).IsNotZero() ||
-                    w.And(in nearPlayer).IsNotZero() ||
-                    w.And(in nearEnemy).IsNotZero() ||
-                    w.And(in nearWallMask).IsNotZero())
-                .ToArray();
+
+            // TODO index
+            // return moves
+            //     .Where(w =>
+            //         // w.And(in WallConstants.nearEdgeWallMask).IsNotZero() ||
+            //         w.And(in nearPlayer).IsNotZero() ||
+            //         w.And(in nearEnemy).IsNotZero() ||
+            //         w.And(in nearWallMask).IsNotZero()
+            //         )
+            //     .ToArray();
+            return null;
         }
 
         private FieldMask GetNearWallMask(Field field)
         {
-            return WallConstants.allWalls.Where(w => w == field.Walls)
+            return WallConstants.indexToMask.Where(w => w == field.Walls)
                 .Aggregate(new FieldMask(), (agg, w) => WallConstants.nearWallsMasks[w].Or(in agg));
         }
 

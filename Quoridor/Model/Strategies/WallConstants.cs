@@ -6,12 +6,18 @@ namespace Quoridor.Model.Strategies
     {
         private const int WallSize = 3;
         public const int MaxWallCount = 128;
-        public static FieldMask[] allWalls;
+
+        public static FieldMask[] indexToMask;
+        public static Dictionary<FieldMask, byte>[] maskToIndex;
+
         public static FieldMask nearEdgeWallMask;
-        public static readonly Dictionary<(FieldMask position, FieldMask endPosition), FieldMask> behindPlayerWall = new();
+
+        public static readonly Dictionary<(FieldMask position, FieldMask endPosition), FieldMask> behindPlayerWall =
+            new();
+
         public static readonly Dictionary<FieldMask, FieldMask> nearPlayerWallsMasks = new();
         public static readonly Dictionary<FieldMask, FieldMask> nearWallsMasks = new();
-        public static readonly Dictionary<FieldMask, FieldMask[]> nearWalls = new();
+        public static readonly Dictionary<byte, byte[]> nearWalls = new();
 
         static WallConstants()
         {
@@ -21,17 +27,17 @@ namespace Quoridor.Model.Strategies
             GenerateNearWallMasks();
             GenerateNearWall();
         }
-        
+
         public static void GenerateAllWallMoves()
         {
-            allWalls = new FieldMask[MaxWallCount];
+            indexToMask = new FieldMask[MaxWallCount];
             var count = 0;
             for (var i = 1; i < FieldMask.BitboardSize; i += 2)
             {
                 for (var j = 1; j < FieldMask.BitboardSize; j += 2)
                 {
-                    allWalls[count++] = GenerateWall(i, j, WallOrientation.Horizontal);
-                    allWalls[count++] = GenerateWall(i, j, WallOrientation.Vertical);
+                    indexToMask[count++] = GenerateWall(i, j, WallOrientation.Horizontal);
+                    indexToMask[count++] = GenerateWall(i, j, WallOrientation.Vertical);
                 }
             }
         }
@@ -59,7 +65,7 @@ namespace Quoridor.Model.Strategies
                 }
             }
         }
-        
+
         private static FieldMask GetWallMask(int i, int j)
         {
             var wallMask = new FieldMask();
@@ -98,13 +104,12 @@ namespace Quoridor.Model.Strategies
             var wallMask = GenerateWall(i, j, WallOrientation.Horizontal);
             behindPlayerWall[(position, Constants.BlueEndPositions)] = wallMask;
         }
-        
-         private static void GenerateNearWall()
+
+        private static void GenerateNearWall()
         {
-            for (var i = 0; i < allWalls.Length; i++)
+            for (var i = 0; i < indexToMask.Length; i++)
             {
-                var currentNearWalls = new List<FieldMask>();
-                var currentWall = allWalls[i];
+                var currentNearWallsIndexes = new List<byte>();
                 if (i % 2 == 0)
                 {
                     AddIfInRange(i + 1);
@@ -117,15 +122,14 @@ namespace Quoridor.Model.Strategies
                     AddIfInRange(i - FieldMask.BitboardSize + 1);
                     AddIfInRange(i + FieldMask.BitboardSize - 1);
                 }
-                
-                nearWalls[currentWall] = currentNearWalls.ToArray();
+
+                nearWalls[(byte) i] = currentNearWallsIndexes.ToArray();
 
                 void AddIfInRange(int index)
                 {
-                    if (index >= 0 && index < allWalls.Length)
+                    if (index >= 0 && index < indexToMask.Length)
                     {
-                        var wall = allWalls[index];
-                        currentNearWalls.Add(wall);
+                        currentNearWallsIndexes.Add((byte) index);
                     }
                 }
             }
@@ -139,11 +143,11 @@ namespace Quoridor.Model.Strategies
             {
                 for (var j = 1; j < FieldMask.BitboardSize; j += 2)
                 {
-                    var horizontal = allWalls[count++];
+                    var horizontal = indexToMask[count++];
                     var nearWallsMask = GenerateNearWallsForHorizontal(i, j);
                     nearWallsMasks[horizontal] = nearWallsMask;
 
-                    var vertical = allWalls[count++];
+                    var vertical = indexToMask[count++];
                     nearWallsMask = GenerateNearWallsForVertical(i, j);
                     nearWallsMasks[vertical] = nearWallsMask;
                 }
@@ -207,7 +211,7 @@ namespace Quoridor.Model.Strategies
 
             return wall;
         }
-        
+
         private static (int yOffset, int xOffset) GetOffset(WallOrientation wallOrientation)
         {
             var yOffset = wallOrientation == WallOrientation.Vertical ? 1 : 0;

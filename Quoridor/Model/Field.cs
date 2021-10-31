@@ -6,19 +6,22 @@ namespace Quoridor.Model
 
     public class Field
     {
-        public List<FieldMask> PossibleWalls { get; } = new();
+        public List<byte> PossibleWalls { get; } = new();
+        public List<FieldMask> ValidWalls { get; } = new();
         public List<FieldMask> ProbableValidWalls { get; } = new();
 
         public ref readonly FieldMask Walls => ref walls;
 
         public FieldMask walls;
 
-        public void PlaceWallAndUpdateValidMoves(in FieldMask wall, Player player)
+        public void PlaceWallAndUpdateValidMoves(in byte wallIndex, Player player)
         {
-            walls = walls.Or(in wall);
-            var nearWalls = WallConstants.nearWalls[wall];
-
-            PossibleWalls.Remove(wall);
+            var wallMask = WallConstants.indexToMask[wallIndex];
+            walls = walls.Or(in wallMask);
+            
+            var nearWalls = WallConstants.nearWalls[wallIndex];
+            
+            PossibleWalls.Remove(wallIndex);
             foreach (var nearWall in nearWalls)
             {
                 PossibleWalls.Remove(nearWall);
@@ -27,15 +30,6 @@ namespace Quoridor.Model
         
         public void PlaceWallAndUpdateProbableValidMoves(in FieldMask wall, Player player)
         {
-            walls = walls.Or(in wall);
-            for (var i = 0; i < PossibleWalls.Count; i++)
-            {
-                if (PossibleWalls[i].And(in wall).IsNotZero())
-                {
-                    PossibleWalls.RemoveAt(i);
-                    i--;
-                }
-            }
         }
 
         // private bool IsOnShortestPath()

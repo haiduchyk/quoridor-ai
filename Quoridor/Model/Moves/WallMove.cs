@@ -38,7 +38,8 @@ namespace Quoridor.Model.Moves
         public void Execute()
         {
             player.UseWall(wall);
-            field.PlaceWallAndUpdateValidMoves(in wall, player);
+            // TODO index
+            // field.PlaceWallAndUpdateValidMoves(in wall, player);
         }
 
         public void Apply(Field field, Player player)
