@@ -125,7 +125,7 @@ namespace Quoridor.Model.Strategies
                     if (index >= 0 && index < allWalls.Length)
                     {
                         var wall = allWalls[index];
-                        currentWall.And(wall);
+                        currentNearWalls.Add(wall);
                     }
                 }
             }
