@@ -8,6 +8,8 @@ namespace Quoridor.Controller.Moves
 
     public class PlayerMover
     {
+        public bool ShouldPrint => !player.ShouldWaitForMove();
+
         private readonly Field field;
         private readonly Player player;
         private readonly IMoveConverter moveConverter;
@@ -21,23 +23,17 @@ namespace Quoridor.Controller.Moves
             this.ioWorker = ioWorker;
         }
 
-        public IMove WaitForMove()
+        public (IMove move, string code) WaitForMove()
         {
-            return player.ShouldWaitForMove() ? ReadMoveFromConsole() : PrintNextMove();
+            var move = player.ShouldWaitForMove() ? ReadMoveFromConsole() : player.FindMove(field);
+            var code = moveConverter.GetCode(field, player, move);
+            return (move, code);
         }
 
         private IMove ReadMoveFromConsole()
         {
             var input = ioWorker.ReadInput();
             return moveConverter.ParseMove(field, player, input);
-        }
-
-        private IMove PrintNextMove()
-        {
-            var move = player.FindMove(field);
-            var code = moveConverter.GetCode(field, player, move);
-            ioWorker.WriteLine(code);
-            return move;
         }
     }
 }
