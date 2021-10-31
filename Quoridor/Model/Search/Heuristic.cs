@@ -1,16 +1,16 @@
 namespace Quoridor.Model
 {
     using System.Collections.Generic;
+    using Strategies;
 
-    public class Heuristic : IComparer<FieldMask>
+    public class Heuristic : IComparer<byte>
     {
-        private readonly Dictionary<FieldMask, int> distances;
-        private readonly Dictionary<FieldMask, FieldMask> rows = new();
-        private readonly Dictionary<FieldMask, Dictionary<FieldMask, int>> heuristic = new();
+        private readonly Dictionary<byte, int> distances;
+        private readonly Dictionary<(byte, byte), int> heuristic = new();
 
-        private FieldMask endPosition;
+        private byte endPosition;
 
-        public Heuristic(Dictionary<FieldMask, int> distances)
+        public Heuristic(Dictionary<byte, int> distances)
         {
             this.distances = distances;
             InitializeHeuristic();
@@ -18,34 +18,26 @@ namespace Quoridor.Model
 
         private void InitializeHeuristic()
         {
-            heuristic[Constants.BlueEndPositions] = new Dictionary<FieldMask, int>();
-            heuristic[Constants.RedEndPositions] = new Dictionary<FieldMask, int>();
-            for (var i = 0; i < FieldMask.BitboardSize; i += 2)
+            for (var i = 0; i < 9; i++)
             {
-                var rowMask = new FieldMask();
-                rowMask.SetBit(i, 0, true);
-                for (var j = 0; j < FieldMask.BitboardSize; j += 2)
+                for (var j = 0; j < 9; j++)
                 {
-                    var mask = new FieldMask();
-                    mask.SetBit(i, j, true);
-                    rows[mask] = rowMask;
+                    var index = (byte)(i * 9 + j);
+                    heuristic[(PlayerConstants.EndBlueDownIndexIncluding, index)] = i;
+                    heuristic[(PlayerConstants.EndRedDownIndexIncluding, index)] = 8 - i;
                 }
-                heuristic[Constants.BlueEndPositions][rowMask] = i / 2;
-                heuristic[Constants.RedEndPositions][rowMask] = (FieldMask.BitboardSize - 1 - i) / 2;
             }
         }
 
-        public void SetEndPosition(in FieldMask endPosition)
+        public void SetEndPosition(in byte endPosition)
         {
             this.endPosition = endPosition;
         }
 
-        public int Compare(FieldMask first, FieldMask second)
+        public int Compare(byte first, byte second)
         {
-            // Actual shit
-            // var firstHeuristic = distances[first] + heuristic[endPosition][rows[first]];
-            // var secondHeuristic = distances[second] + heuristic[endPosition][rows[second]];
-            return distances[first] + heuristic[endPosition][rows[first]] - (distances[second] + heuristic[endPosition][rows[second]]);
+            return distances[first] + heuristic[(endPosition, first)] -
+                   (distances[second] + heuristic[(endPosition, second)]);
         }
     }
 }

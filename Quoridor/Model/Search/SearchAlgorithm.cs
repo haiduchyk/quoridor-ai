@@ -5,7 +5,7 @@ namespace Quoridor.Model
 
     public abstract class SearchAlgorithm : ISearch
     {
-        protected readonly Dictionary<byte, int> Distances = new(81);
+        protected readonly Dictionary<byte, int> distances = new(81);
 
         private readonly byte[] possiblePositions = new byte[81];
         private readonly Dictionary<byte, (byte mask, bool isSimple)> prevNodes = new(81);
@@ -49,11 +49,11 @@ namespace Quoridor.Model
             for (var i = 0; i < 81; i++)
             {
                 var pos = possiblePositions[i];
-                Distances[pos] = int.MaxValue;
+                distances[pos] = int.MaxValue;
                 prevNodes[pos] = (Constants.EmptyIndex, default);
             }
 
-            Distances[position] = 0;
+            distances[position] = 0;
             queue.Clear();
             queue.Enqueue(position);
         }
@@ -70,16 +70,16 @@ namespace Quoridor.Model
                     return true;
                 }
 
-                var traversedDistance = Distances[position];
+                var traversedDistance = distances[position];
 
                 var (masks, isSimple) = GetPossibleMoves(player, in position);
 
                 foreach (var pos in masks)
                 {
                     var distance = traversedDistance + 1;
-                    if (distance < Distances[pos])
+                    if (distance < distances[pos])
                     {
-                        Distances[pos] = distance;
+                        distances[pos] = distance;
                         prevNodes[pos] = (position, isSimple);
                         queue.Enqueue(pos);
                     }
@@ -90,7 +90,7 @@ namespace Quoridor.Model
             return false;
         }
 
-        private bool IsDestinationReached(Player player, FieldMask position)
+        private bool IsDestinationReached(Player player, byte position)
         {
             return player.IsEndPosition(position);
         }

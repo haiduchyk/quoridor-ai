@@ -9,9 +9,9 @@ namespace Quoridor.Model
         {
         }
 
-        protected override IComparer<FieldMask> GetComparer()
+        protected override IComparer<byte> GetComparer()
         {
-            return new DistanceComparer(Distances);
+            return new DistanceComparer(distances);
         }
     }
 }

@@ -7,20 +7,20 @@ namespace Quoridor.Model
     {
         private Heuristic heuristic;
 
-        public AStarSearchAlgorithm(IMoveProvider moveProvider, PathWithWallsRetriever pathRetriever) 
+        public AStarSearchAlgorithm(IMoveProvider moveProvider, PathWithWallsRetriever pathRetriever)
             : base(moveProvider, pathRetriever)
         {
         }
 
-        protected override IComparer<FieldMask> GetComparer()
+        protected override IComparer<byte> GetComparer()
         {
-            return heuristic = new Heuristic(Distances);
+            return heuristic = new Heuristic(distances);
         }
 
-        protected override void Prepare(Player player, in FieldMask position)
+        protected override void Prepare(Player player, in byte position)
         {
             base.Prepare(player, position);
-            heuristic.SetEndPosition(player.EndPosition);
+            heuristic.SetEndPosition(player.EndDownIndex);
         }
     }
 }
