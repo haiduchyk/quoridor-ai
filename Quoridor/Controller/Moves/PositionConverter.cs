@@ -111,7 +111,7 @@ namespace Quoridor.Controller.Moves
         private WallOrientation GetWallType(int row, int column, FieldMask wall)
         {
             var (i, j) = ToFieldMaskWallIndex(row, column);
-            return wall.GetBit(i + 1, j) ? WallOrientation.Horizontal : WallOrientation.Vertical;
+            return wall.GetBit(i + 1, j) ? WallOrientation.Vertical : WallOrientation.Horizontal;
         }
 
         private (int i, int j) ToFieldMaskIndex(int row, int column)

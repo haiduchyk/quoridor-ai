@@ -35,8 +35,10 @@ namespace Quoridor.Controller.Flow
 
         private void PrepareComponents()
         {
-            bluePlayerMover = new PlayerMover(gameProvider.Game.Field, gameProvider.Game.BluePlayer, moveConverter, ioWorker);
-            redPlayerMover = new PlayerMover(gameProvider.Game.Field, gameProvider.Game.RedPlayer, moveConverter, ioWorker);
+            bluePlayerMover = new PlayerMover(gameProvider.Game.Field, gameProvider.Game.BluePlayer, moveConverter,
+                ioWorker);
+            redPlayerMover = new PlayerMover(gameProvider.Game.Field, gameProvider.Game.RedPlayer, moveConverter,
+                ioWorker);
             moveCount = 0;
         }
 
@@ -58,8 +60,13 @@ namespace Quoridor.Controller.Flow
 
         private void MakeMove(PlayerMover playerMover)
         {
-            lastMove = playerMover.WaitForMove();
-            lastMove.Execute();
+            var (move, code) = playerMover.WaitForMove();
+            move.Execute();
+            lastMove = move;
+            if (playerMover.ShouldPrint)
+            {
+                ioWorker.WriteLine(code);
+            }
         }
 
         private void DrawField()
