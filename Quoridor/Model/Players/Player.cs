@@ -17,8 +17,6 @@ namespace Quoridor.Model.Players
 
         public int NumberOfMoves { get; private set; }
 
-        public string Name { get; }
-        
         public FieldMask CurrentPath { get; set; }
 
         private readonly IMoveStrategy moveStrategy;
@@ -29,12 +27,10 @@ namespace Quoridor.Model.Players
         {
         }
 
-        public Player(FieldMask position, int amountOfWalls, string name, IMoveStrategy moveStrategy,
-            FieldMask endPosition)
+        public Player(FieldMask position, int amountOfWalls, FieldMask endPosition, IMoveStrategy moveStrategy)
         {
             this.position = position;
             AmountOfWalls = amountOfWalls;
-            Name = name;
             this.moveStrategy = moveStrategy;
             this.endPosition = endPosition;
         }

@@ -6,7 +6,7 @@ namespace Quoridor.Model.Moves
 
     public class WallMove : IMove
     {
-        public FieldMask GetIdentifier => wall.Or(player.EndPosition);
+        public FieldMask GetIdentifier => wall;
 
         private readonly ISearch search;
         private readonly FieldMask wall;

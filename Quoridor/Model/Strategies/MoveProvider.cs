@@ -2,17 +2,21 @@ namespace Quoridor.Model
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using Strategies;
 
     public interface IMoveProvider
     {
         FieldMask[] GetAvailableMoves(Field field, in FieldMask playerMask, in FieldMask enemyMask);
 
-        (FieldMask[] masks, bool isSimple) GetAvailableMovesWithType(Field field, in FieldMask playerMask, in FieldMask enemyMask);
+        (FieldMask[] masks, bool isSimple) GetAvailableMovesWithType(Field field, in FieldMask playerMask,
+            in FieldMask enemyMask);
 
         int GetRow(in FieldMask moveMask);
 
         bool TryMoveForward(Field field, in FieldMask playerMask, out FieldMask moveMask);
+
+        bool IsSimple(Field field, in FieldMask playerMask, FieldMask move);
     }
 
     public class MoveProvider : IMoveProvider
@@ -23,8 +27,8 @@ namespace Quoridor.Model
 
         private readonly Dictionary<FieldMask, int> rows = new();
 
-        private SimpleMoveCalculator simpleMoveCalculator;
-        private WithEnemyMoveCalculator withEnemyMoveCalculator;
+        private readonly SimpleMoveCalculator simpleMoveCalculator;
+        private readonly WithEnemyMoveCalculator withEnemyMoveCalculator;
 
         public MoveProvider()
         {
@@ -77,6 +81,12 @@ namespace Quoridor.Model
             var playerRow = GetRow(in playerMask);
             var moveRow = GetRow(in moveMask);
             return Math.Abs(playerRow - moveRow) == 1;
+        }
+
+        public bool IsSimple(Field field, in FieldMask playerMask, FieldMask move)
+        {
+            var simpleMoves = simpleMoveCalculator.GetAvailableMoves(field, in playerMask);
+            return simpleMoves.Any(m => m == move);
         }
 
         private void CreateEnemyPlayerMasks()

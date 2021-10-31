@@ -39,7 +39,7 @@ namespace Quoridor.Model.Strategies
         {
             UpdateFields(field, player);
             SetRoot();
-            
+
             var startTime = GetCurrentTime();
             var count = 0;
 
@@ -57,11 +57,7 @@ namespace Quoridor.Model.Strategies
             move.Apply(field, player);
             root = bestNode;
 
-            Console.WriteLine($"Count => {count}");
-            Console.WriteLine($"Time => {GetTime(startTime)}");
-            Console.WriteLine($"Depth => {GetDepth(root)}");
-            var (branching, nodes) = GetNodeStatistic(root);
-            Console.WriteLine($"Average branching => {(float) branching / nodes}");
+            PrintStatistic(count, startTime);
             return move;
         }
 
@@ -76,7 +72,6 @@ namespace Quoridor.Model.Strategies
                 FindNewRootFromChildren();
             }
         }
-        
 
         private void CreateNewRoot()
         {
@@ -162,7 +157,7 @@ namespace Quoridor.Model.Strategies
                 return double.PositiveInfinity;
             }
 
-            var expand = (double) node.wins / node.games;
+            var expand = (double)node.wins / node.games;
             expand = node.IsPlayerMove ? expand : 1 - expand;
             var explore = C * Math.Sqrt(Math.Log10(node.parent.games) / node.games);
             return expand + explore;
@@ -172,7 +167,7 @@ namespace Quoridor.Model.Strategies
         {
             var unvisited = node.children.Where(n => !n.IsVisited).ToArray();
             var child = unvisited[random.Next(0, unvisited.Length)];
-            
+
             child.move.Execute();
             child.SetChild(FindChildren(child));
             return child;
@@ -191,7 +186,6 @@ namespace Quoridor.Model.Strategies
                 {
                     move.Execute();
                     moveCount++;
-                    
                 }
             }
 
@@ -217,6 +211,17 @@ namespace Quoridor.Model.Strategies
         private bool HasTime(long startTime)
         {
             return GetCurrentTime() - startTime < ComputeTime;
+        }
+
+        private void PrintStatistic(int count, long startTime)
+        {
+#if DEBUG
+            Console.WriteLine($"Count => {count}");
+            Console.WriteLine($"Time => {GetTime(startTime)}");
+            Console.WriteLine($"Depth => {GetDepth(root)}");
+            var (branching, nodes) = GetNodeStatistic(root);
+            Console.WriteLine($"Average branching => {(float)branching / nodes}");
+#endif
         }
 
         private float GetTime(long startTime)

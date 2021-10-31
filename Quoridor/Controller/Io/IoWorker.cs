@@ -1,4 +1,4 @@
-namespace Quoridor.Controller
+namespace Quoridor.Controller.Io
 {
     public interface IInputReader
     {

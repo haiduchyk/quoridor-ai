@@ -6,6 +6,8 @@ namespace Quoridor.Model.Moves
 
     public class PlayerMove : IMove
     {
+        public FieldMask GetIdentifier => position;
+
         private readonly FieldMask position;
         private readonly FieldMask previousPosition;
         private Player player;
@@ -32,8 +34,6 @@ namespace Quoridor.Model.Moves
             this.player = player;
         }
 
-        public FieldMask GetIdentifier => position.Or(player.EndPosition);
-
         protected bool Equals(PlayerMove other)
         {
             return position.Equals(other.position) && previousPosition.Equals(other.previousPosition);
@@ -56,7 +56,7 @@ namespace Quoridor.Model.Moves
                 return false;
             }
 
-            return Equals((PlayerMove) obj);
+            return Equals((PlayerMove)obj);
         }
 
         public override int GetHashCode()

@@ -1,10 +1,8 @@
 namespace Quoridor.Model.Strategies
 {
-    using System;
     using System.Linq;
-    using Controller;
+    using Controller.Flow;
     using Moves;
-    using Players;
 
     public class MonteNode
     {
