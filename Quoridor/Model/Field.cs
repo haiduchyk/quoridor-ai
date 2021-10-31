@@ -18,6 +18,7 @@ namespace Quoridor.Model
             walls = walls.Or(in wall);
             var nearWalls = WallConstants.nearWalls[wall];
 
+            PossibleWalls.Remove(wall);
             foreach (var nearWall in nearWalls)
             {
                 PossibleWalls.Remove(nearWall);
