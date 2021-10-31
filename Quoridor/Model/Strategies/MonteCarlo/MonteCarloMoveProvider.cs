@@ -62,10 +62,13 @@ namespace Quoridor.Model.Strategies
         private List<IMove> MoveOnPath(MonteNode node)
         {
             var turnPlayer = node.IsPlayerMove ? player : player.Enemy;
-            search.HasPath(field, turnPlayer, in turnPlayer.Position, out var path);
-            var moves = moveProvider.GetAvailableMoves(field, in turnPlayer.Position, in turnPlayer.Enemy.Position);
-            var shift = moves.First(m => m.And(in path).IsNotZero());
-            return FromMove(shift);
+            if (search.HasPath(field, turnPlayer, in turnPlayer.Position, out var path))
+            {
+                var moves = moveProvider.GetAvailableMoves(field, in turnPlayer.Position, in turnPlayer.Enemy.Position);
+                var shift = moves.First(m => m.And(in path).IsNotZero());
+                return FromMove(shift);
+            }
+            return AllMoves(node);
         }
 
         private List<IMove> FromMove(FieldMask moveMask)
@@ -81,7 +84,8 @@ namespace Quoridor.Model.Strategies
         private List<IMove> Shifts(MonteNode node)
         {
             var turnPlayer = node.IsPlayerMove ? player : player.Enemy;
-            var shifts = moveProvider.GetAvailableMovesWithType(field, in turnPlayer.Position, in turnPlayer.Enemy.Position);
+            var shifts =
+                moveProvider.GetAvailableMovesWithType(field, in turnPlayer.Position, in turnPlayer.Enemy.Position);
             return shifts.masks.Select<FieldMask, IMove>(m => new PlayerMove(turnPlayer, m)).ToList();
         }
 
