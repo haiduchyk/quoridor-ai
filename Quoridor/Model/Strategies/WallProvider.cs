@@ -75,7 +75,7 @@ namespace Quoridor.Model
             var nearWallMask = GetNearWallMask(field);
             return moves
                 .Where(w =>
-                    w.And(in WallConstants.nearEdgeWallMask).IsNotZero() ||
+                    // w.And(in WallConstants.nearEdgeWallMask).IsNotZero() ||
                     w.And(in nearPlayer).IsNotZero() ||
                     w.And(in nearEnemy).IsNotZero() ||
                     w.And(in nearWallMask).IsNotZero())
