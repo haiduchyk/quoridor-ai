@@ -18,9 +18,14 @@ namespace Quoridor.Model
         public static readonly FieldMask RedEndPositions =
             new(new[] { 0, 0, 0, 0, 187649268645888 });
 
+        
+        public static readonly byte RedPlayerStartIndex = 4;
+        public static readonly byte BluePlayerStartIndex = 76;
+        
         public static readonly List<(int y, int x)> Directions = new() { (1, 0), (0, 1), (-1, 0), (0, -1) };
         public static readonly List<(int y, int x)> Diagonals = new() { (1, 1), (-1, 1), (-1, -1), (1, -1) };
         
         public static readonly FieldMask EmptyField = new();
+        public static readonly byte EmptyIndex = 255;
     }
 }

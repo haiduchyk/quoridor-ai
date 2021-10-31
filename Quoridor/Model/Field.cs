@@ -37,14 +37,14 @@ namespace Quoridor.Model
         //     return player.CurrentPath.And(wall).IsNotZero();
         // }
 
-        public void PlaceWall(in FieldMask wall)
+        public void PlaceWall(in byte wall)
         {
-            walls = walls.Or(in wall);
+            walls = walls.Or(in WallConstants.AllWalls[wall]);
         }
 
-        public void RemoveWall(in FieldMask wall)
+        public void RemoveWall(in byte wall)
         {
-            walls = walls.Nor(in wall);
+            walls = walls.Nor(in WallConstants.AllWalls[wall]);
         }
 
         public bool HasWall(int y, int x)

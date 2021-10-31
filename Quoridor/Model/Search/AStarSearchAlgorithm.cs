@@ -14,7 +14,7 @@ namespace Quoridor.Model
 
         protected override IComparer<FieldMask> GetComparer()
         {
-            return heuristic = new Heuristic(distances);
+            return heuristic = new Heuristic(Distances);
         }
 
         protected override void Prepare(Player player, in FieldMask position)

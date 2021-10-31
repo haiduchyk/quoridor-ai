@@ -6,13 +6,13 @@ namespace Quoridor.Model.Moves
 
     public class PlayerMove : IMove
     {
-        public ref readonly FieldMask Id => ref position;
+        public ref readonly byte Id => ref position;
 
-        private readonly FieldMask position;
-        private readonly FieldMask previousPosition;
+        private readonly byte position;
+        private readonly byte previousPosition;
         private Player player;
 
-        public PlayerMove(Player player, FieldMask position)
+        public PlayerMove(Player player, byte position)
         {
             this.player = player;
             this.position = position;

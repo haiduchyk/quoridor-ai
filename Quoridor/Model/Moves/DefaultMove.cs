@@ -4,7 +4,7 @@ namespace Quoridor.Model.Moves
 
     public class DefaultMove : IMove
     {
-        public ref readonly FieldMask Id => ref Constants.EmptyField;
+        public ref readonly byte Id => throw new System.NotImplementedException();
 
         public bool IsValid()
         {
@@ -18,5 +18,6 @@ namespace Quoridor.Model.Moves
         public void Apply(Field field, Player player)
         {
         }
+
     }
 }

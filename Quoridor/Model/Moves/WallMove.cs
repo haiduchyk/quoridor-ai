@@ -6,7 +6,7 @@ namespace Quoridor.Model.Moves
 
     public class WallMove : IMove
     {
-        public ref readonly FieldMask Id => ref WallConstants.AllWalls[wallIndex];
+        public ref readonly byte Id => ref wallIndex;
 
         private readonly ISearch search;
         private readonly byte wallIndex;

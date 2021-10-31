@@ -5,11 +5,11 @@ namespace Quoridor.Model
 
     public abstract class SearchAlgorithm : ISearch
     {
-        protected readonly Dictionary<FieldMask, int> distances = new(81);
+        protected readonly Dictionary<byte, int> Distances = new(81);
 
-        private readonly FieldMask[] possiblePositions = new FieldMask[81];
-        private readonly Dictionary<FieldMask, (FieldMask mask, bool isSimple)> prevNodes = new(81);
-        private readonly PriorityQueue<FieldMask> queue;
+        private readonly byte[] possiblePositions = new byte[81];
+        private readonly Dictionary<byte, (byte mask, bool isSimple)> prevNodes = new(81);
+        private readonly PriorityQueue<byte> queue;
 
         private readonly IMoveProvider moveProvider;
         private readonly PathWithWallsRetriever pathRetriever;
@@ -21,31 +21,21 @@ namespace Quoridor.Model
             this.moveProvider = moveProvider;
             this.pathRetriever = pathRetriever;
             var comparer = GetComparer();
-            queue = new PriorityQueue<FieldMask>(comparer);
+            queue = new PriorityQueue<byte>(comparer);
             FindPossiblePositions();
         }
 
-        protected abstract IComparer<FieldMask> GetComparer();
+        protected abstract IComparer<byte> GetComparer();
 
         private void FindPossiblePositions()
         {
-            var count = 0;
-            for (var y = 0; y < FieldMask.BitboardSize; y++)
+            for (var i = 0; i < FieldMask.PlayerFieldArea; i++)
             {
-                for (var x = 0; x < FieldMask.BitboardSize; x++)
-                {
-                    if (y % 2 == 0 && x % 2 == 0)
-                    {
-                        var mask = new FieldMask();
-                        mask.SetBit(y, x, true);
-                        possiblePositions[count] = mask;
-                        count++;
-                    }
-                }
+                possiblePositions[i] = (byte) i;
             }
         }
 
-        public bool HasPath(Field field, Player player, in FieldMask position, out FieldMask path)
+        public bool HasPath(Field field, Player player, in byte position, out FieldMask path)
         {
             this.field = field;
             Prepare(player, in position);
@@ -54,16 +44,16 @@ namespace Quoridor.Model
             return result;
         }
 
-        protected virtual void Prepare(Player player, in FieldMask position)
+        protected virtual void Prepare(Player player, in byte position)
         {
             for (var i = 0; i < 81; i++)
             {
                 var pos = possiblePositions[i];
-                distances[pos] = int.MaxValue;
-                prevNodes[pos] = (Constants.EmptyField, default);
+                Distances[pos] = int.MaxValue;
+                prevNodes[pos] = (Constants.EmptyIndex, default);
             }
 
-            distances[position] = 0;
+            Distances[position] = 0;
             queue.Clear();
             queue.Enqueue(position);
         }
@@ -80,21 +70,22 @@ namespace Quoridor.Model
                     return true;
                 }
 
-                var traversedDistance = distances[position];
+                var traversedDistance = Distances[position];
 
                 var (masks, isSimple) = GetPossibleMoves(player, in position);
 
                 foreach (var pos in masks)
                 {
                     var distance = traversedDistance + 1;
-                    if (distance < distances[pos])
+                    if (distance < Distances[pos])
                     {
-                        distances[pos] = distance;
+                        Distances[pos] = distance;
                         prevNodes[pos] = (position, isSimple);
                         queue.Enqueue(pos);
                     }
                 }
             }
+
             path = Constants.EmptyField;
             return false;
         }
@@ -104,7 +95,7 @@ namespace Quoridor.Model
             return player.IsEndPosition(position);
         }
 
-        private (FieldMask[] masks, bool isSimple) GetPossibleMoves(Player player, in FieldMask position)
+        private (byte[] indexes, bool isSimple) GetPossibleMoves(Player player, in byte position)
         {
             return moveProvider.GetAvailableMovesWithType(field, in position, in player.Enemy.Position);
         }

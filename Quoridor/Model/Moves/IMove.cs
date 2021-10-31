@@ -10,11 +10,11 @@ namespace Quoridor.Model.Moves
 
         void Apply(Field field, Player player);
 
-        ref readonly FieldMask Id { get; }
+        ref readonly byte Id { get; }
 
         public void Log()
         {
-            Id.Log();
+            Id.ToString().Log();
         }
     }
 }

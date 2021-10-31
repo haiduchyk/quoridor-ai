@@ -11,7 +11,7 @@ namespace Quoridor.Model
 
         protected override IComparer<FieldMask> GetComparer()
         {
-            return new DistanceComparer(distances);
+            return new DistanceComparer(Distances);
         }
     }
 }

@@ -14,6 +14,7 @@ namespace Quoridor.Model.Strategies
 
         public static FieldMask nearEdgeWallMask;
 
+        // TODO index
         public static readonly Dictionary<(FieldMask position, FieldMask endPosition), byte> BehindPlayerWall = new();
 
         public static readonly Dictionary<FieldMask, FieldMask> NearPlayerWallsMasks = new();

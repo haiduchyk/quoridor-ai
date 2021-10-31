@@ -8,10 +8,10 @@ namespace Quoridor.Model.Strategies
         private const int SimpleMoveBitsAmount = 3;
 
         // <playerPosition <wallMask, possibleMoves>>
-        private Dictionary<(FieldMask playerPosition, FieldMask wallMask), FieldMask[]> simplePlayersMoves = new();
+        private Dictionary<(byte playerPosition, FieldMask wallMask), byte[]> simplePlayersMoves = new();
 
         //  <playerPosition, wallMaskForThisPlayerPosition>
-        private Dictionary<FieldMask, FieldMask> simplePlayersMovesMasks = new();
+        private Dictionary<byte, FieldMask> simplePlayersMovesMasks = new();
 
         public SimpleMoveCalculator()
         {
@@ -19,28 +19,24 @@ namespace Quoridor.Model.Strategies
             CreateSimplePlayerMoves();
         }
 
-        public FieldMask[] GetAvailableMoves(Field field, in FieldMask playerMask)
+        public byte[] GetAvailableMoves(Field field, in byte playerIndex)
         {
             // Actual code
             // var wallMask = simplePlayersMovesMasks[playerMask];
             // var currentWallMask = field.GetWallsForMask(in wallMask);
             // var moves = simplePlayersMoves[(playerMask, currentWallMask)];
             // return moves;
-            return simplePlayersMoves[(playerMask, field.GetWallsForMask(simplePlayersMovesMasks[playerMask]))];
+            return simplePlayersMoves[(playerIndex, field.GetWallsForMask(simplePlayersMovesMasks[playerIndex]))];
         }
 
         private void CreateSimplePlayerMovesMasks()
         {
-            for (var y = 0; y < FieldMask.BitboardSize; y++)
+            for (var y = 0; y < FieldMask.BitboardSize; y += 2)
             {
-                for (var x = 0; x < FieldMask.BitboardSize; x++)
+                for (var x = 0; x < FieldMask.BitboardSize; x += 2)
                 {
-                    if (y % 2 == 0 && x % 2 == 0)
-                    {
-                        var playerMask = new FieldMask();
-                        playerMask.SetBit(y, x, true);
-                        simplePlayersMovesMasks[playerMask] = CreateSimplePlayerMovesMaskFor(y, x);
-                    }
+                    var playerIndex = FieldMask.GetPlayerIndex(y, x);
+                    simplePlayersMovesMasks[playerIndex] = CreateSimplePlayerMovesMaskFor(y, x);
                 }
             }
         }
@@ -64,27 +60,25 @@ namespace Quoridor.Model.Strategies
             {
                 for (var x = 0; x < FieldMask.BitboardSize; x += 2)
                 {
-                    var playerMask = new FieldMask();
-                    playerMask.SetBit(y, x, true);
-
+                    var playerIndex = FieldMask.GetPlayerIndex(y, x);
                     var uniqueVariant = CalculateUniqueVariantFor(y, x);
-                    foreach (var variant in uniqueVariant)
+                    foreach (var (wallMask, movePositions) in uniqueVariant)
                     {
-                        simplePlayersMoves[(playerMask, variant.wallMask)] = variant.movePositions;
+                        simplePlayersMoves[(playerIndex, wallMask)] = movePositions;
                     }
                 }
             }
         }
 
-        private List<(FieldMask wallMask, FieldMask[] movePositions)> CalculateUniqueVariantFor(int y, int x)
+        private List<(FieldMask wallMask, byte[] movePositions)> CalculateUniqueVariantFor(int y, int x)
         {
-            var result = new List<(FieldMask, FieldMask[])>();
+            var result = new List<(FieldMask, byte[])>();
 
             var uniqueVariants = Math.Pow(4, 2);
 
             for (var unique = 0; unique < uniqueVariants; unique++)
             {
-                var playerMoveMasks = new List<FieldMask>();
+                var playerMoveMasks = new List<byte>();
                 var fieldMask = new FieldMask();
 
                 var uniquePosition = 0;
@@ -115,9 +109,8 @@ namespace Quoridor.Model.Strategies
 
                                     if (FieldMask.IsInRange(newPlayerY, newPlayerX))
                                     {
-                                        var playerMask = new FieldMask();
-                                        playerMask.SetBit(newPlayerY, newPlayerX, true);
-                                        playerMoveMasks.Add(playerMask);
+                                        var playerIndex = FieldMask.GetPlayerIndex(newPlayerY, newPlayerX);
+                                        playerMoveMasks.Add(playerIndex);
                                     }
                                 }
                             }

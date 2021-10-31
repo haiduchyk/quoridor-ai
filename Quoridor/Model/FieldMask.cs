@@ -9,6 +9,8 @@ namespace Quoridor.Model
         public const int BitBlocksAmount = 5;
         public const int BitboardSize = 17;
         public const int BitboardCenter = BitboardSize / 2 + 1;
+        public const int PlayerFieldSize = BitboardSize / 2 + 1;
+        public const int PlayerFieldArea = PlayerFieldSize * PlayerFieldSize;
 
         public const int TotalBitsAmount = BitsBlockSize * BitBlocksAmount; // 320, this is with redundant
         public const int UsedBitsAmount = BitboardSize * BitboardSize; // 289, this is without redundant
@@ -180,6 +182,16 @@ namespace Quoridor.Model
         {
             return index is >= 0 and < UsedBitsAmount;
         }
+
+        public static byte GetPlayerIndex(int y, int x)
+        {
+            return (byte) (PlayerFieldSize * y / 2 + x / 2);
+        }
+        
+        // public static (int y, int x) GetPlayerPosition(byte index)
+        // {
+        //     return inde;
+        // }
 
         public static bool IsInRange(int y, int x)
         {

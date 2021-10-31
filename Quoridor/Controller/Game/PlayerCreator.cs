@@ -26,7 +26,7 @@ namespace Quoridor.Controller.Game
 
         public Player CreateFirstPlayer(GameOptions gameOptions)
         {
-            var position = Constants.BluePlayerPosition;
+            var position = Constants.BluePlayerStartIndex;
             var walls = Constants.WallsPerGame;
             var endPosition = Constants.BlueEndPositions;
             return gameOptions.color switch
@@ -41,7 +41,7 @@ namespace Quoridor.Controller.Game
 
         public Player CreateSecondPlayer(GameOptions gameOptions)
         {
-            var position = Constants.RedPlayerPosition;
+            var position = Constants.RedPlayerStartIndex;
             var walls = Constants.WallsPerGame;
             var endPosition = Constants.RedEndPositions;
             return gameOptions.color switch
@@ -54,12 +54,12 @@ namespace Quoridor.Controller.Game
             };
         }
 
-        public Player CreatePlayer(FieldMask position, int walls, FieldMask endPosition)
+        public Player CreatePlayer(byte position, int walls, FieldMask endPosition)
         {
             return new Player(position, walls, endPosition, new ManualStrategy());
         }
 
-        public Player CreateBot(FieldMask position, int walls, FieldMask endPosition)
+        public Player CreateBot(byte position, int walls, FieldMask endPosition)
         {
             return new Player(position, walls, endPosition, GetStrategy());
         }
