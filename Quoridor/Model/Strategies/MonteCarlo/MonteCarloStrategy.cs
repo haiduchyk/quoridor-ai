@@ -8,7 +8,7 @@ namespace Quoridor.Model.Strategies
 
     public class MonteCarloStrategy : IMoveStrategy
     {
-        private const long ComputeTime = 10_00;
+        private const long ComputeTime = 5000;
         private const double C = 1.4142135;
 
         public bool IsManual => false;
@@ -56,6 +56,7 @@ namespace Quoridor.Model.Strategies
                 else
                 {
                     root = nextRoot;
+
                     if (root.children == null)
                     {
                         root.SetChild(FindChildren(root));
@@ -68,7 +69,7 @@ namespace Quoridor.Model.Strategies
 
             var count = 0;
 
-            while (count < 1000)
+            while (HasTime(startTime))
             {
                 UpdateFields(field, player);
                 var node = Select(root);
@@ -86,7 +87,7 @@ namespace Quoridor.Model.Strategies
             Console.WriteLine($"Time => {GetTime(startTime)}");
             Console.WriteLine($"Depth => {GetDepth(root)}");
             var (branching, nodes) = GetNodeStatistic(root);
-            Console.WriteLine($"Average branching => {(float)branching / nodes}");
+            Console.WriteLine($"Average branching => {(float) branching / nodes}");
             return move;
         }
 
@@ -118,7 +119,6 @@ namespace Quoridor.Model.Strategies
             }
 
             var chosenNode = PickUnvisited(node);
-            chosenNode.move.Execute();
             return chosenNode;
         }
 
@@ -151,7 +151,7 @@ namespace Quoridor.Model.Strategies
                 return double.PositiveInfinity;
             }
 
-            var expand = (double)node.wins / node.games;
+            var expand = (double) node.wins / node.games;
             expand = node.IsPlayerMove ? expand : 1 - expand;
             var explore = C * Math.Sqrt(Math.Log10(node.parent.games) / node.games);
             return expand + explore;
@@ -161,6 +161,8 @@ namespace Quoridor.Model.Strategies
         {
             var unvisited = node.children.Where(n => !n.IsVisited).ToArray();
             var child = unvisited[random.Next(0, unvisited.Length)];
+            
+            child.move.Execute();
             child.SetChild(FindChildren(child));
             return child;
         }
@@ -174,11 +176,11 @@ namespace Quoridor.Model.Strategies
             {
                 var player = moveCount % 2 == 0 ? firstPlayer : secondPlayer;
                 var move = strategy.FindMove(monteField, player);
-                if (move.IsValid())
-                {
+                // if (move.IsValid())
+                // {
                     move.Execute();
                     moveCount++;
-                }
+                // }
             }
 
             return montePlayer.HasReachedFinish() ? 1 : 0;

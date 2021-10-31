@@ -5,6 +5,8 @@ namespace Quoridor.Model.Moves
 
     public class WallMove : IMove
     {
+        public FieldMask GetIdentifier => wall.Or(player.EndPosition);
+        
         private readonly ISearch search;
         private readonly FieldMask wall;
         private Field field;
@@ -44,9 +46,44 @@ namespace Quoridor.Model.Moves
             this.player = player;
         }
 
-        public FieldMask GetIdentifier()
+        protected bool Equals(WallMove other)
         {
-            return wall;
+            return wall.Equals(other.wall);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (obj.GetType() != GetType())
+            {
+                return false;
+            }
+
+            return Equals((WallMove) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return wall.GetHashCode();
+        }
+
+        public static bool operator ==(WallMove left, WallMove right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(WallMove left, WallMove right)
+        {
+            return !Equals(left, right);
         }
     }
 }

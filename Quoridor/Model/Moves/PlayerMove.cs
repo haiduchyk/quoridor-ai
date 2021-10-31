@@ -1,5 +1,6 @@
 namespace Quoridor.Model.Moves
 {
+    using System;
     using Model;
     using Players;
 
@@ -31,9 +32,46 @@ namespace Quoridor.Model.Moves
             this.player = player;
         }
 
-        public FieldMask GetIdentifier()
+        public FieldMask GetIdentifier => position.Or(player.EndPosition);
+
+        protected bool Equals(PlayerMove other)
         {
-            return position;
+            return position.Equals(other.position) && previousPosition.Equals(other.previousPosition);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (obj.GetType() != this.GetType())
+            {
+                return false;
+            }
+
+            return Equals((PlayerMove) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(position, previousPosition);
+        }
+
+        public static bool operator ==(PlayerMove left, PlayerMove right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(PlayerMove left, PlayerMove right)
+        {
+            return !Equals(left, right);
         }
     }
 }

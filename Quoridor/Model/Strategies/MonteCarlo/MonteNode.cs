@@ -45,7 +45,8 @@ namespace Quoridor.Model.Strategies
         {
             foreach (var child in children)
             {
-                if (child.move.GetIdentifier() == GameController.lastMove.GetIdentifier())
+                // TODO: shit 
+                if (child.move == GameController.lastMove)
                 {
                     child.SetParentInNull();
                     return child;

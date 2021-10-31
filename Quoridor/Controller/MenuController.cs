@@ -13,11 +13,13 @@ namespace Quoridor.Controller
             {
                 new() { id = 1, name = "Game versus another player" },
                 new() { id = 2, name = "Game versus bot" },
-                new() { id = 3, name = "Quit" },
+                new() { id = 3, name = "bot versus bot" },
+                new() { id = 4, name = "Quit" },
             }
         };
 
         private readonly IInputReader inputReader;
+
         private readonly MenuView menuView;
 
         public MenuController(IInputReader inputReader)
@@ -65,7 +67,7 @@ namespace Quoridor.Controller
 
         private bool ShouldQuit(OptionItem option)
         {
-            return option == Options.Items[2];
+            return option == Options.Items[3];
         }
 
         private GameOptions GetGameOptionsFor(OptionItem option)
@@ -73,6 +75,12 @@ namespace Quoridor.Controller
             if (option == Options.Items[0])
             {
                 return new GameOptions(GameMode.VersusPlayer, BotDifficulty.Easy);
+            }
+
+            if (option == Options.Items[2])
+            {
+                return new GameOptions(GameMode.BotVersusBot, BotDifficulty.Easy);
+
             }
             return new GameOptions(GameMode.VersusBot, BotDifficulty.Easy);
         }

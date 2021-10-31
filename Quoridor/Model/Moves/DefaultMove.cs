@@ -17,9 +17,6 @@ namespace Quoridor.Model.Moves
         {
         }
 
-        public FieldMask GetIdentifier()
-        {
-            return Constants.EmptyField;
-        }
+        public FieldMask GetIdentifier { get; }
     }
 }

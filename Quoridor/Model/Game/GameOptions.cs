@@ -22,6 +22,7 @@ namespace Quoridor.Model
     public enum GameMode
     {
         VersusBot,
-        VersusPlayer
+        VersusPlayer,
+        BotVersusBot,
     }
 }

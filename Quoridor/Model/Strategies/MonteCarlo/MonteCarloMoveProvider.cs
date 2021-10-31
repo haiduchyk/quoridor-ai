@@ -82,10 +82,6 @@ namespace Quoridor.Model.Strategies
         {
             var turnPlayer = node.IsPlayerMove ? player : player.Enemy;
             var shifts = moveProvider.GetAvailableMovesWithType(field, in turnPlayer.Position, in turnPlayer.Enemy.Position);
-            if (!shifts.isSimple)
-            {
-                Console.WriteLine($" = {1}");
-            }
             return shifts.masks.Select<FieldMask, IMove>(m => new PlayerMove(turnPlayer, m)).ToList();
         }
 

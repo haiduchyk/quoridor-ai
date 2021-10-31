@@ -15,18 +15,20 @@ namespace Quoridor.Model
         {
             Field = new Field(FieldMask.BitboardSize);
             Field.ValidWalls.AddRange(wallProvider.GetAllMoves());
-            BluePlayer = CreateFirstPlayer();
+            BluePlayer = CreateFirstPlayer(gameOptions, botCreator);
             RedPlayer = CreateSecondPlayer(gameOptions, botCreator);
             BluePlayer.SetEnemy(RedPlayer);
             RedPlayer.SetEnemy(BluePlayer);
         }
 
-        private Player CreateFirstPlayer()
+        private Player CreateFirstPlayer(GameOptions gameOptions, IBotCreator botCreator)
         {
             var position = Constants.BluePlayerPosition;
             var name = Constants.BluePlayerName;
             var endPosition = Constants.BlueEndPositions;
-            return new Player(position, Constants.WallsPerGame, name, new ManualStrategy(), endPosition);
+            return gameOptions.gameMode != GameMode.BotVersusBot
+                ? new Player(position, Constants.WallsPerGame, name, new ManualStrategy(), endPosition)
+                : botCreator.CreateBotFor(position, name, gameOptions.botDifficulty, endPosition);
         }
 
         private Player CreateSecondPlayer(GameOptions gameOptions, IBotCreator botCreator)
@@ -34,6 +36,7 @@ namespace Quoridor.Model
             var position = Constants.RedPlayerPosition;
             var name = Constants.RedPlayerName;
             var endPosition = Constants.RedEndPositions;
+            
             return gameOptions.gameMode == GameMode.VersusPlayer
                 ? new Player(position, Constants.WallsPerGame, name, new ManualStrategy(), endPosition)
                 : botCreator.CreateBotFor(position, name, gameOptions.botDifficulty, endPosition);

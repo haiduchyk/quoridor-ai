@@ -10,6 +10,11 @@ namespace Quoridor.Model.Moves
 
         void Apply(Field field, Player player);
 
-        FieldMask GetIdentifier();
+        FieldMask GetIdentifier { get; }
+        
+        public void Log()
+        {
+            GetIdentifier.Log();
+        }
     }
 }
