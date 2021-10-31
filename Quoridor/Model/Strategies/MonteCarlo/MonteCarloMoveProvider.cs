@@ -89,7 +89,8 @@ namespace Quoridor.Model.Strategies
         {
             var turnPlayer = node.IsPlayerMove ? player : player.Enemy;
             var walls = wallProvider.GenerateWallMoves(field, turnPlayer);
-            return walls.Select<FieldMask, IMove>(w => new WallMove(field, turnPlayer, search, w));
+            return walls.Select<FieldMask, IMove>(w => new WallMove(field, turnPlayer, search, w))
+                .Where(w => w.IsValid());
         }
 
         private List<IMove> AllMoves(MonteNode node)
@@ -113,7 +114,8 @@ namespace Quoridor.Model.Strategies
             search.HasPath(field, turnPlayer.Enemy, in turnPlayer.Enemy.Position, out var path);
             return walls
                 .Where(w => w.And(in path).IsNotZero())
-                .Select<FieldMask, IMove>(w => new WallMove(field, turnPlayer, search, w));
+                .Select<FieldMask, IMove>(w => new WallMove(field, turnPlayer, search, w))
+                .Where(w => w.IsValid());
         }
     }
 }
