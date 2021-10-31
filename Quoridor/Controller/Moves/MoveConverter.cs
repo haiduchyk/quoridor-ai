@@ -73,12 +73,12 @@ namespace Quoridor.Controller.Moves
         {
             switch (move)
             {
-                case PlayerMove step when moveProvider.IsSimple(field, in player.Position, step.GetIdentifier):
-                    return $"move {positionConverter.CellPositionToCode(step.GetIdentifier)}";
-                case PlayerMove step when !moveProvider.IsSimple(field, in player.Position, step.GetIdentifier):
-                    return $"jump {positionConverter.CellPositionToCode(step.GetIdentifier)}";
+                case PlayerMove step when moveProvider.IsSimple(field, in player.Position, step.Id):
+                    return $"move {positionConverter.CellPositionToCode(step.Id)}";
+                case PlayerMove step when !moveProvider.IsSimple(field, in player.Position, step.Id):
+                    return $"jump {positionConverter.CellPositionToCode(step.Id)}";
                 case WallMove wall:
-                    return $"wall {positionConverter.WallPositionToCode(wall.GetIdentifier)}";
+                    return $"wall {positionConverter.WallPositionToCode(wall.Id)}";
             }
 
             return "unknown";

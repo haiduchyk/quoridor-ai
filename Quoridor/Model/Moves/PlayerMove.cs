@@ -6,7 +6,7 @@ namespace Quoridor.Model.Moves
 
     public class PlayerMove : IMove
     {
-        public FieldMask GetIdentifier => position;
+        public ref readonly FieldMask Id => ref position;
 
         private readonly FieldMask position;
         private readonly FieldMask previousPosition;

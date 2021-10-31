@@ -5,19 +5,20 @@ namespace Quoridor.Model.Strategies
     public static class WallConstants
     {
         private const int WallSize = 3;
-        public const int MaxWallCount = 128;
+        private const int MaxWallCount = 128;
 
-        public static FieldMask[] indexToMask;
-        public static Dictionary<FieldMask, byte>[] maskToIndex;
+        public static readonly FieldMask[] AllWalls = new FieldMask[MaxWallCount];
+        public static readonly byte[] AllIndexes = new byte[MaxWallCount];
+
+        public static readonly Dictionary<FieldMask, byte> MaskToIndex = new();
 
         public static FieldMask nearEdgeWallMask;
 
-        public static readonly Dictionary<(FieldMask position, FieldMask endPosition), FieldMask> behindPlayerWall =
-            new();
+        public static readonly Dictionary<(FieldMask position, FieldMask endPosition), byte> BehindPlayerWall = new();
 
-        public static readonly Dictionary<FieldMask, FieldMask> nearPlayerWallsMasks = new();
-        public static readonly Dictionary<FieldMask, FieldMask> nearWallsMasks = new();
-        public static readonly Dictionary<byte, byte[]> nearWalls = new();
+        public static readonly Dictionary<FieldMask, FieldMask> NearPlayerWallsMasks = new();
+        public static readonly Dictionary<FieldMask, FieldMask> NearWallsMasks = new();
+        public static readonly Dictionary<byte, byte[]> NearWalls = new();
 
         static WallConstants()
         {
@@ -30,15 +31,19 @@ namespace Quoridor.Model.Strategies
 
         public static void GenerateAllWallMoves()
         {
-            indexToMask = new FieldMask[MaxWallCount];
             var count = 0;
             for (var i = 1; i < FieldMask.BitboardSize; i += 2)
             {
                 for (var j = 1; j < FieldMask.BitboardSize; j += 2)
                 {
-                    indexToMask[count++] = GenerateWall(i, j, WallOrientation.Horizontal);
-                    indexToMask[count++] = GenerateWall(i, j, WallOrientation.Vertical);
+                    AllWalls[count++] = GenerateWall(i, j, WallOrientation.Horizontal);
+                    AllWalls[count++] = GenerateWall(i, j, WallOrientation.Vertical);
                 }
+            }
+            for (byte i = 0; i < 128; i++)
+            {
+                MaskToIndex[AllWalls[i]] = i;
+                AllIndexes[i] = i;
             }
         }
 
@@ -59,7 +64,7 @@ namespace Quoridor.Model.Strategies
                 {
                     var position = new FieldMask();
                     position.SetBit(i, j, true);
-                    nearPlayerWallsMasks[position] = GetWallMask(i, j);
+                    NearPlayerWallsMasks[position] = GetWallMask(i, j);
                     SetUpWallMask(i, j, position);
                     SetDownWallMask(i, j, position);
                 }
@@ -88,8 +93,7 @@ namespace Quoridor.Model.Strategies
 
             j = j == 0 ? 1 : j - 1;
             i -= 1;
-            var wallMask = GenerateWall(i, j, WallOrientation.Horizontal);
-            behindPlayerWall[(position, Constants.RedEndPositions)] = wallMask;
+            BehindPlayerWall[(position, Constants.RedEndPositions)] = ToIndex(i, j, WallOrientation.Horizontal);
         }
 
         private static void SetDownWallMask(int i, int j, FieldMask position)
@@ -101,13 +105,12 @@ namespace Quoridor.Model.Strategies
 
             j = j == 0 ? 1 : j - 1;
             i += 1;
-            var wallMask = GenerateWall(i, j, WallOrientation.Horizontal);
-            behindPlayerWall[(position, Constants.BlueEndPositions)] = wallMask;
+            BehindPlayerWall[(position, Constants.RedEndPositions)] = ToIndex(i, j, WallOrientation.Horizontal);
         }
 
         private static void GenerateNearWall()
         {
-            for (var i = 0; i < indexToMask.Length; i++)
+            for (var i = 0; i < AllWalls.Length; i++)
             {
                 var currentNearWallsIndexes = new List<byte>();
                 if (i % 2 == 0)
@@ -123,18 +126,17 @@ namespace Quoridor.Model.Strategies
                     AddIfInRange(i + FieldMask.BitboardSize - 1);
                 }
 
-                nearWalls[(byte) i] = currentNearWallsIndexes.ToArray();
+                NearWalls[(byte)i] = currentNearWallsIndexes.ToArray();
 
                 void AddIfInRange(int index)
                 {
-                    if (index >= 0 && index < indexToMask.Length)
+                    if (index >= 0 && index < AllWalls.Length)
                     {
-                        currentNearWallsIndexes.Add((byte) index);
+                        currentNearWallsIndexes.Add((byte)index);
                     }
                 }
             }
         }
-
 
         private static void GenerateNearWallMasks()
         {
@@ -143,17 +145,16 @@ namespace Quoridor.Model.Strategies
             {
                 for (var j = 1; j < FieldMask.BitboardSize; j += 2)
                 {
-                    var horizontal = indexToMask[count++];
+                    var horizontal = AllWalls[count++];
                     var nearWallsMask = GenerateNearWallsForHorizontal(i, j);
-                    nearWallsMasks[horizontal] = nearWallsMask;
+                    NearWallsMasks[horizontal] = nearWallsMask;
 
-                    var vertical = indexToMask[count++];
+                    var vertical = AllWalls[count++];
                     nearWallsMask = GenerateNearWallsForVertical(i, j);
-                    nearWallsMasks[vertical] = nearWallsMask;
+                    NearWallsMasks[vertical] = nearWallsMask;
                 }
             }
         }
-
 
         // TODO how fast and good with this flag on and off
         private static bool needUpPoint = false;
@@ -217,6 +218,14 @@ namespace Quoridor.Model.Strategies
             var yOffset = wallOrientation == WallOrientation.Vertical ? 1 : 0;
             var xOffset = wallOrientation == WallOrientation.Horizontal ? 1 : 0;
             return (yOffset, xOffset);
+        }
+
+        public static byte ToIndex(int i, int j, WallOrientation wallOrientation)
+        {
+            i /= 2;
+            j /= 2;
+            var offset = wallOrientation == WallOrientation.Horizontal ? 0 : 1;
+            return (byte)(i * 8 + j + offset);
         }
     }
 }

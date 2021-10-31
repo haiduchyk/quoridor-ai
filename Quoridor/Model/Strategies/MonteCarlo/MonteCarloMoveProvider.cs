@@ -76,7 +76,7 @@ namespace Quoridor.Model.Strategies
             return new List<IMove>() { new PlayerMove(player, moveMask) };
         }
 
-        private List<IMove> FromWall(FieldMask wall)
+        private List<IMove> FromWall(byte wall)
         {
             return new List<IMove>() { new WallMove(field, player, search, wall) };
         }
@@ -93,8 +93,8 @@ namespace Quoridor.Model.Strategies
         {
             var turnPlayer = node.IsPlayerMove ? player : player.Enemy;
             var walls = wallProvider.GenerateWallMoves(field, turnPlayer);
-            return walls.Select<FieldMask, IMove>(w => new WallMove(field, turnPlayer, search, w))
-                .Where(w => w.IsValid());
+            return walls.Select<byte, IMove>(w => new WallMove(field, turnPlayer, search, w))
+                .Where(m => m.IsValid());
         }
 
         private List<IMove> AllMoves(MonteNode node)
@@ -117,9 +117,9 @@ namespace Quoridor.Model.Strategies
             var walls = wallProvider.GenerateWallMoves(field);
             search.HasPath(field, turnPlayer.Enemy, in turnPlayer.Enemy.Position, out var path);
             return walls
-                .Where(w => w.And(in path).IsNotZero())
-                .Select<FieldMask, IMove>(w => new WallMove(field, turnPlayer, search, w))
-                .Where(w => w.IsValid());
+                .Where(b => WallConstants.AllWalls[b].And(in path).IsNotZero())
+                .Select<byte, IMove>(w => new WallMove(field, turnPlayer, search, w))
+                .Where(m => m.IsValid());
         }
     }
 }

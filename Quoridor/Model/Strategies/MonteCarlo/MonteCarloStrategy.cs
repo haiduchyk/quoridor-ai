@@ -43,7 +43,7 @@ namespace Quoridor.Model.Strategies
             var startTime = GetCurrentTime();
             var count = 0;
 
-            while (count < 1000)
+            while (HasTime(startTime))
             {
                 UpdateFields(field, player);
                 var node = Select(root);

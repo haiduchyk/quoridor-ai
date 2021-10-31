@@ -7,27 +7,27 @@ namespace Quoridor.Model
     public class Field
     {
         public List<byte> PossibleWalls { get; } = new();
-        public List<FieldMask> ValidWalls { get; } = new();
-        public List<FieldMask> ProbableValidWalls { get; } = new();
+        public List<byte> ValidWalls { get; } = new();
+        public List<byte> ProbableValidWalls { get; } = new();
 
         public ref readonly FieldMask Walls => ref walls;
 
-        public FieldMask walls;
+        private FieldMask walls;
 
         public void PlaceWallAndUpdateValidMoves(in byte wallIndex, Player player)
         {
-            var wallMask = WallConstants.indexToMask[wallIndex];
+            var wallMask = WallConstants.AllWalls[wallIndex];
             walls = walls.Or(in wallMask);
-            
-            var nearWalls = WallConstants.nearWalls[wallIndex];
-            
+
+            var nearWalls = WallConstants.NearWalls[wallIndex];
+
             PossibleWalls.Remove(wallIndex);
             foreach (var nearWall in nearWalls)
             {
                 PossibleWalls.Remove(nearWall);
             }
         }
-        
+
         public void PlaceWallAndUpdateProbableValidMoves(in FieldMask wall, Player player)
         {
         }

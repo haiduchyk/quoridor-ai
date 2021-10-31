@@ -4,6 +4,8 @@ namespace Quoridor.Model.Moves
 
     public class DefaultMove : IMove
     {
+        public ref readonly FieldMask Id => ref Constants.EmptyField;
+
         public bool IsValid()
         {
             return false;
@@ -16,7 +18,5 @@ namespace Quoridor.Model.Moves
         public void Apply(Field field, Player player)
         {
         }
-
-        public FieldMask GetIdentifier { get; }
     }
 }

@@ -2,12 +2,13 @@ namespace Quoridor.Controller.Moves
 {
     using System;
     using Model;
+    using Model.Strategies;
 
     public interface IPositionConverter
     {
         FieldMask? TryParseCellPosition(string code);
 
-        FieldMask? TryParseWallPosition(string code);
+        byte? TryParseWallPosition(string code);
 
         string CellPositionToCode(FieldMask position);
 
@@ -28,7 +29,7 @@ namespace Quoridor.Controller.Moves
             return TryParse(code, 'a', 8);
         }
 
-        public FieldMask? TryParseWallPosition(string code)
+        public byte? TryParseWallPosition(string code)
         {
             var orientation = code.ToLower()[^1];
 
@@ -46,7 +47,7 @@ namespace Quoridor.Controller.Moves
             }
             var (row, column) = ConvertToPosition(position.Value);
             var (i, j) = ToFieldMaskWallIndex(row, column);
-            return wallProvider.GenerateWall(i, j, wallType);
+            return WallConstants.ToIndex(i, j, wallType);
         }
 
         public string CellPositionToCode(FieldMask position)

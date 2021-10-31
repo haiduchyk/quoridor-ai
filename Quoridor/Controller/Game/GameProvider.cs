@@ -29,8 +29,7 @@ namespace Quoridor.Controller.Game
         public Game StartNewGame(GameOptions gameOptions)
         {
             var field = new Field();
-            // TODO index
-            // field.PossibleWalls.AddRange(wallProvider.GetAllMoves());
+            field.PossibleWalls.AddRange(wallProvider.GetAllMoves());
             var bluePlayer = playerCreator.CreateFirstPlayer(gameOptions);
             var redPlayer = playerCreator.CreateSecondPlayer(gameOptions);
             bluePlayer.SetEnemy(redPlayer);
