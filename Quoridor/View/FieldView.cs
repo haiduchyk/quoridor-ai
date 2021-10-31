@@ -57,8 +57,8 @@ namespace Quoridor.View
 
         private void RenderPlayer(int y, int x, Player bluePlayer, Player redPlayer)
         {
-            var isBlue = bluePlayer.Position.GetBit(y, x);
-            var isRed = redPlayer.Position.GetBit(y, x);
+            var isBlue = bluePlayer.PositionMask.GetBit(y, x);
+            var isRed = redPlayer.PositionMask.GetBit(y, x);
 
             if (isBlue)
             {
