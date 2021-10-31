@@ -26,6 +26,7 @@ namespace Quoridor.Model.Strategies
 
         public List<IMove> FindMoves(MonteNode node)
         {
+            
             var row = moveProvider.GetRow(in player.Position);
             var startRow = player.EndDownIndex == PlayerConstants.EndBlueDownIndexIncluding ? 16 : 0;
             if (IsLessNthMove(node, 5) && Math.Abs(startRow - row) < 3)
@@ -38,6 +39,10 @@ namespace Quoridor.Model.Strategies
                 return FromWall(wall);
             }
             var turnPlayer = node.IsPlayerMove ? player : player.Enemy;
+            if (turnPlayer.HasReachedFinish())
+            {
+                return new List<IMove>();
+            }
             if (!turnPlayer.HasWalls())
             {
                 return Shifts(node);
