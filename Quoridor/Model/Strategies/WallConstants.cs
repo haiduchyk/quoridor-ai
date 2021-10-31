@@ -12,13 +12,13 @@ namespace Quoridor.Model.Strategies
 
         public static readonly Dictionary<FieldMask, byte> MaskToIndex = new();
 
-        public static FieldMask nearEdgeWallMask;
+        public static readonly byte[] NearEdgeWalls = new byte[16];
 
         // TODO index
-        public static readonly Dictionary<(byte position, FieldMask endPosition), byte> BehindPlayerWall = new();
+        public static readonly Dictionary<(byte position, byte endPosition), byte> BehindPlayerWall = new();
 
-        public static readonly Dictionary<FieldMask, FieldMask> NearPlayerWallsMasks = new();
-        public static readonly Dictionary<FieldMask, FieldMask> NearWallsMasks = new();
+        public static readonly Dictionary<byte, byte[]> NearPlayerWalls = new();
+        public static readonly Dictionary<byte, byte[]> NearWallsMasks = new();
         public static readonly Dictionary<byte, byte[]> NearWalls = new();
 
         static WallConstants()
@@ -50,10 +50,11 @@ namespace Quoridor.Model.Strategies
 
         private static void GenerateNearEdgeWallMask()
         {
+            var count = 0;
             for (var i = 1; i < FieldMask.BitboardSize; i += 2)
             {
-                nearEdgeWallMask.SetBit(i, 0, true);
-                nearEdgeWallMask.SetBit(i, FieldMask.BitboardSize - 1, true);
+                NearEdgeWalls[count++] = ToIndex(i, 1, WallOrientation.Horizontal);
+                NearEdgeWalls[count++] = ToIndex(i, 15, WallOrientation.Horizontal);
             }
         }
 
@@ -63,29 +64,32 @@ namespace Quoridor.Model.Strategies
             {
                 for (var j = 0; j < FieldMask.BitboardSize; j += 2)
                 {
-                    var position = new FieldMask();
-                    position.SetBit(i, j, true);
-                    NearPlayerWallsMasks[position] = GetWallMask(i, j);
-                    SetUpWallMask(i, j, position);
-                    SetDownWallMask(i, j, position);
+                    var index = FieldMask.GetPlayerIndex(i, j);
+                    NearPlayerWalls[index] = GetNearWalls(i, j);
+                    SetUpWallMask(i, j, index);
+                    SetDownWallMask(i, j, index);
                 }
             }
         }
 
-        private static FieldMask GetWallMask(int i, int j)
+        private static byte[] GetNearWalls(int i, int j)
         {
-            var wallMask = new FieldMask();
-            foreach (var (offsetY, offsetX) in Constants.Directions)
+            var walls = new List<byte>();
+            foreach (var (offsetY, offsetX) in Constants.Diagonals)
             {
                 var y = i + offsetY;
                 var x = j + offsetX;
-                wallMask.TrySetBit(y, x, true);
+                if (FieldMask.IsInRange(y, x))
+                {
+                    walls.Add(ToIndex(y, x, WallOrientation.Horizontal));
+                    walls.Add(ToIndex(y, x, WallOrientation.Vertical));
+                }
             }
 
-            return wallMask;
+            return walls.ToArray();
         }
 
-        private static void SetUpWallMask(int i, int j, FieldMask position)
+        private static void SetUpWallMask(int i, int j, byte position)
         {
             if (i == 0)
             {
@@ -94,10 +98,11 @@ namespace Quoridor.Model.Strategies
 
             j = j == 0 ? 1 : j - 1;
             i -= 1;
-            BehindPlayerWall[(position, Constants.RedEndPositions)] = ToIndex(i, j, WallOrientation.Horizontal);
+            BehindPlayerWall[(position, PlayerConstants.EndRedDownIndexIncluding)] =
+                ToIndex(i, j, WallOrientation.Horizontal);
         }
 
-        private static void SetDownWallMask(int i, int j, FieldMask position)
+        private static void SetDownWallMask(int i, int j, byte position)
         {
             if (i == 16)
             {
@@ -106,7 +111,8 @@ namespace Quoridor.Model.Strategies
 
             j = j == 0 ? 1 : j - 1;
             i += 1;
-            BehindPlayerWall[(position, Constants.RedEndPositions)] = ToIndex(i, j, WallOrientation.Horizontal);
+            BehindPlayerWall[(position, PlayerConstants.EndBlueDownIndexIncluding)] =
+                ToIndex(i, j, WallOrientation.Horizontal);
         }
 
         private static void GenerateNearWall()
@@ -141,18 +147,16 @@ namespace Quoridor.Model.Strategies
 
         private static void GenerateNearWallMasks()
         {
-            var count = 0;
+            byte count = 0;
             for (var i = 1; i < FieldMask.BitboardSize; i += 2)
             {
                 for (var j = 1; j < FieldMask.BitboardSize; j += 2)
                 {
-                    var horizontal = AllWalls[count++];
                     var nearWallsMask = GenerateNearWallsForHorizontal(i, j);
-                    NearWallsMasks[horizontal] = nearWallsMask;
+                    NearWallsMasks[count++] = nearWallsMask;
 
-                    var vertical = AllWalls[count++];
                     nearWallsMask = GenerateNearWallsForVertical(i, j);
-                    NearWallsMasks[vertical] = nearWallsMask;
+                    NearWallsMasks[count++] = nearWallsMask;
                 }
             }
         }
@@ -160,44 +164,52 @@ namespace Quoridor.Model.Strategies
         // TODO how fast and good with this flag on and off
         private static bool needUpPoint = false;
 
-        private static FieldMask GenerateNearWallsForHorizontal(int i, int j)
+        private static byte[] GenerateNearWallsForHorizontal(int i, int j)
         {
-            var mask = new FieldMask();
-            foreach (var (offsetY, offsetX) in Constants.Directions)
+            var walls = new List<byte>();
+            for (var k = -1; k <= 1; k += 2)
             {
-                mask.TrySetBit(i + offsetY, j + 2 * offsetX, true);
-                if (needUpPoint || offsetY == 0)
+                if (FieldMask.IsInRange(i + k, j))
                 {
-                    mask.TrySetBit(i + 2 * offsetY, j + 3 * offsetX, true);
+                    walls.Add(ToIndex(i + k, j, WallOrientation.Horizontal));
                 }
             }
-
-            foreach (var (offsetY, offsetX) in Constants.Diagonals)
+            for (var k = -1; k <= 1; k++)
             {
-                mask.TrySetBit(i + offsetY, j + 2 * offsetX, true);
+                if (FieldMask.IsInRange(i + k, j - 1))
+                {
+                    walls.Add(ToIndex(i + k, j - 1, WallOrientation.Horizontal));
+                }
+                if (FieldMask.IsInRange(i + k, j + 1))
+                {
+                    walls.Add(ToIndex(i + k, j + 1, WallOrientation.Horizontal));
+                }
             }
-
-            return mask;
+            return walls.ToArray();
         }
 
-        private static FieldMask GenerateNearWallsForVertical(int i, int j)
+        private static byte[] GenerateNearWallsForVertical(int i, int j)
         {
-            var mask = new FieldMask();
-            foreach (var (offsetY, offsetX) in Constants.Directions)
+            var walls = new List<byte>();
+            for (var k = -1; k <= 1; k += 2)
             {
-                mask.TrySetBit(i + 2 * offsetY, j + offsetX, true);
-                if (needUpPoint || offsetX == 0)
+                if (FieldMask.IsInRange(i, j + k))
                 {
-                    mask.TrySetBit(i + 3 * offsetY, j + 2 * offsetX, true);
+                    walls.Add(ToIndex(i, j + k, WallOrientation.Vertical));
                 }
             }
-
-            foreach (var (offsetY, offsetX) in Constants.Diagonals)
+            for (var k = -1; k <= 1; k++)
             {
-                mask.TrySetBit(i + 2 * offsetY, j + offsetX, true);
+                if (FieldMask.IsInRange(i - 1, j + k))
+                {
+                    walls.Add(ToIndex(i - 1, j + k, WallOrientation.Vertical));
+                }
+                if (FieldMask.IsInRange(i + 1, j + k))
+                {
+                    walls.Add(ToIndex(i + 1, j + k, WallOrientation.Vertical));
+                }
             }
-
-            return mask;
+            return walls.ToArray();
         }
 
         public static FieldMask GenerateWall(int y, int x, WallOrientation wallOrientation)

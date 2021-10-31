@@ -6,6 +6,7 @@ namespace Quoridor.Model
 
     public class Field
     {
+        public List<byte> PlacedWalls { get; } = new();
         public List<byte> PossibleWalls { get; } = new();
         public List<byte> ValidWalls { get; } = new();
         public List<byte> ProbableValidWalls { get; } = new();
@@ -16,6 +17,7 @@ namespace Quoridor.Model
 
         public void PlaceWallAndUpdateValidMoves(in byte wallIndex, Player player)
         {
+            PlacedWalls.Add(wallIndex);
             var wallMask = WallConstants.AllWalls[wallIndex];
             walls = walls.Or(in wallMask);
 

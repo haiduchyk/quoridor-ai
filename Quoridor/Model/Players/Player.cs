@@ -8,7 +8,7 @@ namespace Quoridor.Model.Players
         public Player Enemy { get; private set; }
 
         public FieldMask PositionMask => PlayerConstants.allPositions[Position];
-        
+
         public ref readonly byte Position => ref position;
 
         public FieldMask Walls { get; private set; }
@@ -16,6 +16,8 @@ namespace Quoridor.Model.Players
         public int AmountOfWalls { get; private set; }
 
         public int NumberOfMoves { get; private set; }
+
+        public byte EndDownIndex => endDownIndex;
 
         public FieldMask CurrentPath { get; set; }
 

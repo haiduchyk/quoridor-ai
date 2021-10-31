@@ -24,7 +24,7 @@ namespace Quoridor.Model
     public class WallProvider : IWallProvider
     {
         private readonly IMoveProvider moveProvider;
-        public static readonly Dictionary<(FieldMask walls, FieldMask player, FieldMask enemy), byte[]> cached = new();
+        public static readonly Dictionary<(FieldMask walls, byte player, byte enemy), byte[]> cached = new();
 
         public WallProvider(IMoveProvider moveProvider)
         {
@@ -68,37 +68,30 @@ namespace Quoridor.Model
 
         private byte[] CreateWallMoves(Field field, Player player)
         {
-            var moves = field.PossibleWalls;
-            var nearPlayer = WallConstants.NearPlayerWallsMasks[player.Position];
-            var nearEnemy = WallConstants.NearPlayerWallsMasks[player.Enemy.Position];
-            var nearWallMask = GetNearWallMask(field);
+            var heuristicWalls = WallConstants.NearEdgeWalls
+                .Concat(WallConstants.NearPlayerWalls[player.Position])
+                .Concat(WallConstants.NearPlayerWalls[player.Enemy.Position])
+                .Concat(GetNearWalls(field));
 
-            return moves
-                .Where(b =>
-                    WallConstants.AllWalls[b].And(in WallConstants.nearEdgeWallMask).IsNotZero() ||
-                    WallConstants.AllWalls[b].And(in nearPlayer).IsNotZero() ||
-                    WallConstants.AllWalls[b].And(in nearEnemy).IsNotZero() ||
-                    WallConstants.AllWalls[b].And(in nearWallMask).IsNotZero())
-                .ToArray();
+            return heuristicWalls.Intersect(field.PossibleWalls).Distinct().ToArray();
         }
 
-        private FieldMask GetNearWallMask(Field field)
+        private IEnumerable<byte> GetNearWalls(Field field)
         {
-            return WallConstants.AllWalls.Where(w => w == field.Walls)
-                .Aggregate(new FieldMask(), (agg, w) => WallConstants.NearWallsMasks[w].Or(in agg));
+            return field.PlacedWalls.SelectMany(w => WallConstants.NearWallsMasks[w]);
         }
 
         public bool TryGetWallBehind(Field field, Player player, out byte wall)
         {
             var row = moveProvider.GetRow(in player.Position);
-            if (row == 0 && player.EndPosition == Constants.RedEndPositions ||
-                row == 16 && player.EndPosition == Constants.BlueEndPositions)
+            if (row == 0 && player.EndDownIndex == PlayerConstants.EndRedDownIndexIncluding ||
+                row == 16 && player.EndDownIndex == PlayerConstants.EndBlueDownIndexIncluding)
             {
                 wall = 0;
                 return false;
             }
 
-            wall = WallConstants.BehindPlayerWall[(player.Position, player.EndPosition)];
+            wall = WallConstants.BehindPlayerWall[(player.Position, player.EndDownIndex)];
             return field.Walls.And(in WallConstants.AllWalls[wall]).IsZero();
         }
     }
