@@ -2,67 +2,41 @@ namespace Quoridor.Model
 {
     using System.Collections.Generic;
     using Players;
+    using Strategies;
 
     public class Field
     {
-        public int Size { get; }
-
-        public List<FieldMask> ValidWalls { get; } = new();
+        public List<FieldMask> PossibleWalls { get; } = new();
         public List<FieldMask> ProbableValidWalls { get; } = new();
 
         public ref readonly FieldMask Walls => ref walls;
 
-        private FieldMask walls;
+        public FieldMask walls;
 
-        public Field()
-        {
-        }
-
-        public Field(int size)
-        {
-            Size = size;
-        }
-
-        public void PlaceWallAndUpdateMoves(in FieldMask wall, Player player)
-        {
-            walls = walls.Or(in wall);
-            for (var i = 0; i < ValidWalls.Count; i++)
-            {
-                if (ValidWalls[i].And(in wall).IsNotZero())
-                {
-                    ValidWalls.RemoveAt(i);
-                    i--;
-                }
-            }
-        }
-        
-        
         public void PlaceWallAndUpdateValidMoves(in FieldMask wall, Player player)
         {
             walls = walls.Or(in wall);
-            for (var i = 0; i < ValidWalls.Count; i++)
+            var nearWalls = WallConstants.nearWalls[wall];
+
+            foreach (var nearWall in nearWalls)
             {
-                if (ValidWalls[i].And(in wall).IsNotZero())
-                {
-                    ValidWalls.RemoveAt(i);
-                    i--;
-                }
+                PossibleWalls.Remove(nearWall);
             }
         }
         
-        public void PlaceWallAndUpdatePropableValidMoves(in FieldMask wall, Player player)
+        public void PlaceWallAndUpdateProbableValidMoves(in FieldMask wall, Player player)
         {
             walls = walls.Or(in wall);
-            for (var i = 0; i < ValidWalls.Count; i++)
+            for (var i = 0; i < PossibleWalls.Count; i++)
             {
-                if (ValidWalls[i].And(in wall).IsNotZero())
+                if (PossibleWalls[i].And(in wall).IsNotZero())
                 {
-                    ValidWalls.RemoveAt(i);
+                    PossibleWalls.RemoveAt(i);
                     i--;
                 }
             }
         }
-        
+
         // private bool IsOnShortestPath()
         // {
         //     return player.CurrentPath.And(wall).IsNotZero();
@@ -88,23 +62,11 @@ namespace Quoridor.Model
             return walls.And(in wallMask);
         }
 
-        public int Flatten(int y, int x)
-        {
-            return x + y * Size;
-        }
-
-        public (int i, int j) Nested(int position)
-        {
-            var i = position / Size;
-            var j = position % Size;
-            return (i, j);
-        }
-
         public void Update(Field field)
         {
             walls = field.walls;
-            ValidWalls.Clear();
-            ValidWalls.AddRange(field.ValidWalls);
+            PossibleWalls.Clear();
+            PossibleWalls.AddRange(field.PossibleWalls);
         }
     }
 }

@@ -2,11 +2,12 @@ namespace Quoridor.Model.Moves
 {
     using Model;
     using Players;
+    using Strategies;
 
     public class WallMove : IMove
     {
         public FieldMask GetIdentifier => wall.Or(player.EndPosition);
-        
+
         private readonly ISearch search;
         private readonly FieldMask wall;
         private Field field;
@@ -24,7 +25,7 @@ namespace Quoridor.Model.Moves
         {
             return player.HasWalls() && CheckPath();
         }
-        
+
         private bool CheckPath()
         {
             field.PlaceWall(in wall);
@@ -37,7 +38,7 @@ namespace Quoridor.Model.Moves
         public void Execute()
         {
             player.UseWall(wall);
-            field.PlaceWallAndUpdateMoves(in wall, player);
+            field.PlaceWallAndUpdateValidMoves(in wall, player);
         }
 
         public void Apply(Field field, Player player)

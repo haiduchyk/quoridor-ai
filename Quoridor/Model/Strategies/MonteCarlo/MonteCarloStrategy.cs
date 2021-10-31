@@ -187,11 +187,12 @@ namespace Quoridor.Model.Strategies
             {
                 var player = moveCount % 2 == 0 ? firstPlayer : secondPlayer;
                 var move = strategy.FindMove(monteField, player);
-                // if (move.IsValid())
-                // {
+                if (move.IsValid())
+                {
                     move.Execute();
                     moveCount++;
-                // }
+                    
+                }
             }
 
             return montePlayer.HasReachedFinish() ? 1 : 0;

@@ -1,6 +1,7 @@
 namespace Quoridor.Controller
 {
     using Model;
+    using Model.Strategies;
 
     public interface IGameProvider
     {
