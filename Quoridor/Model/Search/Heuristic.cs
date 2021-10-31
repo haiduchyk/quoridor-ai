@@ -18,13 +18,13 @@ namespace Quoridor.Model
 
         private void InitializeHeuristic()
         {
-            for (var i = 0; i < 9; i++)
+            for (var i = 0; i < FieldMask.PlayerFieldSize; i++)
             {
-                for (var j = 0; j < 9; j++)
+                for (var j = 0; j < FieldMask.PlayerFieldSize; j++)
                 {
-                    var index = (byte)(i * 9 + j);
+                    var index = (byte)(i * FieldMask.PlayerFieldSize + j);
                     heuristic[(PlayerConstants.EndBlueDownIndexIncluding, index)] = i;
-                    heuristic[(PlayerConstants.EndRedDownIndexIncluding, index)] = 8 - i;
+                    heuristic[(PlayerConstants.EndRedDownIndexIncluding, index)] = FieldMask.PlayerFieldSize - 1 - i;
                 }
             }
         }

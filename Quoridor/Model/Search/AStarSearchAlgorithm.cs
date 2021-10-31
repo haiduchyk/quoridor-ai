@@ -7,7 +7,7 @@ namespace Quoridor.Model
     {
         private Heuristic heuristic;
 
-        public AStarSearchAlgorithm(IMoveProvider moveProvider, PathWithWallsRetriever pathRetriever)
+        public AStarSearchAlgorithm(IMoveProvider moveProvider, PathRetriever pathRetriever)
             : base(moveProvider, pathRetriever)
         {
         }

@@ -3,12 +3,12 @@ namespace Quoridor.Model
     using System.Collections.Generic;
     using Strategies;
 
-    public class PathWithWallsRetriever
+    public class PathRetriever
     {
-        // <playerPosition <nextPlayerPosition, mask>>
+        // <nextPlayerPosition <playerPosition, mask>>
         private readonly Dictionary<byte, Dictionary<byte, FieldMask>> simpleMoveMasks = new();
 
-        // <playerPosition <enemyPosition <nextPlayerPosition, mask>>>
+        // <nextPlayerPosition <enemyPosition <playerPosition, mask>>>
         private readonly Dictionary<byte, Dictionary<byte, Dictionary<byte, FieldMask>>> withEnemyMoveMasks = new();
 
         public FieldMask RetrievePath(byte playerPosition, Dictionary<byte, (byte mask, bool isSimple)> prevNodes,
@@ -34,7 +34,7 @@ namespace Quoridor.Model
             return path;
         }
 
-        public PathWithWallsRetriever()
+        public PathRetriever()
         {
             CreateSimplePlayerMoves();
             CreateWithEnemyMoves();

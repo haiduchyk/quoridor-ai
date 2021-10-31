@@ -30,7 +30,7 @@ namespace Quoridor.Controller.Game
             var walls = Constants.WallsPerGame;
             
             var endUpIndex = PlayerConstants.EndBlueUpIndexIncluding;
-            var endDownIndex = PlayerConstants.EndBlueUpIndexIncluding;
+            var endDownIndex = PlayerConstants.EndBlueDownIndexIncluding;
             
             
             return gameOptions.color switch

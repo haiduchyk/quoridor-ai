@@ -123,7 +123,7 @@ namespace Quoridor.Model
 
                 if (FieldMask.IsInRange(enemyY, enemyX))
                 {
-                    var enemyIndex = FieldMask.GetPlayerIndex(y, x);
+                    var enemyIndex = FieldMask.GetPlayerIndex(enemyY, enemyX);
 
                     wallPosition.SetBit(wallY, wallX, true);
                     result.Add((enemyIndex, wallPosition));

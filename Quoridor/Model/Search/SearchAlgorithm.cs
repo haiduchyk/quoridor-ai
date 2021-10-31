@@ -12,11 +12,11 @@ namespace Quoridor.Model
         private readonly PriorityQueue<byte> queue;
 
         private readonly IMoveProvider moveProvider;
-        private readonly PathWithWallsRetriever pathRetriever;
+        private readonly PathRetriever pathRetriever;
 
         private Field field;
 
-        public SearchAlgorithm(IMoveProvider moveProvider, PathWithWallsRetriever pathRetriever)
+        public SearchAlgorithm(IMoveProvider moveProvider, PathRetriever pathRetriever)
         {
             this.moveProvider = moveProvider;
             this.pathRetriever = pathRetriever;
