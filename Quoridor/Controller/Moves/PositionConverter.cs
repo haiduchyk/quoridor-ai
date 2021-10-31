@@ -1,18 +1,17 @@
 namespace Quoridor.Controller.Moves
 {
-    using System;
     using Model;
     using Model.Strategies;
 
     public interface IPositionConverter
     {
-        FieldMask? TryParseCellPosition(string code);
+        byte? TryParseCellPosition(string code);
 
         byte? TryParseWallPosition(string code);
 
-        string CellPositionToCode(FieldMask position);
+        string CellPositionToCode(byte position);
 
-        string WallPositionToCode(FieldMask wall);
+        string WallPositionToCode(byte wall);
     }
 
     public class PositionConverter : IPositionConverter
@@ -24,9 +23,16 @@ namespace Quoridor.Controller.Moves
             this.wallProvider = wallProvider;
         }
 
-        public FieldMask? TryParseCellPosition(string code)
+        public byte? TryParseCellPosition(string code)
         {
-            return TryParse(code, 'a', 8);
+            var position = TryParse(code, 'a', 8);
+            if (!position.HasValue)
+            {
+                return null;
+            }
+            var (row, column) = position.Value;
+            var (i, j) = ToFieldMaskIndex(row, column);
+            return FieldMask.GetPlayerIndex(i, j);
         }
 
         public byte? TryParseWallPosition(string code)
@@ -45,26 +51,27 @@ namespace Quoridor.Controller.Moves
             {
                 return null;
             }
-            var (row, column) = ConvertToPosition(position.Value);
+            var (row, column) = position.Value;
             var (i, j) = ToFieldMaskWallIndex(row, column);
             return WallConstants.ToIndex(i, j, wallType);
         }
 
-        public string CellPositionToCode(FieldMask position)
+        public string CellPositionToCode(byte position)
         {
-            var (row, column) = ConvertToPosition(position);
+            var (i, j) = FieldMask.Flatten(position);
+            var (row, column) = FromFieldMaskIndex(i, j);
             return $"{(char)('A' + column)}{row + 1}";
         }
 
-        public string WallPositionToCode(FieldMask wall)
+        public string WallPositionToCode(byte wall)
         {
-            var (row, column) = ConvertToPosition(wall);
-            var type = GetWallType(row, column, wall);
+            var (i, j, type) = WallConstants.Flatten(wall);
+            var (row, column) = FromFieldMaskIndex(i, j);
             return
                 $"{(char)('S' + column)}{row + 1}{(type == WallOrientation.Horizontal ? 'h' : 'v')}";
         }
 
-        private FieldMask? TryParse(string code, char startSymbol, int limit)
+        private (int row, int column)? TryParse(string code, char startSymbol, int limit)
         {
             if (code == null)
             {
@@ -85,34 +92,10 @@ namespace Quoridor.Controller.Moves
 
             if (row >= 0 && column >= 0 && row <= limit && column <= limit)
             {
-                var position = new FieldMask();
-                var (i, j) = ToFieldMaskIndex(row, column);
-                position.SetBit(i, j, true);
-                return position;
+                return (row, column);
             }
 
             return null;
-        }
-
-        private (int row, int column) ConvertToPosition(FieldMask mask)
-        {
-            for (var i = 0; i < FieldMask.BitboardSize; i++)
-            {
-                for (var j = 0; j < FieldMask.BitboardSize; j++)
-                {
-                    if (mask.GetBit(i, j))
-                    {
-                        return FromFieldMaskIndex(i, j);
-                    }
-                }
-            }
-            throw new Exception("Invalid field mask in move");
-        }
-
-        private WallOrientation GetWallType(int row, int column, FieldMask wall)
-        {
-            var (i, j) = ToFieldMaskWallIndex(row, column);
-            return wall.GetBit(i + 1, j) ? WallOrientation.Vertical : WallOrientation.Horizontal;
         }
 
         private (int i, int j) ToFieldMaskIndex(int row, int column)

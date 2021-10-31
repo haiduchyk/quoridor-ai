@@ -2,7 +2,6 @@ namespace Quoridor.Model.Moves
 {
     using Model;
     using Players;
-    using Strategies;
 
     public class WallMove : IMove
     {

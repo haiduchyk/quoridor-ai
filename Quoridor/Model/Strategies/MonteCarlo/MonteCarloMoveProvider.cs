@@ -27,7 +27,7 @@ namespace Quoridor.Model.Strategies
         public List<IMove> FindMoves(MonteNode node)
         {
             var row = moveProvider.GetRow(in player.Position);
-            var startRow = player.EndPosition == Constants.BlueEndPositions ? 16 : 0;
+            var startRow = player.EndDownIndex == PlayerConstants.EndBlueDownIndexIncluding ? 16 : 0;
             if (IsLessNthMove(node, 5) && Math.Abs(startRow - row) < 3)
             {
                 return MoveOnPath(node);
@@ -65,13 +65,13 @@ namespace Quoridor.Model.Strategies
             if (search.HasPath(field, turnPlayer, in turnPlayer.Position, out var path))
             {
                 var moves = moveProvider.GetAvailableMoves(field, in turnPlayer.Position, in turnPlayer.Enemy.Position);
-                var shift = moves.First(m => m.And(in path).IsNotZero());
+                var shift = moves.First(m => PlayerConstants.allPositions[m].And(in path).IsNotZero());
                 return FromMove(shift);
             }
             return AllMoves(node);
         }
 
-        private List<IMove> FromMove(FieldMask moveMask)
+        private List<IMove> FromMove(byte moveMask)
         {
             return new List<IMove>() { new PlayerMove(player, moveMask) };
         }
@@ -84,9 +84,8 @@ namespace Quoridor.Model.Strategies
         private List<IMove> Shifts(MonteNode node)
         {
             var turnPlayer = node.IsPlayerMove ? player : player.Enemy;
-            var shifts =
-                moveProvider.GetAvailableMovesWithType(field, in turnPlayer.Position, in turnPlayer.Enemy.Position);
-            return shifts.masks.Select<FieldMask, IMove>(m => new PlayerMove(turnPlayer, m)).ToList();
+            var shifts = moveProvider.GetAvailableMoves(field, in turnPlayer.Position, in turnPlayer.Enemy.Position);
+            return shifts.Select<byte, IMove>(m => new PlayerMove(turnPlayer, m)).ToList();
         }
 
         private IEnumerable<IMove> GetWallMoves(MonteNode node)

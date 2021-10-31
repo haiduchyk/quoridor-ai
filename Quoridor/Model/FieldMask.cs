@@ -185,9 +185,16 @@ namespace Quoridor.Model
 
         public static byte GetPlayerIndex(int y, int x)
         {
-            return (byte) (PlayerFieldSize * y / 2 + x / 2);
+            return (byte)(PlayerFieldSize * y / 2 + x / 2);
         }
-        
+
+        public static (int i, int j) Flatten(byte position)
+        {
+            var y = position / PlayerFieldSize;
+            var x = position % PlayerFieldSize;
+            return (y * 2, x * 2);
+        }
+
         // public static (int y, int x) GetPlayerPosition(byte index)
         // {
         //     return inde;

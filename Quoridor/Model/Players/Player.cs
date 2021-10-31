@@ -26,10 +26,8 @@ namespace Quoridor.Model.Players
         private byte endDownIndex;
         private byte position;
 
-        public Player(byte endUpIndex, byte endDownIndex)
+        public Player()
         {
-            this.endUpIndex = endUpIndex;
-            this.endDownIndex = endDownIndex;
         }
 
         public Player(byte position, int amountOfWalls, byte endUpIndex, byte endDownIndex, IMoveStrategy moveStrategy)

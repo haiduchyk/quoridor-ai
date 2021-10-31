@@ -10,8 +10,6 @@ namespace Quoridor.Model.Strategies
         public static readonly FieldMask[] AllWalls = new FieldMask[MaxWallCount];
         public static readonly byte[] AllIndexes = new byte[MaxWallCount];
 
-        public static readonly Dictionary<FieldMask, byte> MaskToIndex = new();
-
         public static readonly byte[] NearEdgeWalls = new byte[16];
 
         // TODO index
@@ -43,7 +41,6 @@ namespace Quoridor.Model.Strategies
             }
             for (byte i = 0; i < 128; i++)
             {
-                MaskToIndex[AllWalls[i]] = i;
                 AllIndexes[i] = i;
             }
         }
@@ -239,6 +236,14 @@ namespace Quoridor.Model.Strategies
             j /= 2;
             var offset = wallOrientation == WallOrientation.Horizontal ? 0 : 1;
             return (byte)(i * 8 + j + offset);
+        }
+
+        public static (int i, int j, WallOrientation orientation) Flatten(byte wall)
+        {
+            var y = wall / 16;
+            var x = wall % 16;
+            var orientation = wall % 2 == 0 ? WallOrientation.Horizontal : WallOrientation.Vertical;
+            return (y * 2, x * 2, orientation);
         }
     }
 }
