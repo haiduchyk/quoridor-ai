@@ -39,30 +39,7 @@ namespace Quoridor.Model.Strategies
         {
             UpdateFields(field, player);
 
-            if (root == null)
-            {
-                root = new MonteNode();
-                root.SetChild(FindChildren(root));
-            }
-            else
-            {
-                var nextRoot = root.GetNextRoot();
 
-                if (nextRoot == null)
-                {
-                    root = new MonteNode();
-                    root.SetChild(FindChildren(root));
-                }
-                else
-                {
-                    root = nextRoot;
-
-                    if (root.children == null)
-                    {
-                        root.SetChild(FindChildren(root));
-                    }
-                }
-            }
 
 
             var startTime = GetCurrentTime();
@@ -89,6 +66,43 @@ namespace Quoridor.Model.Strategies
             var (branching, nodes) = GetNodeStatistic(root);
             Console.WriteLine($"Average branching => {(float) branching / nodes}");
             return move;
+        }
+
+        private void SetRoot()
+        {
+            if (root == null)
+            {
+                CreateNewRoot();
+            }
+            else
+            {
+                FindNewRootFromChildren();
+            }
+        }
+        
+
+        private void CreateNewRoot()
+        {
+            root = new MonteNode();
+            root.SetChild(FindChildren(root));
+        }
+
+        private void FindNewRootFromChildren()
+        {
+            var nextRoot = root.GetNextRoot();
+
+            if (nextRoot == null)
+            {
+                CreateNewRoot();
+            }
+            else
+            {
+                root = nextRoot;
+                if (root.children == null)
+                {
+                    root.SetChild(FindChildren(root));
+                }
+            }
         }
 
         private void UpdateFields(Field field, Player player)
