@@ -11,8 +11,6 @@ namespace Quoridor.Model.Players
         
         public ref readonly byte Position => ref position;
 
-        public ref readonly FieldMask EndPosition => ref endPosition;
-
         public FieldMask Walls { get; private set; }
 
         public int AmountOfWalls { get; private set; }
@@ -22,19 +20,23 @@ namespace Quoridor.Model.Players
         public FieldMask CurrentPath { get; set; }
 
         private readonly IMoveStrategy moveStrategy;
-        private FieldMask endPosition;
+        private byte endUpIndex;
+        private byte endDownIndex;
         private byte position;
 
-        public Player()
+        public Player(byte endUpIndex, byte endDownIndex)
         {
+            this.endUpIndex = endUpIndex;
+            this.endDownIndex = endDownIndex;
         }
 
-        public Player(byte position, int amountOfWalls, FieldMask endPosition, IMoveStrategy moveStrategy)
+        public Player(byte position, int amountOfWalls, byte endUpIndex, byte endDownIndex, IMoveStrategy moveStrategy)
         {
             this.position = position;
             AmountOfWalls = amountOfWalls;
+            this.endUpIndex = endUpIndex;
+            this.endDownIndex = endDownIndex;
             this.moveStrategy = moveStrategy;
-            this.endPosition = endPosition;
         }
 
         public void SetEnemy(Player enemy)
@@ -45,12 +47,12 @@ namespace Quoridor.Model.Players
         public bool HasReachedFinish()
         {
             // TODO index , rewrite using index
-            return PositionMask.And(in endPosition).IsNotZero();
+            return IsEndPosition(position);
         }
 
-        public bool IsEndPosition(in FieldMask checkPosition)
+        public bool IsEndPosition(in byte checkPosition)
         {
-            return checkPosition.And(in endPosition).IsNotZero();
+            return checkPosition <= endUpIndex && checkPosition >= endDownIndex;
         }
 
         public void ChangePosition(in byte position)
@@ -89,7 +91,8 @@ namespace Quoridor.Model.Players
 
         public void Update(Player player)
         {
-            endPosition = player.EndPosition;
+            endUpIndex = player.endUpIndex;
+            endDownIndex = player.endDownIndex;
             position = player.Position;
             AmountOfWalls = player.AmountOfWalls;
             NumberOfMoves = player.NumberOfMoves;

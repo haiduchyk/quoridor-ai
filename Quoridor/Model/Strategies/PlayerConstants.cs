@@ -3,8 +3,12 @@ namespace Quoridor.Model.Strategies
     public static class PlayerConstants
     {
         public static FieldMask[] allPositions;
-        public const byte EndRedIndexIncluding = 72;
-        public const byte EndBlueIndexIncluding = 8;
+        
+        public const byte EndRedUpIndexIncluding = 80;
+        public const byte EndRedDownIndexIncluding = 72;
+        
+        public const byte EndBlueUpIndexIncluding = 8;
+        public const byte EndBlueDownIndexIncluding = 0;
 
         static PlayerConstants()
         {
