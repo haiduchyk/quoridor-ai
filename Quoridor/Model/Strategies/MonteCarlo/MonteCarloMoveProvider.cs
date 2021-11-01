@@ -26,9 +26,8 @@ namespace Quoridor.Model.Strategies
 
         public List<IMove> FindMoves(MonteNode node)
         {
-            
             var row = moveProvider.GetRow(in player.Position);
-            var startRow = player.EndDownIndex == PlayerConstants.EndBlueDownIndexIncluding ? 16 : 0;
+            var startRow = player.EndDownIndex == PlayerConstants.EndBlueDownIndexIncluding ? FieldMask.PlayerFieldSize - 1 : 0;
             if (IsLessNthMove(node, 5) && Math.Abs(startRow - row) < 3)
             {
                 return MoveOnPath(node);
@@ -39,9 +38,14 @@ namespace Quoridor.Model.Strategies
                 return FromWall(wall);
             }
             var turnPlayer = node.IsPlayerMove ? player : player.Enemy;
+            var turnEnemy = node.IsPlayerMove ? player : player.Enemy;
             if (turnPlayer.HasReachedFinish())
             {
                 return new List<IMove>();
+            }
+            if (!turnPlayer.HasWalls() && !turnEnemy.HasWalls())
+            {
+                return MoveOnPath(node);
             }
             if (!turnPlayer.HasWalls())
             {
@@ -70,10 +74,11 @@ namespace Quoridor.Model.Strategies
             if (search.HasPath(field, turnPlayer, in turnPlayer.Position, out var path))
             {
                 var moves = moveProvider.GetAvailableMoves(field, in turnPlayer.Position, in turnPlayer.Enemy.Position);
-                var shift = moves.First(m => PlayerConstants.allPositions[m].And(in path).IsNotZero());
+                var movesOnPath = moves.Where(m => PlayerConstants.allPositions[m].And(in path).IsNotZero()).ToArray();
+                var shift = movesOnPath.First();
                 return FromMove(shift);
             }
-            return AllMoves(node);
+            return Shifts(node);
         }
 
         private List<IMove> FromMove(byte moveMask)
@@ -97,7 +102,8 @@ namespace Quoridor.Model.Strategies
         {
             var turnPlayer = node.IsPlayerMove ? player : player.Enemy;
             var walls = wallProvider.GenerateWallMoves(field, turnPlayer);
-            return walls.Select<byte, IMove>(w => new WallMove(field, turnPlayer, search, w))
+            return walls
+                .Select<byte, IMove>(w => new WallMove(field, turnPlayer, search, w))
                 .Where(m => m.IsValid());
         }
 

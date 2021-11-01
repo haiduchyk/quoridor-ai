@@ -1,6 +1,7 @@
 namespace Quoridor.Model.Strategies
 {
     using System.Collections.Generic;
+    using System.Linq;
 
     public static class WallConstants
     {
@@ -17,7 +18,7 @@ namespace Quoridor.Model.Strategies
 
         public static readonly Dictionary<byte, byte[]> NearPlayerWalls = new();
         public static readonly Dictionary<byte, byte[]> NearWallsMasks = new();
-        public static readonly Dictionary<byte, byte[]> NearWalls = new();
+        public static readonly Dictionary<byte, byte[]> OverlapedWalls = new();
 
         static WallConstants()
         {
@@ -114,29 +115,30 @@ namespace Quoridor.Model.Strategies
 
         private static void GenerateNearWall()
         {
-            for (var i = 0; i < AllWalls.Length; i++)
+            for (var i = 0; i < FieldMask.BitboardSize; i++)
             {
-                var currentNearWallsIndexes = new List<byte>();
-                if (i % 2 == 0)
+                for (var j = 0; j < FieldMask.BitboardSize; j++)
                 {
-                    AddIfInRange(i + 1);
-                    AddIfInRange(i - 2);
-                    AddIfInRange(i + 2);
-                }
-                else
-                {
-                    AddIfInRange(i - 1);
-                    AddIfInRange(i - FieldMask.BitboardSize + 1);
-                    AddIfInRange(i + FieldMask.BitboardSize - 1);
-                }
+                    var currentNearWallsIndexes = new List<byte>();
+                    var index = ToIndex(i, j, WallOrientation.Horizontal);
+                    AddIfInRange(i, j, WallOrientation.Vertical);
+                    AddIfInRange(i, j - 2, WallOrientation.Horizontal);
+                    AddIfInRange(i, j + 2, WallOrientation.Horizontal);
+                    OverlapedWalls[index] = currentNearWallsIndexes.ToArray();
 
-                NearWalls[(byte)i] = currentNearWallsIndexes.ToArray();
+                    currentNearWallsIndexes = new List<byte>();
+                    AddIfInRange(i, j, WallOrientation.Horizontal);
+                    AddIfInRange(i - 2, j, WallOrientation.Vertical);
+                    AddIfInRange(i + 2, j, WallOrientation.Vertical);
+                    index = ToIndex(i, j, WallOrientation.Vertical);
+                    OverlapedWalls[index] = currentNearWallsIndexes.ToArray();
 
-                void AddIfInRange(int index)
-                {
-                    if (index >= 0 && index < AllWalls.Length)
+                    void AddIfInRange(int y, int x, WallOrientation orientation)
                     {
-                        currentNearWallsIndexes.Add((byte)index);
+                        if (FieldMask.IsInRange(y, x))
+                        {
+                            currentNearWallsIndexes.Add(ToIndex(y, x, orientation));
+                        }
                     }
                 }
             }
@@ -164,49 +166,49 @@ namespace Quoridor.Model.Strategies
         private static byte[] GenerateNearWallsForHorizontal(int i, int j)
         {
             var walls = new List<byte>();
-            for (var k = -1; k <= 1; k += 2)
-            {
-                if (FieldMask.IsInRange(i + k, j))
-                {
-                    walls.Add(ToIndex(i + k, j, WallOrientation.Horizontal));
-                }
-            }
-            for (var k = -1; k <= 1; k++)
-            {
-                if (FieldMask.IsInRange(i + k, j - 1))
-                {
-                    walls.Add(ToIndex(i + k, j - 1, WallOrientation.Horizontal));
-                }
-                if (FieldMask.IsInRange(i + k, j + 1))
-                {
-                    walls.Add(ToIndex(i + k, j + 1, WallOrientation.Horizontal));
-                }
-            }
+
+            AddIfInRange(i, j - 4, WallOrientation.Horizontal);
+            AddIfInRange(i, j + 4, WallOrientation.Horizontal);
+            AddIfInRange(i + 2, j - 2, WallOrientation.Vertical);
+            AddIfInRange(i + 2, j, WallOrientation.Vertical);
+            AddIfInRange(i + 2, j + 2, WallOrientation.Vertical);
+            AddIfInRange(i - 2, j - 2, WallOrientation.Vertical);
+            AddIfInRange(i - 2, j, WallOrientation.Vertical);
+            AddIfInRange(i - 2, j + 2, WallOrientation.Vertical);
+
             return walls.ToArray();
+
+            void AddIfInRange(int y, int x, WallOrientation orientation)
+            {
+                if (FieldMask.IsInRange(y, x))
+                {
+                    walls.Add(ToIndex(y, x, orientation));
+                }
+            }
         }
 
         private static byte[] GenerateNearWallsForVertical(int i, int j)
         {
             var walls = new List<byte>();
-            for (var k = -1; k <= 1; k += 2)
-            {
-                if (FieldMask.IsInRange(i, j + k))
-                {
-                    walls.Add(ToIndex(i, j + k, WallOrientation.Vertical));
-                }
-            }
-            for (var k = -1; k <= 1; k++)
-            {
-                if (FieldMask.IsInRange(i - 1, j + k))
-                {
-                    walls.Add(ToIndex(i - 1, j + k, WallOrientation.Vertical));
-                }
-                if (FieldMask.IsInRange(i + 1, j + k))
-                {
-                    walls.Add(ToIndex(i + 1, j + k, WallOrientation.Vertical));
-                }
-            }
+
+            AddIfInRange(i - 4, j, WallOrientation.Vertical);
+            AddIfInRange(i + 4, j, WallOrientation.Vertical);
+            AddIfInRange(i - 2, j + 2, WallOrientation.Horizontal);
+            AddIfInRange(i, j + 2, WallOrientation.Horizontal);
+            AddIfInRange(i + 2, j + 2, WallOrientation.Horizontal);
+            AddIfInRange(i - 2, j - 2, WallOrientation.Horizontal);
+            AddIfInRange(i, j - 2, WallOrientation.Horizontal);
+            AddIfInRange(i + 2, j - 2, WallOrientation.Horizontal);
+
             return walls.ToArray();
+
+            void AddIfInRange(int y, int x, WallOrientation orientation)
+            {
+                if (FieldMask.IsInRange(y, x))
+                {
+                    walls.Add(ToIndex(y, x, orientation));
+                }
+            }
         }
 
         public static FieldMask GenerateWall(int y, int x, WallOrientation wallOrientation)
@@ -235,15 +237,15 @@ namespace Quoridor.Model.Strategies
             i /= 2;
             j /= 2;
             var offset = wallOrientation == WallOrientation.Horizontal ? 0 : 1;
-            return (byte)(i * 8 + j + offset);
+            return (byte)((i * 8 + j) * 2 + offset);
         }
 
         public static (int i, int j, WallOrientation orientation) Flatten(byte wall)
         {
             var y = wall / 16;
-            var x = wall % 16;
+            var x = (wall - y * 16) / 2;
             var orientation = wall % 2 == 0 ? WallOrientation.Horizontal : WallOrientation.Vertical;
-            return (y * 2, x * 2, orientation);
+            return (y, x, orientation);
         }
     }
 }

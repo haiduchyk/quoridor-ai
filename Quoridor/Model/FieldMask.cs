@@ -188,17 +188,12 @@ namespace Quoridor.Model
             return (byte)(PlayerFieldSize * y / 2 + x / 2);
         }
 
-        public static (int i, int j) Flatten(byte position)
+        public static (int i, int j) GetPlayerPosition(byte position)
         {
             var y = position / PlayerFieldSize;
-            var x = position % PlayerFieldSize;
-            return (y * 2, x * 2);
+            var x = position - y * PlayerFieldSize;
+            return (y, x);
         }
-
-        // public static (int y, int x) GetPlayerPosition(byte index)
-        // {
-        //     return inde;
-        // }
 
         public static bool IsInRange(int y, int x)
         {

@@ -58,15 +58,13 @@ namespace Quoridor.Controller.Moves
 
         public string CellPositionToCode(byte position)
         {
-            var (i, j) = FieldMask.Flatten(position);
-            var (row, column) = FromFieldMaskIndex(i, j);
+            var (row, column) = FieldMask.GetPlayerPosition(position);
             return $"{(char)('A' + column)}{row + 1}";
         }
 
         public string WallPositionToCode(byte wall)
         {
-            var (i, j, type) = WallConstants.Flatten(wall);
-            var (row, column) = FromFieldMaskIndex(i, j);
+            var (row, column, type) = WallConstants.Flatten(wall);
             return
                 $"{(char)('S' + column)}{row + 1}{(type == WallOrientation.Horizontal ? 'h' : 'v')}";
         }
@@ -106,11 +104,6 @@ namespace Quoridor.Controller.Moves
         private (int i, int j) ToFieldMaskWallIndex(int row, int column)
         {
             return (row * 2 + 1, column * 2 + 1);
-        }
-
-        private (int row, int column) FromFieldMaskIndex(int i, int j)
-        {
-            return (i / 2, j / 2);
         }
     }
 }

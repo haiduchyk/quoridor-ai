@@ -53,11 +53,12 @@ namespace Quoridor.Model.Strategies
             }
 
             var bestNode = FindBest(root);
+            PrintStatistic(count, startTime, bestNode);
+
             var move = bestNode.move;
             move.Apply(field, player);
             root = bestNode;
 
-            PrintStatistic(count, startTime);
             return move;
         }
 
@@ -118,12 +119,16 @@ namespace Quoridor.Model.Strategies
 
         private MonteNode Select(MonteNode node)
         {
-            while (node.IsFullyExpanded)
+            while (node.IsFullyExpanded && !node.IsTerminal)
             {
                 node = FindBestUct(node);
                 node.move.Execute();
             }
 
+            if (node.IsTerminal)
+            {
+                return node;
+            }
             var chosenNode = PickUnvisited(node);
             return chosenNode;
         }
@@ -213,14 +218,18 @@ namespace Quoridor.Model.Strategies
             return GetCurrentTime() - startTime < ComputeTime;
         }
 
-        private void PrintStatistic(int count, long startTime)
+        private void PrintStatistic(int count, long startTime, MonteNode bestNode)
         {
 #if DEBUG
+            var name = montePlayer.EndDownIndex == PlayerConstants.EndBlueDownIndexIncluding ? "Blue" : "Red";
+            Console.WriteLine($"{name}");
             Console.WriteLine($"Count => {count}");
             Console.WriteLine($"Time => {GetTime(startTime)}");
             Console.WriteLine($"Depth => {GetDepth(root)}");
             var (branching, nodes) = GetNodeStatistic(root);
             Console.WriteLine($"Average branching => {(float)branching / nodes}");
+            Console.WriteLine($"Win rate in root => {root.WinRate:F4}");
+            Console.WriteLine($"Win rate in best => {bestNode.WinRate:F4}");
 #endif
         }
 

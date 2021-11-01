@@ -21,7 +21,7 @@ namespace Quoridor.Model
             var wallMask = WallConstants.AllWalls[wallIndex];
             walls = walls.Or(in wallMask);
 
-            var nearWalls = WallConstants.NearWalls[wallIndex];
+            var nearWalls = WallConstants.OverlapedWalls[wallIndex];
 
             PossibleWalls.Remove(wallIndex);
             foreach (var nearWall in nearWalls)
@@ -62,6 +62,8 @@ namespace Quoridor.Model
         public void Update(Field field)
         {
             walls = field.walls;
+            PlacedWalls.Clear();
+            PlacedWalls.AddRange(field.PlacedWalls);
             PossibleWalls.Clear();
             PossibleWalls.AddRange(field.PossibleWalls);
         }

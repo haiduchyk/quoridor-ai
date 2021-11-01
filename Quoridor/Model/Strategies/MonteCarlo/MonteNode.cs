@@ -10,6 +10,8 @@ namespace Quoridor.Model.Strategies
 
         public bool IsFullyExpanded => children.Sum(c => c.games) >= children.Length;
 
+        public bool IsTerminal => children.Length == 0;
+
         public bool IsVisited => games > 0;
 
         public double WinRate => (double)wins / games;
