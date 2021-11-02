@@ -29,10 +29,10 @@ namespace Quoridor.Model.Strategies
             monteEnemy = new Player();
             montePlayer.SetEnemy(monteEnemy);
             monteEnemy.SetEnemy(montePlayer);
-            monteCarloMoveProvider =
-                new MonteCarloMoveProvider(moveProvider, wallProvider, search, monteField, montePlayer);
+            var moveVariation = new MoveVariationProvider(moveProvider, wallProvider, search, monteField, montePlayer);
+            monteCarloMoveProvider = new MonteCarloMoveProvider(moveVariation, monteField, montePlayer);
             strategy = new HeuristicStrategy(moveProvider, wallProvider, search);
-            random = new Random(1);
+            random = new Random();
         }
 
         public IMove FindMove(Field field, Player player)

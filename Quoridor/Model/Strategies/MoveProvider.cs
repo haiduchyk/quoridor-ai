@@ -13,7 +13,7 @@ namespace Quoridor.Model
 
         int GetRow(in byte moveIndex);
 
-        // bool TryMoveForward(Field field, in FieldMask playerMask, out FieldMask moveMask);
+        bool TryMoveForward(Field field, in byte playerMask, out byte moveMask);
 
         bool IsSimple(Field field, in byte playerIndex, byte moveIndex);
     }
@@ -53,7 +53,7 @@ namespace Quoridor.Model
         }
 
         public (byte[] indexes, bool isSimple) GetAvailableMovesWithType(Field field, in byte playerMask,
-           in byte enemyMask)
+            in byte enemyMask)
         {
             if (withEnemyMoveMasks.TryGetValue((playerMask, enemyMask), out var wallMask))
             {
@@ -74,13 +74,20 @@ namespace Quoridor.Model
             return rows[moveIndex];
         }
 
-        // public bool TryMoveForward(Field field, in FieldMask playerMask, out FieldMask moveMask)
-        // {
-        //     moveMask = simpleMoveCalculator.GetAvailableMoves(field, playerMask)[0];
-        //     var playerRow = GetRow(in playerMask);
-        //     var moveRow = GetRow(in moveMask);
-        //     return Math.Abs(playerRow - moveRow) == 1;
-        // }
+        public bool TryMoveForward(Field field, in byte playerMask, out byte moveMask)
+        {
+            var playerRow = GetRow(in playerMask);
+            var masks = simpleMoveCalculator.GetAvailableMoves(field, playerMask)
+                .Where(m => Math.Abs(playerRow - GetRow(in m)) == 1)
+                .ToArray();
+            if (masks.Length == 0)
+            {
+                moveMask = Constants.EmptyIndex;
+                return false;
+            }
+            moveMask = masks[0];
+            return true;
+        }
 
         public bool IsSimple(Field field, in byte playerIndex, byte moveIndex)
         {
