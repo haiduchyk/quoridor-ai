@@ -50,7 +50,7 @@ namespace Quoridor.Model
 
         public List<byte> GenerateWallMoves(Field field)
         {
-            return field.PossibleWalls;
+            return field.ValidWalls;
         }
 
         public byte[] GenerateWallMoves(Field field, Player player)
@@ -73,13 +73,13 @@ namespace Quoridor.Model
                 .Concat(WallConstants.NearPlayerWalls[player.Position])
                 .Concat(WallConstants.NearPlayerWalls[player.Enemy.Position]);
 
-            var result = heuristicWalls.Intersect(field.PossibleWalls).Distinct().ToArray();
+            var result = heuristicWalls.Intersect(field.ValidWalls).Distinct().ToArray();
             return result;
         }
 
         private IEnumerable<byte> GetNearWalls(Field field)
         {
-            return field.PlacedWalls.SelectMany(w => WallConstants.NearWallsMasks[w]);
+            return field.PlacedWalls.SelectMany(w => WallConstants.NearWalls[w]);
         }
 
         public bool TryGetWallBehind(Field field, Player player, out byte wall)

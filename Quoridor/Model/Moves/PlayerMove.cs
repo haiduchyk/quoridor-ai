@@ -11,22 +11,22 @@ namespace Quoridor.Model.Moves
         private readonly byte position;
         private readonly byte previousPosition;
         private Player player;
+        private Field field;
+        private ISearch search;
 
-        public PlayerMove(Player player, byte position)
+        public PlayerMove(Player player, byte position, Field field, ISearch search)
         {
             this.player = player;
             this.position = position;
+            this.field = field;
+            this.search = search;
             previousPosition = player.Position;
-        }
-
-        public bool IsValid()
-        {
-            return true;
         }
 
         public void Execute()
         {
             player.ChangePosition(position);
+            search.UpdatePathForPlayers(field, player);
         }
 
         public void Apply(Field field, Player player)

@@ -19,7 +19,7 @@ namespace Quoridor.Controller
             var botCreator = new PlayerCreator(moveProvider, wallProvider, search);
             var positionConverter = new PositionConverter(wallProvider);
             var moveConverter = new MoveConverter(positionConverter, moveProvider, search);
-            var gameProvider = new GameProvider(botCreator, wallProvider);
+            var gameProvider = new GameProvider(botCreator, wallProvider, search);
             var ioWorker = new ConsoleWorker();
             var menuController = new MenuController(ioWorker);
             var gameController = new GameController(gameProvider, moveConverter, ioWorker);

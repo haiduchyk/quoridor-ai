@@ -20,24 +20,11 @@ namespace Quoridor.Model.Moves
             this.wallIndex = wallIndex;
         }
 
-        public bool IsValid()
-        {
-            return player.HasWalls() && CheckPath();
-        }
-
-        private bool CheckPath()
-        {
-            field.PlaceWall(in Id);
-            var hasPathForEnemy = search.HasPath(field, player.Enemy, in player.Enemy.Position, out _);
-            var hasPathForPlayer = search.HasPath(field, player, in player.Position, out _);
-            field.RemoveWall(in Id);
-            return hasPathForPlayer && hasPathForEnemy;
-        }
-
         public void Execute()
         {
             player.UseWall(Id);
             field.PlaceWallAndUpdateValidMoves(in wallIndex, player);
+            search.UpdatePathForPlayers(field, player);
         }
 
         public void Apply(Field field, Player player)

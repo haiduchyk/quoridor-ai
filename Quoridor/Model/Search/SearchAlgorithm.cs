@@ -1,5 +1,6 @@
 namespace Quoridor.Model
 {
+    using System;
     using System.Collections.Generic;
     using Players;
 
@@ -15,15 +16,22 @@ namespace Quoridor.Model
         private readonly PathRetriever pathRetriever;
 
         private Field field;
-
+        
+        // TODO please add DI
+        public static ISearch Instance;
+        
         public SearchAlgorithm(IMoveProvider moveProvider, PathRetriever pathRetriever)
         {
+            // TODO please add DI
+            Instance = this;
+            
             this.moveProvider = moveProvider;
             this.pathRetriever = pathRetriever;
             var comparer = GetComparer();
             queue = new PriorityQueue<byte>(comparer);
             FindPossiblePositions();
         }
+        
 
         protected abstract IComparer<byte> GetComparer();
 
@@ -40,8 +48,29 @@ namespace Quoridor.Model
             this.field = field;
             Prepare(player, in position);
             var result = Search(player, out path);
-            player.CurrentPath = path;
             return result;
+        }
+
+        public void UpdatePathForPlayers(Field field, Player player)
+        {
+            this.field = field;
+            Prepare(player, in player.Position);
+            var result = Search(player, out var path);
+            if (!result)
+            {
+                Console.WriteLine($" What");
+            }
+            player.CurrentPath = path;
+
+
+            var enemy = player.Enemy;
+            Prepare(enemy, in enemy.Position);
+            result = Search(enemy, out path);
+            if (!result)
+            {
+                Console.WriteLine($" What");
+            }
+            enemy.CurrentPath = path;
         }
 
         protected virtual void Prepare(Player player, in byte position)

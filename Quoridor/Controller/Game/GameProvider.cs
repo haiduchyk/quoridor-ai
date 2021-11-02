@@ -1,5 +1,6 @@
 namespace Quoridor.Controller.Game
 {
+    using System.Linq;
     using Model;
     using Model.Strategies;
 
@@ -19,17 +20,21 @@ namespace Quoridor.Controller.Game
 
         private readonly IPlayerCreator playerCreator;
         private readonly IWallProvider wallProvider;
+        private readonly ISearch search;
 
-        public GameProvider(IPlayerCreator playerCreator, IWallProvider wallProvider)
+        public GameProvider(IPlayerCreator playerCreator, IWallProvider wallProvider, ISearch search)
         {
             this.playerCreator = playerCreator;
             this.wallProvider = wallProvider;
+            this.search = search;
         }
 
         public Game StartNewGame(GameOptions gameOptions)
         {
-            var field = new Field();
+            var field = new Field(search);
             field.PossibleWalls.AddRange(wallProvider.GetAllMoves());
+            field.ValidWalls = field.PossibleWalls.ToList();
+            
             var bluePlayer = playerCreator.CreateFirstPlayer(gameOptions);
             var redPlayer = playerCreator.CreateSecondPlayer(gameOptions);
             bluePlayer.SetEnemy(redPlayer);

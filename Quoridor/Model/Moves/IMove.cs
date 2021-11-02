@@ -4,8 +4,6 @@ namespace Quoridor.Model.Moves
 
     public interface IMove
     {
-        bool IsValid();
-
         void Execute();
 
         void Apply(Field field, Player player);

@@ -24,7 +24,7 @@ namespace Quoridor.Model.Strategies
 
         public MonteCarloStrategy(IMoveProvider moveProvider, IWallProvider wallProvider, ISearch search)
         {
-            monteField = new Field();
+            monteField = new Field(search);
             montePlayer = new Player();
             monteEnemy = new Player();
             montePlayer.SetEnemy(monteEnemy);
@@ -43,7 +43,8 @@ namespace Quoridor.Model.Strategies
             var startTime = GetCurrentTime();
             var count = 0;
 
-            while (HasTime(startTime))
+            while (count < 100)
+            // while (HasTime(startTime))
             {
                 UpdateFields(field, player);
                 var node = Select(root);
@@ -187,11 +188,11 @@ namespace Quoridor.Model.Strategies
             {
                 var player = moveCount % 2 == 0 ? firstPlayer : secondPlayer;
                 var move = strategy.FindMove(monteField, player);
-                if (move.IsValid())
-                {
+                // if (move.IsValid())
+                // {
                     move.Execute();
                     moveCount++;
-                }
+                // }
             }
 
             return montePlayer.HasReachedFinish() ? 1 : 0;

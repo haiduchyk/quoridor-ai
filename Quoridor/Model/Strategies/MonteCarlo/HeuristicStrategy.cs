@@ -30,18 +30,20 @@ namespace Quoridor.Model.Strategies
 
         private IMove GetMoveOnPath(Field field, Player player)
         {
+            // TODO make list of shortest path of bytes in Player 
+            // TODO dont take random, take bigger row
             var availableMoves = moveProvider.GetAvailableMoves(field, in player.Position, in player.Enemy.Position);
             var move = availableMoves.Length == 0
                 ? player.Position
                 : availableMoves[random.Next(0, availableMoves.Length)];
-            return new PlayerMove(player, move);
+            return new PlayerMove(player, move, field, search);
         }
 
         private IMove GetRandomWallMove(Field field, Player player)
         {
             if (!player.HasWalls())
             {
-                return new PlayerMove(player, player.Position);
+                return new PlayerMove(player, player.Position, field, search);
             }
             var walls = wallProvider.GenerateWallMoves(field);
             var wall = walls[random.Next(0, walls.Count)];
