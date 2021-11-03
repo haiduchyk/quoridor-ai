@@ -99,7 +99,7 @@ namespace Quoridor.Model.Strategies
 
         public bool TryMoveForward(Field field, Player player, out byte move)
         {
-            return moveProvider.TryMoveForward(field, in player.Position, out move);
+            return moveProvider.TryMoveForward(field, player, out move);
         }
     }
 }

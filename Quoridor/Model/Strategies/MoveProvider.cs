@@ -3,6 +3,7 @@ namespace Quoridor.Model
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Players;
     using Strategies;
 
     public interface IMoveProvider
@@ -13,7 +14,7 @@ namespace Quoridor.Model
 
         int GetRow(in byte moveIndex);
 
-        bool TryMoveForward(Field field, in byte playerMask, out byte moveMask);
+        bool TryMoveForward(Field field, Player player, out byte moveMask);
 
         bool IsSimple(Field field, in byte playerIndex, byte moveIndex);
     }
@@ -74,11 +75,12 @@ namespace Quoridor.Model
             return rows[moveIndex];
         }
 
-        public bool TryMoveForward(Field field, in byte playerMask, out byte moveMask)
+        public bool TryMoveForward(Field field, Player player, out byte moveMask)
         {
-            var playerRow = GetRow(in playerMask);
-            var masks = simpleMoveCalculator.GetAvailableMoves(field, playerMask)
-                .Where(m => Math.Abs(playerRow - GetRow(in m)) == 1)
+            var playerRow = GetRow(in player.Position);
+            var direction = GetDirection(player);
+            var masks = simpleMoveCalculator.GetAvailableMoves(field, in player.Position)
+                .Where(m => GetRow(in m) - playerRow == direction)
                 .ToArray();
             if (masks.Length == 0)
             {
@@ -87,6 +89,11 @@ namespace Quoridor.Model
             }
             moveMask = masks[0];
             return true;
+        }
+
+        private int GetDirection(Player player)
+        {
+            return player.EndDownIndex == PlayerConstants.EndBlueDownIndexIncluding ? -1 : 1;
         }
 
         public bool IsSimple(Field field, in byte playerIndex, byte moveIndex)
