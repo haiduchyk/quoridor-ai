@@ -20,7 +20,8 @@ namespace Quoridor.Model.Strategies
             openings = new List<IPreset>()
             {
                 new StandardOpening(moveVariationProvider, field, player),
-                new GapOpening(moveVariationProvider, field, player)
+                new GapOpening(moveVariationProvider, field, player),
+                new SidewallOpening(moveVariationProvider, field, player),
             };
             presets = new List<IPreset>
             {
@@ -37,7 +38,7 @@ namespace Quoridor.Model.Strategies
         {
             if (currentOpening == null && HasOpening(node))
             {
-                currentOpening = ChooseOpening();
+                currentOpening = ChooseOpening(node);
             }
             if (TryGetMoveFromOpening(node, out var moves))
             {
@@ -58,9 +59,10 @@ namespace Quoridor.Model.Strategies
             return openings.Any(o => !o.IsExpired(node));
         }
 
-        private IPreset ChooseOpening()
+        private IPreset ChooseOpening(MonteNode node)
         {
-            return openings[random.Next(0, openings.Count)];
+            var availableOpenings = openings.Where(o => !o.IsExpired(node)).ToArray();
+            return availableOpenings[random.Next(0, availableOpenings.Length)];
         }
 
         private bool TryGetMoveFromOpening(MonteNode node, out List<IMove> moves)
