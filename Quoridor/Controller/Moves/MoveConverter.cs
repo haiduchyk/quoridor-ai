@@ -30,7 +30,7 @@ namespace Quoridor.Controller.Moves
             if (string.IsNullOrEmpty(input))
             {
                 var masks = moveProvider.GetAvailableMoves(field, in player.Position, in player.Enemy.Position);
-                return new PlayerMove(player, masks.First());
+                return new PlayerMove(player, masks.First(), field, search);
             }
             var commands = input.Split(" ");
             if (commands.Length != 2)
@@ -45,7 +45,7 @@ namespace Quoridor.Controller.Moves
                     var cellPosition = positionConverter.TryParseCellPosition(argument);
                     if (cellPosition.HasValue)
                     {
-                        return new PlayerMove(player, cellPosition.Value);
+                        return new PlayerMove(player, cellPosition.Value, field, search);
                     }
                     break;
 
@@ -53,7 +53,7 @@ namespace Quoridor.Controller.Moves
                     cellPosition = positionConverter.TryParseCellPosition(argument);
                     if (cellPosition.HasValue)
                     {
-                        return new PlayerMove(player, cellPosition.Value);
+                        return new PlayerMove(player, cellPosition.Value, field, search);
                     }
                     break;
 

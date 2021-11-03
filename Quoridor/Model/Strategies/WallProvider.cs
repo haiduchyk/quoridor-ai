@@ -1,6 +1,5 @@
 namespace Quoridor.Model
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
     using Players;
@@ -79,7 +78,7 @@ namespace Quoridor.Model
 
         private IEnumerable<byte> GetNearWalls(Field field)
         {
-            return field.PlacedWalls.SelectMany(w => WallConstants.NearWallsMasks[w]);
+            return field.PlacedWalls.SelectMany(w => WallConstants.NearWalls[w]);
         }
 
         public bool TryGetWallBehind(Field field, Player player, out byte wall)

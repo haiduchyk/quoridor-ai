@@ -17,8 +17,8 @@ namespace Quoridor.Model.Strategies
         public static readonly Dictionary<(byte position, byte endPosition), byte> BehindPlayerWall = new();
 
         public static readonly Dictionary<byte, byte[]> NearPlayerWalls = new();
-        public static readonly Dictionary<byte, byte[]> NearWallsMasks = new();
-        public static readonly Dictionary<byte, byte[]> OverlapedWalls = new();
+        public static readonly Dictionary<byte, byte[]> NearWalls = new();
+        public static readonly Dictionary<byte, byte[]> OverlappedWalls = new();
 
         static WallConstants()
         {
@@ -124,14 +124,14 @@ namespace Quoridor.Model.Strategies
                     AddIfInRange(i, j, WallOrientation.Vertical);
                     AddIfInRange(i, j - 2, WallOrientation.Horizontal);
                     AddIfInRange(i, j + 2, WallOrientation.Horizontal);
-                    OverlapedWalls[index] = currentNearWallsIndexes.ToArray();
+                    OverlappedWalls[index] = currentNearWallsIndexes.ToArray();
 
                     currentNearWallsIndexes = new List<byte>();
                     AddIfInRange(i, j, WallOrientation.Horizontal);
                     AddIfInRange(i - 2, j, WallOrientation.Vertical);
                     AddIfInRange(i + 2, j, WallOrientation.Vertical);
                     index = ToIndex(i, j, WallOrientation.Vertical);
-                    OverlapedWalls[index] = currentNearWallsIndexes.ToArray();
+                    OverlappedWalls[index] = currentNearWallsIndexes.ToArray();
 
                     void AddIfInRange(int y, int x, WallOrientation orientation)
                     {
@@ -152,10 +152,10 @@ namespace Quoridor.Model.Strategies
                 for (var j = 1; j < FieldMask.BitboardSize; j += 2)
                 {
                     var nearWallsMask = GenerateNearWallsForHorizontal(i, j);
-                    NearWallsMasks[count++] = nearWallsMask;
+                    NearWalls[count++] = nearWallsMask;
 
                     nearWallsMask = GenerateNearWallsForVertical(i, j);
-                    NearWallsMasks[count++] = nearWallsMask;
+                    NearWalls[count++] = nearWallsMask;
                 }
             }
         }

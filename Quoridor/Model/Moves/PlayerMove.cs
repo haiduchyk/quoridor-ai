@@ -3,6 +3,7 @@ namespace Quoridor.Model.Moves
     using System;
     using Model;
     using Players;
+    using Strategies;
 
     public class PlayerMove : IMove
     {
@@ -11,27 +12,33 @@ namespace Quoridor.Model.Moves
         private readonly byte position;
         private readonly byte previousPosition;
         private Player player;
+        private Field field;
+        private ISearch search;
 
-        public PlayerMove(Player player, byte position)
+        public PlayerMove(Player player, byte position, Field field, ISearch search)
         {
             this.player = player;
             this.position = position;
+            this.field = field;
+            this.search = search;
             previousPosition = player.Position;
-        }
-
-        public bool IsValid()
-        {
-            return true;
         }
 
         public void Execute()
         {
             player.ChangePosition(position);
+            search.UpdatePathForPlayers(field, player);
+            field.MakeMoveAndUpdate(player);
         }
 
         public void Apply(Field field, Player player)
         {
             this.player = player;
+        }
+        
+        public void Log()
+        {
+            PlayerConstants.allPositions[Id].Log();
         }
 
         protected bool Equals(PlayerMove other)

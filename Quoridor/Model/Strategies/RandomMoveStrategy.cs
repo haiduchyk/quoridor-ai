@@ -36,7 +36,7 @@ namespace Quoridor.Model.Strategies
         {
             var availableMoves = moveProvider.GetAvailableMoves(field, in player.Position, in player.Enemy.Position);
             var move = availableMoves[random.Next(0, availableMoves.Length)];
-            return new PlayerMove(player, move);
+            return new PlayerMove(player, move, field, search);
         }
 
         private IMove GetRandomWallMove(Field field, Player player)
