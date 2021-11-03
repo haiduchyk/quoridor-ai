@@ -4,9 +4,18 @@ namespace Quoridor.Model.Strategies
     using Moves;
     using Players;
 
-    public class StandardOpening : Preset
+    public class RushOpening : Preset
     {
-        public StandardOpening(MoveVariationProvider moveVariationProvider, Field field, Player player) :
+        // Sidewalls
+        // 55, 73
+
+        private readonly Dictionary<byte, byte> sidewall = new()
+        {
+            { PlayerConstants.EndBlueDownIndexIncluding, 55 },
+            { PlayerConstants.EndRedDownIndexIncluding, 73 },
+        };
+
+        public RushOpening(MoveVariationProvider moveVariationProvider, Field field, Player player) :
             base(moveVariationProvider, field, player)
         {
         }
@@ -28,7 +37,7 @@ namespace Quoridor.Model.Strategies
                 moves = moveVariationProvider.FromMove(move);
                 return true;
             }
-            if (CanPlaceWallBehind(node, out var wall))
+            if (IsNthMove(node, 3) && CanPlaceSidewall(out var wall))
             {
                 moves = moveVariationProvider.FromWall(wall);
                 return true;
@@ -37,11 +46,10 @@ namespace Quoridor.Model.Strategies
             return false;
         }
 
-        private bool CanPlaceWallBehind(MonteNode node, out byte wall)
+        private bool CanPlaceSidewall(out byte wall)
         {
-            wall = Constants.EmptyIndex;
-            return IsNthMove(node, 3) && IsOnRow(player, 3) &&
-                   moveVariationProvider.TryGetWallBehind(field, player, out wall);
+            wall = sidewall[player.EndDownIndex];
+            return field.CanPlace(wall);
         }
 
         public override bool IsExpired(MonteNode node)

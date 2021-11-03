@@ -73,12 +73,6 @@ namespace Quoridor.Model.Strategies
             return false;
         }
 
-        private bool CanMoveForward(MonteNode node, int n, out byte move)
-        {
-            move = Constants.EmptyIndex;
-            return IsNthMove(node, n) && moveVariationProvider.TryMoveForward(field, player, out move);
-        }
-
         private bool CanPlaceSidewall(out byte wall)
         {
             wall = sidewall[player.EndDownIndex];

@@ -84,5 +84,11 @@ namespace Quoridor.Model.Strategies
         {
             return node.IsPlayerMove ? player.Enemy : player;
         }
+
+        protected bool CanMoveForward(MonteNode node, int n, out byte move)
+        {
+            move = Constants.EmptyIndex;
+            return IsNthMove(node, n) && moveVariationProvider.TryMoveForward(field, player, out move);
+        }
     }
 }

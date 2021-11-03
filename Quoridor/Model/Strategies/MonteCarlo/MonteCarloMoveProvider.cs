@@ -22,6 +22,7 @@ namespace Quoridor.Model.Strategies
                 new StandardOpening(moveVariationProvider, field, player),
                 new GapOpening(moveVariationProvider, field, player),
                 new SidewallOpening(moveVariationProvider, field, player),
+                new RushOpening(moveVariationProvider, field, player),
             };
             presets = new List<IPreset>
             {
