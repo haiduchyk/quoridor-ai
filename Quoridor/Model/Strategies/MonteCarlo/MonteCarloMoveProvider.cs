@@ -19,10 +19,10 @@ namespace Quoridor.Model.Strategies
             random = new Random();
             openings = new List<IPreset>()
             {
-                // new StandardOpening(moveVariationProvider, field, player),
-                // new GapOpening(moveVariationProvider, field, player),
-                // new SidewallOpening(moveVariationProvider, field, player),
-                // new RushOpening(moveVariationProvider, field, player),
+                new StandardOpening(moveVariationProvider, field, player),
+                new GapOpening(moveVariationProvider, field, player),
+                new SidewallOpening(moveVariationProvider, field, player),
+                new RushOpening(moveVariationProvider, field, player),
                 new ShatranjOpening(moveVariationProvider, field, player),
             };
             presets = new List<IPreset>
