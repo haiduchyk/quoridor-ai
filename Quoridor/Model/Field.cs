@@ -9,9 +9,9 @@ namespace Quoridor.Model
     public class Field
     {
         public List<byte> PlacedWalls { get; } = new();
-        public List<byte> PossibleWalls { get; } = new();
-        public List<byte> ValidWalls { get; set; } = new();
-        public List<byte> ProbableValidWalls { get; } = new();
+
+        // TODO add check if there are anything, ask before removing this todo
+        public List<byte> PossibleWalls { get; set; } = new();
 
         public ref readonly FieldMask Walls => ref walls;
 
@@ -30,14 +30,14 @@ namespace Quoridor.Model
 
             var wallMask = WallConstants.AllWalls[wallIndex];
             walls = walls.Or(in wallMask);
-            
+
             if (!player.HasWalls() && !player.Enemy.HasWalls())
             {
                 return;
             }
-            
+
             RemoveOverlappedWalls(wallIndex);
-            UpdateValidWalls(in wallIndex, player);
+            RemoveCrossingWalls(in wallIndex, player);
         }
 
         private void RemoveOverlappedWalls(in byte wallIndex)
@@ -49,87 +49,82 @@ namespace Quoridor.Model
             }
         }
 
-        private void UpdateValidWalls(in byte wallIndex, Player player)
-        {
-            RemoveCrossingWalls(in wallIndex, player);
-        }
-        // TODO probably will fall if player put wall on first move, ask before remove this todo
         private void RemoveCrossingWalls(in byte wallIndex, Player player)
         {
-            ValidWalls = PossibleWalls.ToList();
-            var shortestPlayerPath = player.CurrentPath;
-            var shortestEnemyPath = player.Enemy.CurrentPath;
-            
             var nearWalls = WallConstants.NearWalls[wallIndex];
             foreach (var nearWall in nearWalls)
             {
-                var nearWallMask = WallConstants.AllWalls[nearWall];
-                var isOnPlayerPath = nearWallMask.Or(shortestPlayerPath).IsNotZero();
-                var isOnEnemyPath = nearWallMask.Or(shortestEnemyPath).IsNotZero();
-                if (isOnPlayerPath && isOnEnemyPath)
+                TryToRemoveNearWall(nearWall, player);
+            }
+        }
+
+        private void TryToRemoveNearWall(byte nearWall, Player player)
+        {
+            var shortestPlayerPath = player.CurrentPath;
+            var shortestEnemyPath = player.Enemy.CurrentPath;
+            var nearWallMask = WallConstants.AllWalls[nearWall];
+
+            var isOnPlayerPath = nearWallMask.And(shortestPlayerPath).IsNotZero();
+            var isOnEnemyPath = nearWallMask.And(shortestEnemyPath).IsNotZero();
+
+            if (isOnPlayerPath && isOnEnemyPath)
+            {
+                if (!CheckBothPaths(nearWall, player))
                 {
-                    if (!CheckBothPaths(wallIndex, player))
-                    {
-                        ValidWalls.Remove(nearWall);
-                    }
+                    PossibleWalls.Remove(nearWall);
                 }
-                else if (isOnEnemyPath)
+            }
+            else if (isOnEnemyPath)
+            {
+                if (!CheckSinglePath(nearWall, player.Enemy))
                 {
-                    if (!CheckEnemyPath(wallIndex, player))
-                    {
-                        ValidWalls.Remove(nearWall);
-                    }
+                    PossibleWalls.Remove(nearWall);
                 }
-                else if (isOnPlayerPath)
+            }
+            else if (isOnPlayerPath)
+            {
+                if (!CheckSinglePath(nearWall, player))
                 {
-                    if (!CheckPlayerPath(wallIndex, player))
-                    {
-                        ValidWalls.Remove(nearWall);
-                    }
+                    PossibleWalls.Remove(nearWall);
                 }
             }
         }
-        
+
         private bool CheckBothPaths(in byte wallIndex, Player player)
         {
+            var oldWalls = walls;
             PlaceWall(in wallIndex);
             var hasPathForEnemy = search.HasPath(this, player.Enemy, in player.Enemy.Position, out _);
             if (!hasPathForEnemy)
             {
-                RemoveWall(in wallIndex);
+                walls = oldWalls;
                 return false;
             }
+
             var hasPathForPlayer = search.HasPath(this, player, in player.Position, out _);
-            RemoveWall(in wallIndex);
+            walls = oldWalls;
             return hasPathForPlayer;
         }
-        
-        private bool CheckPlayerPath(in byte wallIndex, Player player)
+
+        private bool CheckSinglePath(in byte wallIndex, Player player)
         {
+            var oldWalls = walls;
             PlaceWall(in wallIndex);
             var hasPathForPlayer = search.HasPath(this, player, in player.Position, out _);
-            RemoveWall(in wallIndex);
-            return hasPathForPlayer ;
+            walls = oldWalls;
+            return hasPathForPlayer;
         }
-        
-        private bool CheckEnemyPath(in byte wallIndex, Player player)
+
+        public void MakeMoveAndUpdate(Player player)
         {
-            PlaceWall(in wallIndex);
-            var hasPathForEnemy = search.HasPath(this, player.Enemy, in player.Enemy.Position, out _);
-            RemoveWall(in wallIndex);
-            return hasPathForEnemy;
+            var nearWalls = WallConstants.NearPlayerWalls[player.Position];
+            foreach (var nearWall in nearWalls)
+            {
+                TryToRemoveNearWall(nearWall, player);
+            }
         }
 
-        public void PlaceWallAndUpdateProbableValidMoves(in FieldMask wall, Player player)
-        {
-        }
-
-        // private bool IsOnShortestPath()
-        // {
-        //     return player.CurrentPath.And(wall).IsNotZero();
-        // }
-
-        public void PlaceWall(in byte wall)
+        private void PlaceWall(in byte wall)
         {
             walls = walls.Or(in WallConstants.AllWalls[wall]);
         }
@@ -152,15 +147,12 @@ namespace Quoridor.Model
         public void Update(Field field)
         {
             walls = field.walls;
-            
+
             PlacedWalls.Clear();
             PlacedWalls.AddRange(field.PlacedWalls);
-            
+
             PossibleWalls.Clear();
             PossibleWalls.AddRange(field.PossibleWalls);
-            
-            ValidWalls.Clear();
-            ValidWalls.AddRange(field.ValidWalls);
         }
     }
 }

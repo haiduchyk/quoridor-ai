@@ -33,7 +33,6 @@ namespace Quoridor.Controller.Game
         {
             var field = new Field(search);
             field.PossibleWalls.AddRange(wallProvider.GetAllMoves());
-            field.ValidWalls = field.PossibleWalls.ToList();
             
             var bluePlayer = playerCreator.CreateFirstPlayer(gameOptions);
             var redPlayer = playerCreator.CreateSecondPlayer(gameOptions);

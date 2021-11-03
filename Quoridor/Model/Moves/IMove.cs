@@ -10,9 +10,6 @@ namespace Quoridor.Model.Moves
 
         ref readonly byte Id { get; }
 
-        public void Log()
-        {
-            Id.ToString().Log();
-        }
+        public void Log();
     }
 }

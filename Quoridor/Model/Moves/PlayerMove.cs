@@ -3,6 +3,7 @@ namespace Quoridor.Model.Moves
     using System;
     using Model;
     using Players;
+    using Strategies;
 
     public class PlayerMove : IMove
     {
@@ -27,11 +28,17 @@ namespace Quoridor.Model.Moves
         {
             player.ChangePosition(position);
             search.UpdatePathForPlayers(field, player);
+            field.MakeMoveAndUpdate(player);
         }
 
         public void Apply(Field field, Player player)
         {
             this.player = player;
+        }
+        
+        public void Log()
+        {
+            PlayerConstants.allPositions[Id].Log();
         }
 
         protected bool Equals(PlayerMove other)

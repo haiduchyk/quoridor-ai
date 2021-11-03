@@ -1,6 +1,5 @@
 namespace Quoridor.Model
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
     using Players;
@@ -50,7 +49,7 @@ namespace Quoridor.Model
 
         public List<byte> GenerateWallMoves(Field field)
         {
-            return field.ValidWalls;
+            return field.PossibleWalls;
         }
 
         public byte[] GenerateWallMoves(Field field, Player player)
@@ -73,7 +72,7 @@ namespace Quoridor.Model
                 .Concat(WallConstants.NearPlayerWalls[player.Position])
                 .Concat(WallConstants.NearPlayerWalls[player.Enemy.Position]);
 
-            var result = heuristicWalls.Intersect(field.ValidWalls).Distinct().ToArray();
+            var result = heuristicWalls.Intersect(field.PossibleWalls).Distinct().ToArray();
             return result;
         }
 

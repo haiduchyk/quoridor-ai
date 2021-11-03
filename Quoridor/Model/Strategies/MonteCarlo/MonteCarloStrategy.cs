@@ -8,7 +8,7 @@ namespace Quoridor.Model.Strategies
 
     public class MonteCarloStrategy : IMoveStrategy
     {
-        private const long ComputeTime = 2000;
+        private const long ComputeTime = 5000;
         private const double C = 1.4142135;
 
         public bool IsManual => false;
@@ -43,8 +43,8 @@ namespace Quoridor.Model.Strategies
             var startTime = GetCurrentTime();
             var count = 0;
 
-            while (count < 100)
-            // while (HasTime(startTime))
+            // while (count < 97)
+            while (HasTime(startTime))
             {
                 UpdateFields(field, player);
                 var node = Select(root);

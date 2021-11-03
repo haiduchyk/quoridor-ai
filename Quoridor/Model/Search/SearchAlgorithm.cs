@@ -58,7 +58,7 @@ namespace Quoridor.Model
             var result = Search(player, out var path);
             if (!result)
             {
-                Console.WriteLine($" What");
+                // Console.WriteLine($" What");
             }
             player.CurrentPath = path;
 
@@ -68,7 +68,7 @@ namespace Quoridor.Model
             result = Search(enemy, out path);
             if (!result)
             {
-                Console.WriteLine($" What");
+                // Console.WriteLine($" What");
             }
             enemy.CurrentPath = path;
         }

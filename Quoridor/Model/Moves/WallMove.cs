@@ -2,6 +2,7 @@ namespace Quoridor.Model.Moves
 {
     using Model;
     using Players;
+    using Strategies;
 
     public class WallMove : IMove
     {
@@ -9,7 +10,7 @@ namespace Quoridor.Model.Moves
 
         private readonly ISearch search;
         private readonly byte wallIndex;
-        private Field field;
+        public Field field;
         private Player player;
 
         public WallMove(Field field, Player player, ISearch search, byte wallIndex)
@@ -24,13 +25,17 @@ namespace Quoridor.Model.Moves
         {
             player.UseWall(Id);
             field.PlaceWallAndUpdateValidMoves(in wallIndex, player);
-            search.UpdatePathForPlayers(field, player);
         }
 
         public void Apply(Field field, Player player)
         {
             this.field = field;
             this.player = player;
+        }
+        
+        public void Log()
+        {
+            WallConstants.AllWalls[Id].Log();
         }
 
         protected bool Equals(WallMove other)

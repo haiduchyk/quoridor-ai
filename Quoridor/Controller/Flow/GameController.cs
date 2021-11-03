@@ -1,8 +1,12 @@
 namespace Quoridor.Controller.Flow
 {
+    using System;
+    using System.Linq;
     using Game;
     using Io;
+    using Model;
     using Model.Moves;
+    using Model.Strategies;
     using Moves;
     using View;
 

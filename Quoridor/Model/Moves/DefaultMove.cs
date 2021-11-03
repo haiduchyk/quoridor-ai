@@ -6,6 +6,7 @@ namespace Quoridor.Model.Moves
     {
         public ref readonly byte Id => throw new System.NotImplementedException();
 
+
         public bool IsValid()
         {
             return false;
@@ -19,5 +20,9 @@ namespace Quoridor.Model.Moves
         {
         }
 
+        public void Log()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }
