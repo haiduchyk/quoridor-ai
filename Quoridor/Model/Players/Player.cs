@@ -44,9 +44,13 @@ namespace Quoridor.Model.Players
             Enemy = enemy;
         }
 
+        public bool IsFirstPlayer()
+        {
+            return endDownIndex == PlayerConstants.EndBlueDownIndexIncluding;
+        }
+
         public bool HasReachedFinish()
         {
-            // TODO index , rewrite using index
             return IsEndPosition(position);
         }
 

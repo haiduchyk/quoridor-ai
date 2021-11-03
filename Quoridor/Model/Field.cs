@@ -54,6 +54,16 @@ namespace Quoridor.Model
             return walls.GetBit(y, x);
         }
 
+        public bool HasWall(in byte wallIndex)
+        {
+            return PlacedWalls.Contains(wallIndex);
+        }
+
+        public bool CanPlace(byte wallIndex)
+        {
+            return PossibleWalls.Contains(wallIndex);
+        }
+
         public FieldMask GetWallsForMask(in FieldMask wallMask)
         {
             return walls.And(in wallMask);

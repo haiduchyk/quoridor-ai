@@ -4,9 +4,9 @@ namespace Quoridor.Model.Strategies
     using Moves;
     using Players;
 
-    public class StandardOpeningPreset : Preset
+    public class StandardOpening : Preset
     {
-        public StandardOpeningPreset(MoveVariationProvider moveVariationProvider, Field field, Player player) :
+        public StandardOpening(MoveVariationProvider moveVariationProvider, Field field, Player player) :
             base(moveVariationProvider, field, player)
         {
         }
