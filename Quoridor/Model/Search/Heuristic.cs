@@ -5,12 +5,12 @@ namespace Quoridor.Model
 
     public class Heuristic : IComparer<byte>
     {
-        private readonly Dictionary<byte, int> distances;
+        private readonly int[] distances;
         private readonly Dictionary<byte, int> blueHeuristic = new();
         private readonly Dictionary<byte, int> redHeuristic = new();
         private Dictionary<byte, int> heuristic;
 
-        public Heuristic(Dictionary<byte, int> distances)
+        public Heuristic(int[] distances)
         {
             this.distances = distances;
             InitializeHeuristic();

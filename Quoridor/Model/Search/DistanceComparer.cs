@@ -4,9 +4,9 @@ namespace Quoridor.Model
 
     public class DistanceComparer : IComparer<byte>
     {
-        private readonly Dictionary<byte, int> distances;
+        private readonly int[] distances;
 
-        public DistanceComparer(Dictionary<byte, int> distances)
+        public DistanceComparer(int[] distances)
         {
             this.distances = distances;
         }

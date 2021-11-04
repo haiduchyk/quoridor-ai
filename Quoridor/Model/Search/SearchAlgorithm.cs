@@ -8,7 +8,7 @@ namespace Quoridor.Model
     {
         private readonly Dictionary<(FieldMask walls, byte player, byte enemy, byte pos), FieldMask> cached = new();
 
-        protected readonly Dictionary<byte, int> distances = new(81);
+        protected readonly int[] distances = new int[81];
 
         private readonly byte[] possiblePositions = new byte[81];
         private readonly Dictionary<byte, (byte mask, bool isSimple)> prevNodes = new(81);
@@ -19,14 +19,8 @@ namespace Quoridor.Model
 
         private Field field;
 
-        // TODO please add DI
-        public static ISearch Instance;
-
-        public SearchAlgorithm(IMoveProvider moveProvider, PathRetriever pathRetriever)
+        protected SearchAlgorithm(IMoveProvider moveProvider, PathRetriever pathRetriever)
         {
-            // TODO please add DI
-            Instance = this;
-
             this.moveProvider = moveProvider;
             this.pathRetriever = pathRetriever;
             var comparer = GetComparer();

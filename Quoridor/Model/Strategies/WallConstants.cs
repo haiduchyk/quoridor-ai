@@ -167,9 +167,6 @@ namespace Quoridor.Model.Strategies
             }
         }
 
-        // TODO how fast and good with this flag on and off
-        private static bool needUpPoint = false;
-
         private static byte[] GenerateNearWallsForHorizontal(int i, int j, bool withAdditional)
         {
             var walls = new List<byte>();
