@@ -15,15 +15,15 @@ namespace Quoridor.Model
         public const int UsedBitsAmount = BitboardSize * BitboardSize; // 289, this is without redundant
         public const int ExtraBits = TotalBitsAmount - UsedBitsAmount; // 31 redundant bits
 
-        private fixed long blocks[5];
+        public fixed long blocks[5];
 
         public FieldMask(long[] blocks)
         {
-            this.blocks[0] = blocks[0]; 
-            this.blocks[1] = blocks[1]; 
-            this.blocks[2] = blocks[2]; 
-            this.blocks[3] = blocks[3]; 
-            this.blocks[4] = blocks[4]; 
+            this.blocks[0] = blocks[0];
+            this.blocks[1] = blocks[1];
+            this.blocks[2] = blocks[2];
+            this.blocks[3] = blocks[3];
+            this.blocks[4] = blocks[4];
         }
 
         public bool GetBit(int y, int x)
@@ -33,6 +33,7 @@ namespace Quoridor.Model
             {
                 throw new Exception($"Out of range [y:{y}, x:{x}]");
             }
+
             var index = x + y * BitboardSize;
             return GetBit(index);
         }
@@ -50,6 +51,7 @@ namespace Quoridor.Model
             {
                 SetBit(y, x, bit);
             }
+
             return isIsInRange;
         }
 
@@ -72,20 +74,36 @@ namespace Quoridor.Model
         public readonly FieldMask And(in FieldMask mask)
         {
             var result = new FieldMask();
-            for (var i = 0; i < BitBlocksAmount; i++)
+
+            fixed (long* maskBlocks = mask.blocks)
             {
-                result[i] = this[i] & mask[i];
+                fixed (long* oldBlocks = blocks)
+                {
+                    for (var i = 0; i < BitBlocksAmount; i++)
+                    {
+                        *(result.blocks + i) = *(oldBlocks + i) & *(maskBlocks + i);
+                    }
+                }
             }
+
             return result;
         }
 
         public readonly FieldMask Or(in FieldMask mask)
         {
             var result = new FieldMask();
-            for (var i = 0; i < BitBlocksAmount; i++)
+
+            fixed (long* maskBlocks = mask.blocks)
             {
-                result[i] = this[i] | mask[i];
+                fixed (long* oldBlocks = blocks)
+                {
+                    for (var i = 0; i < BitBlocksAmount; i++)
+                    {
+                        *(result.blocks + i) = *(oldBlocks + i) | *(maskBlocks + i);
+                    }
+                }
             }
+
             return result;
         }
 
@@ -96,6 +114,7 @@ namespace Quoridor.Model
             {
                 result[i] = this[i] ^ mask[i];
             }
+
             return result;
         }
 
@@ -106,6 +125,7 @@ namespace Quoridor.Model
             {
                 result[i] = ~this[i];
             }
+
             return result;
         }
 
@@ -147,7 +167,7 @@ namespace Quoridor.Model
 
         public static byte GetPlayerIndex(int y, int x)
         {
-            return (byte)(PlayerFieldSize * y / 2 + x / 2);
+            return (byte) (PlayerFieldSize * y / 2 + x / 2);
         }
 
         public static (int i, int j) GetPlayerPosition(byte position)
