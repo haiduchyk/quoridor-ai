@@ -3,15 +3,15 @@ namespace Quoridor.Model
     using System;
     using System.Collections.Generic;
     using Players;
+    using Strategies;
 
     public abstract class SearchAlgorithm : ISearch
     {
         private readonly Dictionary<(FieldMask walls, byte player, byte enemy, byte pos), FieldMask> cached = new();
 
-        protected readonly int[] distances = new int[81];
+        protected readonly int[] distances = new int[FieldMask.PlayerFieldArea];
 
-        private readonly byte[] possiblePositions = new byte[81];
-        private readonly Dictionary<byte, (byte mask, bool isSimple)> prevNodes = new(81);
+        private readonly Dictionary<byte, (byte mask, bool isSimple)> prevNodes = new(FieldMask.PlayerFieldArea);
         private readonly PriorityQueue<byte> queue;
 
         private readonly IMoveProvider moveProvider;
@@ -25,18 +25,10 @@ namespace Quoridor.Model
             this.pathRetriever = pathRetriever;
             var comparer = GetComparer();
             queue = new PriorityQueue<byte>(comparer);
-            FindPossiblePositions();
         }
 
         protected abstract IComparer<byte> GetComparer();
 
-        private void FindPossiblePositions()
-        {
-            for (var i = 0; i < FieldMask.PlayerFieldArea; i++)
-            {
-                possiblePositions[i] = (byte)i;
-            }
-        }
 
         public bool HasPath(Field field, Player player, in byte position)
         {
@@ -68,18 +60,21 @@ namespace Quoridor.Model
                 player.SetPath(path);
                 return;
             }
+
             var result = Search(player, true, out path);
             player.SetPath(path);
             cached[key] = path;
         }
 
-        protected virtual void Prepare(Player player, in byte position)
+        protected virtual unsafe void Prepare(Player player, in byte position)
         {
-            for (var i = 0; i < 81; i++)
+            fixed (int* distancesPtr = distances)
             {
-                var pos = possiblePositions[i];
-                distances[pos] = int.MaxValue;
-                prevNodes[pos] = (Constants.EmptyIndex, default);
+                for (byte i = 0; i < FieldMask.PlayerFieldArea; i++)
+                {
+                    *(distancesPtr + i) = int.MaxValue; //assigning the value with the pointer
+                    prevNodes[i] = (Constants.EmptyIndex, default);
+                }
             }
 
             distances[position] = 0;

@@ -6,9 +6,9 @@ namespace Quoridor.Model
     public class Heuristic : IComparer<byte>
     {
         private readonly int[] distances;
-        private readonly Dictionary<byte, int> blueHeuristic = new();
-        private readonly Dictionary<byte, int> redHeuristic = new();
-        private Dictionary<byte, int> heuristic;
+        private readonly int[] blueHeuristic = new int[FieldMask.PlayerFieldArea];
+        private readonly int[] redHeuristic = new int[FieldMask.PlayerFieldArea];
+        private int[] heuristic;
 
         public Heuristic(int[] distances)
         {

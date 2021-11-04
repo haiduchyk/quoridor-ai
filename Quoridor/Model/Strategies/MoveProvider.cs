@@ -24,10 +24,9 @@ namespace Quoridor.Model
     public class MoveProvider : IMoveProvider
     {
         //  <playerPosition 81, <enemyPosition ~3-4, wallInBetweenPosition>>
-        private Dictionary<(byte playerPosition, byte enemyPosition), FieldMask> withEnemyMoveMasks =
-            new();
+        private Dictionary<(byte playerPosition, byte enemyPosition), FieldMask> withEnemyMoveMasks = new();
 
-        private readonly Dictionary<byte, int> rows = new();
+        private readonly int[] rows = new int[FieldMask.PlayerFieldArea];
 
         private readonly SimpleMoveCalculator simpleMoveCalculator;
         private readonly WithEnemyMoveCalculator withEnemyMoveCalculator;
@@ -101,6 +100,7 @@ namespace Quoridor.Model
                 jump = Constants.EmptyIndex;
                 return false;
             }
+
             jump = jumpMoves[0];
             return true;
         }
@@ -146,6 +146,7 @@ namespace Quoridor.Model
                     result.Add((enemyIndex, wallPosition));
                 }
             }
+
             return result;
         }
     }

@@ -7,11 +7,10 @@ namespace Quoridor.Model.Strategies
     {
         // <playerPosition 81 <enemyPosition 4 <wallMask 64, possibleMoves>>>
         private Dictionary<(byte playerPosition, byte enemyPosition, FieldMask wallMask), byte[]>
-            withEnemyPlayersMoves =
-                new();
+            withEnemyPlayersMoves = new();
 
         //  <playerPosition 81, <playerPosition 4, wallMaskForThisPlayerAndEnemyPosition>
-        private Dictionary<(byte playerPosition, byte ), FieldMask> withEnemyPlayersMovesMasks = new();
+        private Dictionary<(byte playerPosition, byte wallMask), FieldMask> withEnemyPlayersMovesMasks = new();
 
         public byte[] GetAvailableMoves(Field field, in byte playerMask, in byte enemyMask)
         {

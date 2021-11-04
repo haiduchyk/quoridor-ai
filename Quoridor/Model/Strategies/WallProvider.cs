@@ -37,7 +37,6 @@ namespace Quoridor.Model
 
         public bool CanPlaceWall(Field field, FieldMask wall)
         {
-            // TODO index
             // return field.PossibleWalls.Any(w => w == wall);
             return false;
         }

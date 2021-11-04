@@ -11,7 +11,7 @@ namespace Quoridor.Model.Strategies
         private Dictionary<(byte playerPosition, FieldMask wallMask), byte[]> simplePlayersMoves = new();
 
         //  <playerPosition, wallMaskForThisPlayerPosition>
-        private Dictionary<byte, FieldMask> simplePlayersMovesMasks = new();
+        private FieldMask[] simplePlayersMovesMasks = new FieldMask[FieldMask.PlayerFieldArea];
 
         public SimpleMoveCalculator()
         {
