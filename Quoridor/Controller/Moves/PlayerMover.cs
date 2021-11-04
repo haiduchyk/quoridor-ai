@@ -23,9 +23,9 @@ namespace Quoridor.Controller.Moves
             this.ioWorker = ioWorker;
         }
 
-        public (IMove move, string code) WaitForMove()
+        public (IMove move, string code) WaitForMove(IMove lastMove)
         {
-            var move = player.ShouldWaitForMove() ? ReadMoveFromConsole() : player.FindMove(field);
+            var move = player.ShouldWaitForMove() ? ReadMoveFromConsole() : player.FindMove(field, lastMove);
             var code = moveConverter.GetCode(field, player, move);
             return (move, code);
         }

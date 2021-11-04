@@ -1,12 +1,8 @@
 namespace Quoridor.Controller.Flow
 {
-    using System;
-    using System.Linq;
     using Game;
     using Io;
-    using Model;
     using Model.Moves;
-    using Model.Strategies;
     using Moves;
     using View;
 
@@ -19,8 +15,8 @@ namespace Quoridor.Controller.Flow
 
         private PlayerMover bluePlayerMover;
         private PlayerMover redPlayerMover;
+        private IMove lastMove;
         private int moveCount;
-        public static IMove lastMove;
 
         public GameController(IGameProvider gameProvider, IMoveConverter moveConverter, IIoWorker ioWorker)
         {
@@ -64,7 +60,7 @@ namespace Quoridor.Controller.Flow
 
         private void MakeMove(PlayerMover playerMover)
         {
-            var (move, code) = playerMover.WaitForMove();
+            var (move, code) = playerMover.WaitForMove(lastMove);
             move.Execute();
             lastMove = move;
             if (playerMover.ShouldPrint)

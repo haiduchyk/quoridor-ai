@@ -18,12 +18,17 @@ namespace Quoridor.Model
         FieldMask GenerateWall(int y, int x, WallOrientation wallOrientation);
 
         bool TryGetWallBehind(Field field, Player player, out byte wall);
+
+        bool HasCachedWalls(Field field, Player player, out List<byte> walls);
+  
+        void SetCachedWalls(Field field, Player player, List<byte> walls);
     }
 
     public class WallProvider : IWallProvider
     {
         private readonly IMoveProvider moveProvider;
-        public static readonly Dictionary<(FieldMask walls, byte player, byte enemy), byte[]> cached = new();
+        private static readonly Dictionary<(FieldMask walls, byte player, byte enemy), byte[]> CachedMoves = new();
+        private static readonly Dictionary<(FieldMask walls, byte player, byte enemy), List<byte>> CachedWalls = new();
 
         public WallProvider(IMoveProvider moveProvider)
         {
@@ -54,14 +59,14 @@ namespace Quoridor.Model
 
         public byte[] GenerateWallMoves(Field field, Player player)
         {
-            var combined = (field.Walls, player.Position, player.Enemy.Position);
-            if (cached.TryGetValue(combined, out var walls))
+            var key = (field.Walls, player.Position, player.Enemy.Position);
+            if (CachedMoves.TryGetValue(key, out var walls))
             {
                 return walls;
             }
 
             walls = CreateWallMoves(field, player);
-            cached[combined] = walls;
+            CachedMoves[key] = walls;
             return walls;
         }
 
@@ -78,7 +83,7 @@ namespace Quoridor.Model
 
         private IEnumerable<byte> GetNearWalls(Field field)
         {
-            return field.PlacedWalls.SelectMany(w => WallConstants.NearWalls[w]);
+            return field.PlacedWalls.SelectMany(w => WallConstants.NearWallsToPlace[w]);
         }
 
         public bool TryGetWallBehind(Field field, Player player, out byte wall)
@@ -93,6 +98,18 @@ namespace Quoridor.Model
 
             wall = WallConstants.BehindPlayerWall[(player.Position, player.EndDownIndex)];
             return field.Walls.And(in WallConstants.AllWalls[wall]).IsZero();
+        }
+
+        public bool HasCachedWalls(Field field, Player player, out List<byte> walls)
+        {
+            var key = (field.Walls, player.Position, player.Enemy.Position);
+            return CachedWalls.TryGetValue(key, out walls);
+        }
+
+        public void SetCachedWalls(Field field, Player player, List<byte> walls)
+        {
+            var key = (field.Walls, player.Position, player.Enemy.Position);
+            CachedWalls[key] = walls.ToList();
         }
     }
 }

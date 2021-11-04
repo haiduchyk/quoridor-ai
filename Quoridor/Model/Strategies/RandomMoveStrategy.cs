@@ -21,7 +21,7 @@ namespace Quoridor.Model.Strategies
             this.search = search;
         }
 
-        public IMove FindMove(Field field, Player player)
+        public IMove FindMove(Field field, Player player, IMove lastMove)
         {
             if (!player.HasWalls())
             {
@@ -36,14 +36,14 @@ namespace Quoridor.Model.Strategies
         {
             var availableMoves = moveProvider.GetAvailableMoves(field, in player.Position, in player.Enemy.Position);
             var move = availableMoves[random.Next(0, availableMoves.Length)];
-            return new PlayerMove(player, move, field, search);
+            return new PlayerMove(player, move, field, search, wallProvider);
         }
 
         private IMove GetRandomWallMove(Field field, Player player)
         {
             var walls = wallProvider.GenerateWallMoves(field);
             var wall = walls[random.Next(0, walls.Count)];
-            return new WallMove(field, player, search, wall);
+            return new WallMove(field, player, search, wallProvider, wall);
         }
     }
 }

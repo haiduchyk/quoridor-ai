@@ -6,6 +6,8 @@ namespace Quoridor.Model
 
     public abstract class SearchAlgorithm : ISearch
     {
+        private readonly Dictionary<(FieldMask walls, byte player, byte enemy, byte pos), FieldMask> cached = new();
+
         protected readonly Dictionary<byte, int> distances = new(81);
 
         private readonly byte[] possiblePositions = new byte[81];
@@ -16,22 +18,21 @@ namespace Quoridor.Model
         private readonly PathRetriever pathRetriever;
 
         private Field field;
-        
+
         // TODO please add DI
         public static ISearch Instance;
-        
+
         public SearchAlgorithm(IMoveProvider moveProvider, PathRetriever pathRetriever)
         {
             // TODO please add DI
             Instance = this;
-            
+
             this.moveProvider = moveProvider;
             this.pathRetriever = pathRetriever;
             var comparer = GetComparer();
             queue = new PriorityQueue<byte>(comparer);
             FindPossiblePositions();
         }
-        
 
         protected abstract IComparer<byte> GetComparer();
 
@@ -39,38 +40,43 @@ namespace Quoridor.Model
         {
             for (var i = 0; i < FieldMask.PlayerFieldArea; i++)
             {
-                possiblePositions[i] = (byte) i;
+                possiblePositions[i] = (byte)i;
             }
         }
 
-        public bool HasPath(Field field, Player player, in byte position, out FieldMask path)
+        public bool HasPath(Field field, Player player, in byte position)
         {
             this.field = field;
             Prepare(player, in position);
-            var result = Search(player, out path);
-            return result;
+            return Search(player, false, out _);
+        }
+
+        public bool TryFindPath(Field field, Player player, in byte position, out FieldMask path)
+        {
+            this.field = field;
+            Prepare(player, in position);
+            return Search(player, true, out path);
         }
 
         public void UpdatePathForPlayers(Field field, Player player)
         {
             this.field = field;
+            UpdatePathFor(player);
+            UpdatePathFor(player.Enemy);
+        }
+
+        public void UpdatePathFor(Player player)
+        {
             Prepare(player, in player.Position);
-            var result = Search(player, out var path);
-            if (!result)
+            var key = (field.Walls, player.Position, player.Enemy.Position, player.Position);
+            if (cached.TryGetValue(key, out var path))
             {
-                // Console.WriteLine($" What");
+                player.SetPath(path);
+                return;
             }
-            player.CurrentPath = path;
-
-
-            var enemy = player.Enemy;
-            Prepare(enemy, in enemy.Position);
-            result = Search(enemy, out path);
-            if (!result)
-            {
-                // Console.WriteLine($" What");
-            }
-            enemy.CurrentPath = path;
+            var result = Search(player, true, out path);
+            player.SetPath(path);
+            cached[key] = path;
         }
 
         protected virtual void Prepare(Player player, in byte position)
@@ -87,7 +93,7 @@ namespace Quoridor.Model
             queue.Enqueue(position);
         }
 
-        private bool Search(Player player, out FieldMask path)
+        private bool Search(Player player, bool retrievePath, out FieldMask path)
         {
             while (queue.Count > 0)
             {
@@ -95,7 +101,9 @@ namespace Quoridor.Model
 
                 if (IsDestinationReached(player, position))
                 {
-                    path = pathRetriever.RetrievePath(position, prevNodes, player.Enemy.Position);
+                    path = retrievePath
+                        ? pathRetriever.RetrievePath(position, prevNodes, player.Enemy.Position)
+                        : Constants.EmptyField;
                     return true;
                 }
 

@@ -10,32 +10,51 @@ namespace Quoridor.Model.Moves
         public ref readonly byte Id => ref position;
 
         private readonly byte position;
-        private readonly byte previousPosition;
+        private readonly ISearch search;
+        private readonly IWallProvider wallProvider;
         private Player player;
         private Field field;
-        private ISearch search;
 
-        public PlayerMove(Player player, byte position, Field field, ISearch search)
+        public PlayerMove(Player player, byte position, Field field, ISearch search, IWallProvider wallProvider)
         {
             this.player = player;
             this.position = position;
             this.field = field;
             this.search = search;
-            previousPosition = player.Position;
+            this.wallProvider = wallProvider;
+        }
+
+        public bool IsValid()
+        {
+            return true;
         }
 
         public void Execute()
         {
             player.ChangePosition(position);
             search.UpdatePathForPlayers(field, player);
-            field.MakeMoveAndUpdate(player);
+            if (wallProvider.HasCachedWalls(field, player, out var walls))
+            {
+                field.SetValidWalls(walls);
+            }
+            else
+            {
+                field.MakeMoveAndUpdate(player);
+                wallProvider.SetCachedWalls(field, player, field.PossibleWalls);
+            }
+        }
+
+        public void ExecuteForSimulation()
+        {
+            player.ChangePosition(position);
         }
 
         public void Apply(Field field, Player player)
         {
+            this.field = field;
             this.player = player;
         }
-        
+
         public void Log()
         {
             PlayerConstants.allPositions[Id].Log();
@@ -43,7 +62,7 @@ namespace Quoridor.Model.Moves
 
         protected bool Equals(PlayerMove other)
         {
-            return position.Equals(other.position) && previousPosition.Equals(other.previousPosition);
+            return position.Equals(other.position);
         }
 
         public override bool Equals(object obj)
@@ -68,7 +87,7 @@ namespace Quoridor.Model.Moves
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(position, previousPosition);
+            return position;
         }
 
         public static bool operator ==(PlayerMove left, PlayerMove right)

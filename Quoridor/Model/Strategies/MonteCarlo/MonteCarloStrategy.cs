@@ -8,7 +8,7 @@ namespace Quoridor.Model.Strategies
 
     public class MonteCarloStrategy : IMoveStrategy
     {
-        private const long ComputeTime = 5000;
+        private const long ComputeTime = 2000;
         private const double C = 1.4142135;
 
         public bool IsManual => false;
@@ -35,15 +35,14 @@ namespace Quoridor.Model.Strategies
             random = new Random(1);
         }
 
-        public IMove FindMove(Field field, Player player)
+        public IMove FindMove(Field field, Player player, IMove lastMove)
         {
             UpdateFields(field, player);
-            SetRoot();
+            SetRoot(lastMove);
 
             var startTime = GetCurrentTime();
             var count = 0;
 
-            // while (count < 97)
             while (HasTime(startTime))
             {
                 UpdateFields(field, player);
@@ -63,7 +62,7 @@ namespace Quoridor.Model.Strategies
             return move;
         }
 
-        private void SetRoot()
+        private void SetRoot(IMove lastMove)
         {
             if (root == null)
             {
@@ -71,7 +70,7 @@ namespace Quoridor.Model.Strategies
             }
             else
             {
-                FindNewRootFromChildren();
+                FindNewRootFromChildren(lastMove);
             }
         }
 
@@ -81,9 +80,9 @@ namespace Quoridor.Model.Strategies
             root.SetChild(FindChildren(root));
         }
 
-        private void FindNewRootFromChildren()
+        private void FindNewRootFromChildren(IMove lastMove)
         {
-            var nextRoot = root.GetNextRoot();
+            var nextRoot = root.GetNextRoot(lastMove);
 
             if (nextRoot == null)
             {
@@ -187,12 +186,12 @@ namespace Quoridor.Model.Strategies
             while (!firstPlayer.HasReachedFinish() && !secondPlayer.HasReachedFinish() && moveCount < 100)
             {
                 var player = moveCount % 2 == 0 ? firstPlayer : secondPlayer;
-                var move = strategy.FindMove(monteField, player);
-                // if (move.IsValid())
-                // {
-                    move.Execute();
+                var move = strategy.FindMove(monteField, player, null);
+                if (move.IsValid())
+                {
+                    move.ExecuteForSimulation();
                     moveCount++;
-                // }
+                }
             }
 
             return montePlayer.HasReachedFinish() ? 1 : 0;
@@ -221,7 +220,6 @@ namespace Quoridor.Model.Strategies
 
         private void PrintStatistic(int count, long startTime, MonteNode bestNode)
         {
-#if DEBUG
             var name = montePlayer.EndDownIndex == PlayerConstants.EndBlueDownIndexIncluding ? "Blue" : "Red";
             Console.WriteLine($"{name}");
             Console.WriteLine($"Count => {count}");
@@ -231,7 +229,6 @@ namespace Quoridor.Model.Strategies
             Console.WriteLine($"Average branching => {(float)branching / nodes}");
             Console.WriteLine($"Win rate in root => {root.WinRate:F4}");
             Console.WriteLine($"Win rate in best => {bestNode.WinRate:F4}");
-#endif
         }
 
         private float GetTime(long startTime)

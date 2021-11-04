@@ -3,6 +3,7 @@ namespace Quoridor.Model
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Players;
     using Strategies;
 
     public interface IMoveProvider
@@ -16,6 +17,8 @@ namespace Quoridor.Model
         // bool TryMoveForward(Field field, in FieldMask playerMask, out FieldMask moveMask);
 
         bool IsSimple(Field field, in byte playerIndex, byte moveIndex);
+
+        bool CanJump(Field field, Player player, out byte jump);
     }
 
     public class MoveProvider : IMoveProvider
@@ -53,7 +56,7 @@ namespace Quoridor.Model
         }
 
         public (byte[] indexes, bool isSimple) GetAvailableMovesWithType(Field field, in byte playerMask,
-           in byte enemyMask)
+            in byte enemyMask)
         {
             if (withEnemyMoveMasks.TryGetValue((playerMask, enemyMask), out var wallMask))
             {
@@ -86,6 +89,20 @@ namespace Quoridor.Model
         {
             var simpleMoves = simpleMoveCalculator.GetAvailableMoves(field, playerIndex);
             return simpleMoves.Any(m => m == moveIndex);
+        }
+
+        public bool CanJump(Field field, Player player, out byte jump)
+        {
+            var moves = GetAvailableMoves(field, in player.Position, player.Enemy.Position);
+            var playerRow = GetRow(in player.Position);
+            var jumpMoves = moves.Where(m => Math.Abs(playerRow - GetRow(m)) == 2).ToArray();
+            if (jumpMoves.Length == 0)
+            {
+                jump = Constants.EmptyIndex;
+                return false;
+            }
+            jump = jumpMoves[0];
+            return true;
         }
 
         private void CreateEnemyPlayerMasks()

@@ -6,13 +6,16 @@ namespace Quoridor.Model.Moves
     {
         public ref readonly byte Id => throw new System.NotImplementedException();
 
-
         public bool IsValid()
         {
             return false;
         }
 
         public void Execute()
+        {
+        }
+
+        public void ExecuteForSimulation()
         {
         }
 

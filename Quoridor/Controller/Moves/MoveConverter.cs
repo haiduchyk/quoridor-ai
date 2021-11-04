@@ -16,12 +16,15 @@ namespace Quoridor.Controller.Moves
     {
         private readonly IPositionConverter positionConverter;
         private readonly IMoveProvider moveProvider;
+        private readonly IWallProvider wallProvider;
         private readonly ISearch search;
 
-        public MoveConverter(IPositionConverter positionConverter, IMoveProvider moveProvider, ISearch search)
+        public MoveConverter(IPositionConverter positionConverter, IMoveProvider moveProvider,
+            IWallProvider wallProvider, ISearch search)
         {
             this.positionConverter = positionConverter;
             this.moveProvider = moveProvider;
+            this.wallProvider = wallProvider;
             this.search = search;
         }
 
@@ -30,7 +33,7 @@ namespace Quoridor.Controller.Moves
             if (string.IsNullOrEmpty(input))
             {
                 var masks = moveProvider.GetAvailableMoves(field, in player.Position, in player.Enemy.Position);
-                return new PlayerMove(player, masks.First(), field, search);
+                return new PlayerMove(player, masks.First(), field, search, wallProvider);
             }
             var commands = input.Split(" ");
             if (commands.Length != 2)
@@ -45,7 +48,7 @@ namespace Quoridor.Controller.Moves
                     var cellPosition = positionConverter.TryParseCellPosition(argument);
                     if (cellPosition.HasValue)
                     {
-                        return new PlayerMove(player, cellPosition.Value, field, search);
+                        return new PlayerMove(player, cellPosition.Value, field, search, wallProvider);
                     }
                     break;
 
@@ -53,7 +56,7 @@ namespace Quoridor.Controller.Moves
                     cellPosition = positionConverter.TryParseCellPosition(argument);
                     if (cellPosition.HasValue)
                     {
-                        return new PlayerMove(player, cellPosition.Value, field, search);
+                        return new PlayerMove(player, cellPosition.Value, field, search, wallProvider);
                     }
                     break;
 
@@ -61,7 +64,7 @@ namespace Quoridor.Controller.Moves
                     var wallPosition = positionConverter.TryParseWallPosition(argument);
                     if (wallPosition.HasValue)
                     {
-                        return new WallMove(field, player, search, wallPosition.Value);
+                        return new WallMove(field, player, search, wallProvider, wallPosition.Value);
                     }
                     break;
             }

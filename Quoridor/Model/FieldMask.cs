@@ -2,8 +2,7 @@ namespace Quoridor.Model
 {
     using System;
 
-    // TODO rewrite in fixed buffer array
-    public struct FieldMask : IEquatable<FieldMask>
+    public unsafe struct FieldMask : IEquatable<FieldMask>
     {
         public const int BitsBlockSize = 64;
         public const int BitBlocksAmount = 5;
@@ -16,19 +15,15 @@ namespace Quoridor.Model
         public const int UsedBitsAmount = BitboardSize * BitboardSize; // 289, this is without redundant
         public const int ExtraBits = TotalBitsAmount - UsedBitsAmount; // 31 redundant bits
 
-        private long block0;
-        private long block1;
-        private long block2;
-        private long block3;
-        private long block4;
+        private fixed long blocks[5];
 
         public FieldMask(long[] blocks)
         {
-            block0 = blocks[0];
-            block1 = blocks[1];
-            block2 = blocks[2];
-            block3 = blocks[3];
-            block4 = blocks[4];
+            this.blocks[0] = blocks[0]; 
+            this.blocks[1] = blocks[1]; 
+            this.blocks[2] = blocks[2]; 
+            this.blocks[3] = blocks[3]; 
+            this.blocks[4] = blocks[4]; 
         }
 
         public bool GetBit(int y, int x)
@@ -131,51 +126,18 @@ namespace Quoridor.Model
 
         public bool IsZero()
         {
-            return block0 == 0 && block1 == 0 && block2 == 0 && block3 == 0 && block4 == 0;
+            return blocks[0] == 0 && blocks[1] == 0 && blocks[2] == 0 && blocks[3] == 0 && blocks[4] == 0;
         }
 
         public bool IsNotZero()
         {
-            return block0 != 0 || block1 != 0 || block2 != 0 || block3 != 0 || block4 != 0;
+            return blocks[0] != 0 || blocks[1] != 0 || blocks[2] != 0 || blocks[3] != 0 || blocks[4] != 0;
         }
 
         private long this[int index]
         {
-            readonly get
-            {
-                switch (index)
-                {
-                    case 0: return block0;
-                    case 1: return block1;
-                    case 2: return block2;
-                    case 3: return block3;
-                    case 4: return block4;
-                    default: throw new Exception("Field index out of range");
-                }
-            }
-
-            set
-            {
-                switch (index)
-                {
-                    case 0:
-                        block0 = value;
-                        break;
-                    case 1:
-                        block1 = value;
-                        break;
-                    case 2:
-                        block2 = value;
-                        break;
-                    case 3:
-                        block3 = value;
-                        break;
-                    case 4:
-                        block4 = value;
-                        break;
-                    default: throw new Exception("Field index out of range");
-                }
-            }
+            readonly get => blocks[index];
+            set => blocks[index] = value;
         }
 
         public static bool IsInRange(int index)
@@ -202,11 +164,11 @@ namespace Quoridor.Model
 
         public bool Equals(FieldMask other)
         {
-            return block0 == other.block0 &&
-                   block1 == other.block1 &&
-                   block2 == other.block2 &&
-                   block3 == other.block3 &&
-                   block4 == other.block4;
+            return blocks[0] == other.blocks[0] &&
+                   blocks[1] == other.blocks[1] &&
+                   blocks[2] == other.blocks[2] &&
+                   blocks[3] == other.blocks[3] &&
+                   blocks[4] == other.blocks[4];
         }
 
         public override bool Equals(object obj)
@@ -216,7 +178,7 @@ namespace Quoridor.Model
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(block0, block1, block2, block3, block4);
+            return HashCode.Combine(blocks[0], blocks[1], blocks[2], blocks[3], blocks[4]);
         }
 
         public static bool operator ==(FieldMask left, FieldMask right)

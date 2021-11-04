@@ -17,7 +17,8 @@ namespace Quoridor.Model.Strategies
         public static readonly Dictionary<(byte position, byte endPosition), byte> BehindPlayerWall = new();
 
         public static readonly Dictionary<byte, byte[]> NearPlayerWalls = new();
-        public static readonly Dictionary<byte, byte[]> NearWalls = new();
+        public static readonly Dictionary<byte, byte[]> NearWallsToCheck = new();
+        public static readonly Dictionary<byte, byte[]> NearWallsToPlace = new();
         public static readonly Dictionary<byte, byte[]> OverlappedWalls = new();
 
         static WallConstants()
@@ -151,11 +152,17 @@ namespace Quoridor.Model.Strategies
             {
                 for (var j = 1; j < FieldMask.BitboardSize; j += 2)
                 {
-                    var nearWallsMask = GenerateNearWallsForHorizontal(i, j);
-                    NearWalls[count++] = nearWallsMask;
+                    var nearWalls = GenerateNearWallsForHorizontal(i, j, false);
+                    NearWallsToCheck[count] = nearWalls;
+                    nearWalls = GenerateNearWallsForHorizontal(i, j, true);
+                    NearWallsToPlace[count] = nearWalls;
+                    count++;
 
-                    nearWallsMask = GenerateNearWallsForVertical(i, j);
-                    NearWalls[count++] = nearWallsMask;
+                    nearWalls = GenerateNearWallsForVertical(i, j, false);
+                    NearWallsToCheck[count] = nearWalls;
+                    nearWalls = GenerateNearWallsForVertical(i, j, true);
+                    NearWallsToPlace[count] = nearWalls;
+                    count++;
                 }
             }
         }
@@ -163,7 +170,7 @@ namespace Quoridor.Model.Strategies
         // TODO how fast and good with this flag on and off
         private static bool needUpPoint = false;
 
-        private static byte[] GenerateNearWallsForHorizontal(int i, int j)
+        private static byte[] GenerateNearWallsForHorizontal(int i, int j, bool withAdditional)
         {
             var walls = new List<byte>();
 
@@ -175,6 +182,14 @@ namespace Quoridor.Model.Strategies
             AddIfInRange(i - 2, j - 2, WallOrientation.Vertical);
             AddIfInRange(i - 2, j, WallOrientation.Vertical);
             AddIfInRange(i - 2, j + 2, WallOrientation.Vertical);
+            AddIfInRange(i, j - 2, WallOrientation.Vertical);
+            AddIfInRange(i, j + 2, WallOrientation.Vertical);
+
+            if (withAdditional)
+            {
+                AddIfInRange(i, j - 4, WallOrientation.Vertical);
+                AddIfInRange(i, j + 4, WallOrientation.Vertical);
+            }
 
             return walls.ToArray();
 
@@ -187,7 +202,7 @@ namespace Quoridor.Model.Strategies
             }
         }
 
-        private static byte[] GenerateNearWallsForVertical(int i, int j)
+        private static byte[] GenerateNearWallsForVertical(int i, int j, bool withAdditional)
         {
             var walls = new List<byte>();
 
@@ -199,7 +214,15 @@ namespace Quoridor.Model.Strategies
             AddIfInRange(i - 2, j - 2, WallOrientation.Horizontal);
             AddIfInRange(i, j - 2, WallOrientation.Horizontal);
             AddIfInRange(i + 2, j - 2, WallOrientation.Horizontal);
+            AddIfInRange(i - 2, j, WallOrientation.Horizontal);
+            AddIfInRange(i + 2, j, WallOrientation.Horizontal);
 
+            if (withAdditional)
+            {
+                AddIfInRange(i - 4, j, WallOrientation.Horizontal);
+                AddIfInRange(i + 4, j, WallOrientation.Horizontal);
+            }
+            
             return walls.ToArray();
 
             void AddIfInRange(int y, int x, WallOrientation orientation)

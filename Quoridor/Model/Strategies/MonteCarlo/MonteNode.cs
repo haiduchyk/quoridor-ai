@@ -1,7 +1,6 @@
 namespace Quoridor.Model.Strategies
 {
     using System.Linq;
-    using Controller.Flow;
     using Moves;
 
     public class MonteNode
@@ -41,12 +40,11 @@ namespace Quoridor.Model.Strategies
             this.children = children;
         }
 
-        public MonteNode GetNextRoot()
+        public MonteNode GetNextRoot(IMove lastMove)
         {
             foreach (var child in children)
             {
-                // TODO: shit 
-                if (child.move == GameController.lastMove)
+                if (child.move == lastMove)
                 {
                     child.SetParentInNull();
                     return child;

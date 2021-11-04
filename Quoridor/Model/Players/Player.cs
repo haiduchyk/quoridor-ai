@@ -7,9 +7,11 @@ namespace Quoridor.Model.Players
     {
         public Player Enemy { get; private set; }
 
-        public FieldMask PositionMask => PlayerConstants.allPositions[Position];
+        public ref readonly FieldMask PositionMask => ref PlayerConstants.allPositions[Position];
 
         public ref readonly byte Position => ref position;
+
+        public FieldMask Path { get; private set; }
 
         public FieldMask Walls { get; private set; }
 
@@ -18,8 +20,6 @@ namespace Quoridor.Model.Players
         public int NumberOfMoves { get; private set; }
 
         public byte EndDownIndex => endDownIndex;
-
-        public FieldMask CurrentPath { get; set; }
 
         private readonly IMoveStrategy moveStrategy;
         private byte endUpIndex;
@@ -61,14 +61,19 @@ namespace Quoridor.Model.Players
             NumberOfMoves++;
         }
 
+        public void SetPath(in FieldMask path)
+        {
+            Path = path;
+        }
+
         public bool ShouldWaitForMove()
         {
             return moveStrategy.IsManual;
         }
 
-        public IMove FindMove(Field field)
+        public IMove FindMove(Field field, IMove lastMove)
         {
-            return moveStrategy.FindMove(field, this);
+            return moveStrategy.FindMove(field, this, lastMove);
         }
 
         public bool HasWalls()
