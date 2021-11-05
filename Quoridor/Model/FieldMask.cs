@@ -92,7 +92,6 @@ namespace Quoridor.Model
         public readonly FieldMask Or(in FieldMask mask)
         {
             var result = new FieldMask();
-
             fixed (long* maskBlocks = mask.blocks)
             {
                 fixed (long* oldBlocks = blocks)
@@ -103,7 +102,6 @@ namespace Quoridor.Model
                     }
                 }
             }
-
             return result;
         }
 
