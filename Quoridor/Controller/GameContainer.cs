@@ -1,6 +1,10 @@
 namespace Quoridor.Controller
 {
+    using Flow;
+    using Game;
+    using Io;
     using Model;
+    using Moves;
 
     public class GameContainer
     {
@@ -8,16 +12,18 @@ namespace Quoridor.Controller
 
         public GameContainer()
         {
-            var wallProvider = new WallProvider();
             var moveProvider = new MoveProvider();
-            var search = new AStarSearchAlgorithm(moveProvider);
-            var botCreator = new BotCreator(moveProvider, wallProvider, search);
-            var moveParser = new MoveParser(moveProvider, wallProvider, search);
-            var gameProvider = new GameProvider(botCreator, search);
+            var wallProvider = new WallProvider(moveProvider);
+            var pathRetriever = new PathRetriever();
+            var search = new AStarSearchAlgorithm(moveProvider, pathRetriever);
+            var positionConverter = new PositionConverter(wallProvider);
+            var moveConverter = new MoveConverter(positionConverter, moveProvider, wallProvider, search);
+            var botCreator = new PlayerCreator(moveProvider, wallProvider, search, moveConverter);
+            var gameProvider = new GameProvider(botCreator, wallProvider, search);
             var ioWorker = new ConsoleWorker();
             var menuController = new MenuController(ioWorker);
-            var gameController = new GameController(gameProvider, moveParser, ioWorker);
-            FlowController = new FlowController(menuController, gameController, gameProvider, ioWorker);
+            var gameController = new GameController(gameProvider, moveConverter, ioWorker);
+            FlowController = new FlowController(menuController, gameController, gameProvider);
         }
     }
 }

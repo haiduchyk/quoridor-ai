@@ -1,7 +1,6 @@
 namespace Quoridor.Model
 {
     using Players;
-    using Strategies;
 
     public class Game
     {
@@ -11,33 +10,16 @@ namespace Quoridor.Model
 
         public Player RedPlayer { get; }
 
-        public Game(GameOptions gameOptions, IBotCreator botCreator)
+        public Game(Field field, Player bluePlayer, Player redPlayer)
         {
-            Field = new Field(FieldMask.BitboardSize);
-            BluePlayer = CreateFirstPlayer();
-            RedPlayer = CreateSecondPlayer(gameOptions, botCreator);
-        }
-
-        private Player CreateFirstPlayer()
-        {
-            var position = Constants.BluePlayerPosition;
-            var name = Constants.BluePlayerName;
-            return new Player(position, Constants.WallsPerGame, name, new ManualStrategy());
-        }
-
-        private Player CreateSecondPlayer(GameOptions gameOptions, IBotCreator botCreator)
-        {
-            var position = Constants.RedPlayerPosition;
-            var name = Constants.RedPlayerName;
-            return gameOptions.gameMode == GameMode.VersusPlayer
-                ? new Player(position, Constants.WallsPerGame, name, new ManualStrategy())
-                : botCreator.CreateBotFor(position, name, gameOptions.botDifficulty);
+            Field = field;
+            BluePlayer = bluePlayer;
+            RedPlayer = redPlayer;
         }
 
         public bool HasFinished()
         {
-            return BluePlayer.Position.And(in Constants.BlueEndPositions).IsNotZero() ||
-                   RedPlayer.Position.And(in Constants.RedEndPositions).IsNotZero();
+            return BluePlayer.HasReachedFinish() || RedPlayer.HasReachedFinish();
         }
     }
 }

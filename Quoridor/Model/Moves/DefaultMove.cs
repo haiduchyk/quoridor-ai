@@ -1,7 +1,13 @@
 namespace Quoridor.Model.Moves
 {
+    using Players;
+
     public class DefaultMove : IMove
     {
+        public ref readonly byte Id => throw new System.NotImplementedException();
+
+        public bool IsMove => false;
+
         public bool IsValid()
         {
             return false;
@@ -11,8 +17,17 @@ namespace Quoridor.Model.Moves
         {
         }
 
-        public void Undo()
+        public void ExecuteForSimulation()
         {
+        }
+
+        public void Apply(Field field, Player player)
+        {
+        }
+
+        public void Log()
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

@@ -1,11 +1,21 @@
 namespace Quoridor.Model.Moves
 {
+    using Players;
+
     public interface IMove
     {
-        public abstract bool IsValid();
+        bool IsMove { get; }
 
-        public abstract void Execute();
+        bool IsValid();
 
-        public abstract void Undo();
+        void Execute();
+
+        void ExecuteForSimulation();
+
+        void Apply(Field field, Player player);
+
+        ref readonly byte Id { get; }
+
+        public void Log();
     }
 }

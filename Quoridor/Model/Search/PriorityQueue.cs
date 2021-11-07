@@ -16,11 +16,6 @@ namespace Quoridor.Model
             list = new List<T>();
         }
 
-        public PriorityQueue(int count)
-        {
-            list = new List<T>(count);
-        }
-
         public void Enqueue(T x)
         {
             list.Remove(x);

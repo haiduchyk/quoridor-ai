@@ -1,24 +1,26 @@
 namespace Quoridor.Model
 {
     using System.Collections.Generic;
+    using Players;
 
     public class AStarSearchAlgorithm : SearchAlgorithm
     {
         private Heuristic heuristic;
 
-        public AStarSearchAlgorithm(IMoveProvider moveProvider) : base(moveProvider)
+        public AStarSearchAlgorithm(IMoveProvider moveProvider, PathRetriever pathRetriever)
+            : base(moveProvider, pathRetriever)
         {
         }
 
-        protected override IComparer<FieldMask> GetComparer()
+        protected override IComparer<byte> GetComparer()
         {
             return heuristic = new Heuristic(distances);
         }
 
-        protected override void Prepare(FieldMask position)
+        protected override void Prepare(Player player, in byte position)
         {
-            base.Prepare(position);
-            heuristic.SetEndPosition(endMask);
+            base.Prepare(player, position);
+            heuristic.SetEndPosition(player.EndDownIndex);
         }
     }
 }

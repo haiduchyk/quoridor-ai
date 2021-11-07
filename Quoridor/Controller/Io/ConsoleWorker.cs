@@ -1,4 +1,4 @@
-namespace Quoridor.Controller
+namespace Quoridor.Controller.Io
 {
     using System;
 

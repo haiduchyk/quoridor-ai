@@ -18,10 +18,10 @@ namespace Quoridor.View
         public void Draw(Field field, Player bluePlayer, Player redPlayer)
         {
             RenderBoardLine();
-            for (var y = 0; y < field.Size; y++)
+            for (var y = 0; y < FieldMask.BitboardSize; y++)
             {
                 RenderBoardNumber(y);
-                for (var x = 0; x < field.Size; x++)
+                for (var x = 0; x < FieldMask.BitboardSize; x++)
                 {
                     if (field.HasWall(y, x))
                     {
@@ -57,8 +57,8 @@ namespace Quoridor.View
 
         private void RenderPlayer(int y, int x, Player bluePlayer, Player redPlayer)
         {
-            var isBlue = bluePlayer.Position.GetBit(y, x);
-            var isRed = redPlayer.Position.GetBit(y, x);
+            var isBlue = bluePlayer.PositionMask.GetBit(y, x);
+            var isRed = redPlayer.PositionMask.GetBit(y, x);
 
             if (isBlue)
             {

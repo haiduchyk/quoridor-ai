@@ -2,18 +2,27 @@ namespace Quoridor.Model.Moves
 {
     using Model;
     using Players;
+    using Strategies;
 
     public class PlayerMove : IMove
     {
-        private readonly Player player;
-        private readonly FieldMask position;
-        private readonly FieldMask previousPosition;
+        public ref readonly byte Id => ref position;
 
-        public PlayerMove(Player player, FieldMask position)
+        public bool IsMove => true;
+
+        private readonly byte position;
+        private readonly ISearch search;
+        private readonly IWallProvider wallProvider;
+        private Player player;
+        private Field field;
+
+        public PlayerMove(Player player, byte position, Field field, ISearch search, IWallProvider wallProvider)
         {
             this.player = player;
             this.position = position;
-            previousPosition = player.Position;
+            this.field = field;
+            this.search = search;
+            this.wallProvider = wallProvider;
         }
 
         public bool IsValid()
@@ -24,11 +33,72 @@ namespace Quoridor.Model.Moves
         public void Execute()
         {
             player.ChangePosition(position);
+            search.UpdatePathForPlayers(field, player);
+            if (wallProvider.HasCachedWalls(field, player, out var walls))
+            {
+                field.SetValidWalls(walls);
+            }
+            else
+            {
+                field.MakeMoveAndUpdate(player);
+                wallProvider.SetCachedWalls(field, player, field.PossibleWalls);
+            }
         }
 
-        public void Undo()
+        public void ExecuteForSimulation()
         {
-            player.ChangePosition(previousPosition);
+            player.ChangePosition(position);
+        }
+
+        public void Apply(Field field, Player player)
+        {
+            this.field = field;
+            this.player = player;
+        }
+
+        public void Log()
+        {
+            PlayerConstants.allPositions[Id].Log();
+        }
+
+        protected bool Equals(PlayerMove other)
+        {
+            return position.Equals(other.position);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (obj.GetType() != this.GetType())
+            {
+                return false;
+            }
+
+            return Equals((PlayerMove)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return position;
+        }
+
+        public static bool operator ==(PlayerMove left, PlayerMove right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(PlayerMove left, PlayerMove right)
+        {
+            return !Equals(left, right);
         }
     }
 }

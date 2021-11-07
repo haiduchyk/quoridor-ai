@@ -6,18 +6,20 @@ namespace Quoridor.Model.Strategies
     public class WithEnemyMoveCalculator
     {
         // <playerPosition 81 <enemyPosition 4 <wallMask 64, possibleMoves>>>
-        private Dictionary<FieldMask, Dictionary<FieldMask, Dictionary<FieldMask, FieldMask[]>>> withEnemyPlayersMoves =
-            new();
+        private Dictionary<(byte playerPosition, byte enemyPosition, FieldMask wallMask), byte[]>
+            withEnemyPlayersMoves = new();
 
-        //  <playerPosition 81, <enemyPosition 4, wallMaskForThisPlayerAndEnemyPosition>
-        private Dictionary<FieldMask, Dictionary<FieldMask, FieldMask>> withEnemyPlayersMovesMasks = new();
+        //  <playerPosition 81, <playerPosition 4, wallMaskForThisPlayerAndEnemyPosition>
+        private Dictionary<(byte playerPosition, byte wallMask), FieldMask> withEnemyPlayersMovesMasks = new();
 
-        public FieldMask[] GetAvailableMoves(Field field, FieldMask playerMask, FieldMask enemyMask)
+        public byte[] GetAvailableMoves(Field field, in byte playerMask, in byte enemyMask)
         {
-            var moves = withEnemyPlayersMoves[playerMask][enemyMask];
-            var wallMask = withEnemyPlayersMovesMasks[playerMask][enemyMask];
-            var currentWallMask = field.GetWallsForMask(wallMask);
-            return moves[currentWallMask];
+            // Actual code 
+            // var wallMask = withEnemyPlayersMovesMasks[(playerMask, enemyMask)];
+            // var currentWallMask = field.GetWallsForMask(wallMask);
+            // return withEnemyPlayersMoves[(playerMask, enemyMask, currentWallMask)];
+            return withEnemyPlayersMoves[
+                (playerMask, enemyMask, field.GetWallsForMask(withEnemyPlayersMovesMasks[(playerMask, enemyMask)]))];
         }
 
         public WithEnemyMoveCalculator()
@@ -28,34 +30,32 @@ namespace Quoridor.Model.Strategies
 
         private void CreateWithEnemyPlayerMovesMasks()
         {
-            for (var y = 0; y < FieldMask.BitboardSize; y++)
+            for (var y = 0; y < FieldMask.BitboardSize; y += 2)
             {
-                for (var x = 0; x < FieldMask.BitboardSize; x++)
+                for (var x = 0; x < FieldMask.BitboardSize; x += 2)
                 {
-                    if (y % 2 == 0 && x % 2 == 0)
+                    var playerIndex = FieldMask.GetPlayerIndex(y, x);
+                    var variants = CreateWithEnemyPlayerMovesMaskFor(y, x);
+                    foreach (var (enemyPosition, wallMask) in variants)
                     {
-                        var playerMask = new FieldMask();
-                        playerMask.SetBit(y, x, true);
-                        withEnemyPlayersMovesMasks[playerMask] = CreateWithEnemyPlayerMovesMaskFor(y, x);
+                        withEnemyPlayersMovesMasks[(playerIndex, enemyPosition)] = wallMask;
                     }
                 }
             }
         }
 
-        private Dictionary<FieldMask, FieldMask> CreateWithEnemyPlayerMovesMaskFor(int y, int x)
+        private List<(byte enemyPosition, FieldMask wallMask)> CreateWithEnemyPlayerMovesMaskFor(int y, int x)
         {
-            var result = new Dictionary<FieldMask, FieldMask>();
+            var result = new List<(byte enemyPosition, FieldMask wallMask)>();
             foreach (var (yDelta, xDelta) in Constants.Directions)
             {
                 var curY = y + yDelta * 2;
                 var curX = x + xDelta * 2;
 
-                var enemyMask = new FieldMask();
-
                 if (FieldMask.IsInRange(curY, curX))
                 {
-                    enemyMask.SetBit(curY, curX, true);
-                    result[enemyMask] = GetWallMaskFor(y, x, curY, curX);
+                    var enemyIndex = FieldMask.GetPlayerIndex(curY, curX);
+                    result.Add((enemyIndex, GetWallMaskFor(y, x, curY, curX)));
                 }
             }
 
@@ -94,41 +94,38 @@ namespace Quoridor.Model.Strategies
 
         private void CreateWithEnemyPlayerMoves()
         {
-            for (var y = 0; y < FieldMask.BitboardSize; y++)
+            for (var y = 0; y < FieldMask.BitboardSize; y += 2)
             {
-                for (var x = 0; x < FieldMask.BitboardSize; x++)
+                for (var x = 0; x < FieldMask.BitboardSize; x += 2)
                 {
-                    // if (y != 8 || x != 8)
-                    // {
-                    //     continue;
-                    // }
+                    var playerIndex = FieldMask.GetPlayerIndex(y, x);
 
-                    if (y % 2 == 0 && x % 2 == 0)
+                    var moves = CreateWithEnemyPlayerMovesFor(y, x);
+                    foreach (var (enemyPosition, wallMoves) in moves)
                     {
-                        var playerMask = new FieldMask();
-                        playerMask.SetBit(y, x, true);
-
-                        var moves = CreateWithEnemyPlayerMovesFor(y, x);
-                        withEnemyPlayersMoves[playerMask] = moves;
+                        foreach (var (wallMask, movesPositions) in wallMoves)
+                        {
+                            withEnemyPlayersMoves[(playerIndex, enemyPosition, wallMask)] = movesPositions;
+                        }
                     }
                 }
             }
         }
 
-        private Dictionary<FieldMask, Dictionary<FieldMask, FieldMask[]>> CreateWithEnemyPlayerMovesFor(int y, int x)
+        private List<(byte enemyPosition, List<(FieldMask wallMask, byte[] movesPositions)> wallMoves)>
+            CreateWithEnemyPlayerMovesFor(int y, int x)
         {
-            var result = new Dictionary<FieldMask, Dictionary<FieldMask, FieldMask[]>>();
+            var result = new List<(byte, List<(FieldMask, byte[])>)>();
             foreach (var (yDelta, xDelta) in Constants.Directions)
             {
                 var curY = y + yDelta * 2;
                 var curX = x + xDelta * 2;
 
-                var enemyMask = new FieldMask();
-
                 if (FieldMask.IsInRange(curY, curX))
                 {
-                    enemyMask.SetBit(curY, curX, true);
-                    result[enemyMask] = CalculateUniqueVariantFor(y, x, curY, curX);
+                    var enemyIndex = FieldMask.GetPlayerIndex(curY, curX);
+
+                    result.Add((enemyIndex, CalculateUniqueVariantFor(y, x, curY, curX)));
                 }
             }
 
@@ -136,16 +133,16 @@ namespace Quoridor.Model.Strategies
         }
 
 
-        private Dictionary<FieldMask, FieldMask[]> CalculateUniqueVariantFor(int yPlayer, int xPlayer, int yEnemy,
+        private List<(FieldMask, byte[])> CalculateUniqueVariantFor(int yPlayer, int xPlayer, int yEnemy,
             int xEnemy)
         {
-            var result = new Dictionary<FieldMask, FieldMask[]>();
+            var result = new List<(FieldMask, byte[])>();
 
-            var uniqueVariants = Math.Pow(2, 6) - 1;
+            var uniqueVariants = Math.Pow(2, 6);
 
             for (var unique = 0; unique < uniqueVariants; unique++)
             {
-                var playerMoveMasks = new List<FieldMask>();
+                var playerMoveMasks = new List<byte>();
                 var wallMask = new FieldMask();
 
                 var uniquePosition = 0;
@@ -198,7 +195,8 @@ namespace Quoridor.Model.Strategies
                         {
                             if (isBigJump)
                             {
-                                if (wallMask.GetBit(importantY, importantX))
+                                if (!FieldMask.IsInRange(importantY, importantX) ||
+                                    wallMask.GetBit(importantY, importantX))
                                 {
                                     SimpleUpdate();
                                 }
@@ -217,14 +215,13 @@ namespace Quoridor.Model.Strategies
 
                         if (FieldMask.IsInRange(newPlayerY, newPlayerX))
                         {
-                            var playerMask = new FieldMask();
-                            playerMask.SetBit(newPlayerY, newPlayerX, true);
-                            playerMoveMasks.Add(playerMask);
+                            var playerIndex = FieldMask.GetPlayerIndex(newPlayerY, newPlayerX);
+                            playerMoveMasks.Add(playerIndex);
                         }
                     }
                 }
 
-                result[wallMask] = playerMoveMasks.ToArray();
+                result.Add((wallMask, playerMoveMasks.ToArray()));
             }
 
             return result;

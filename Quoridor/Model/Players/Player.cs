@@ -5,27 +5,65 @@ namespace Quoridor.Model.Players
 
     public class Player
     {
-        public FieldMask Position { get; private set; }
+        public Player Enemy { get; private set; }
+
+        public ref readonly FieldMask PositionMask => ref PlayerConstants.allPositions[Position];
+
+        public ref readonly byte Position => ref position;
+
+        public FieldMask Path { get; private set; }
 
         public FieldMask Walls { get; private set; }
 
         public int AmountOfWalls { get; private set; }
 
-        public string Name { get; }
+        public int NumberOfMoves { get; private set; }
+
+        public byte EndDownIndex => endDownIndex;
 
         private readonly IMoveStrategy moveStrategy;
+        private byte endUpIndex;
+        private byte endDownIndex;
+        private byte position;
 
-        public Player(FieldMask position, int amountOfWalls, string name, IMoveStrategy moveStrategy)
+        public Player()
         {
-            Position = position;
+        }
+
+        public Player(byte position, int amountOfWalls, byte endUpIndex, byte endDownIndex, IMoveStrategy moveStrategy)
+        {
+            this.position = position;
             AmountOfWalls = amountOfWalls;
-            Name = name;
+            this.endUpIndex = endUpIndex;
+            this.endDownIndex = endDownIndex;
             this.moveStrategy = moveStrategy;
         }
 
-        public void ChangePosition(FieldMask position)
+        public void SetEnemy(Player enemy)
         {
-            Position = position;
+            Enemy = enemy;
+        }
+
+        public bool HasReachedFinish()
+        {
+            // TODO index , rewrite using index
+            return IsEndPosition(position);
+        }
+
+        public bool IsEndPosition(in byte checkPosition)
+        {
+            return checkPosition <= endUpIndex && checkPosition >= endDownIndex;
+        }
+
+        public void ChangePosition(in byte position)
+        {
+            this.position = position;
+            NumberOfMoves++;
+        }
+
+        public void SetPath(in FieldMask path)
+        {
+            Path = path;
         }
 
         public bool ShouldWaitForMove()
@@ -33,9 +71,9 @@ namespace Quoridor.Model.Players
             return moveStrategy.IsManual;
         }
 
-        public IMove MakeMove(Field field, Player enemy)
+        public IMove FindMove(Field field, IMove lastMove)
         {
-            return moveStrategy.MakeMove(field, this, enemy);
+            return moveStrategy.FindMove(field, this, lastMove);
         }
 
         public bool HasWalls()
@@ -43,16 +81,27 @@ namespace Quoridor.Model.Players
             return AmountOfWalls > 0;
         }
 
-        public void UseWall(FieldMask wall)
+        public void UseWall(in byte wall)
         {
-            Walls = Walls.Or(in wall);
+            Walls = Walls.Or(in WallConstants.AllWalls[wall]);
             AmountOfWalls--;
+            NumberOfMoves++;
         }
 
-        public void RestoreWall(FieldMask wall)
+        public void RestoreWall(in FieldMask wall)
         {
             Walls = Walls.And(wall.Not());
             AmountOfWalls++;
+        }
+
+        public void Update(Player player)
+        {
+            endUpIndex = player.endUpIndex;
+            endDownIndex = player.endDownIndex;
+            position = player.Position;
+            AmountOfWalls = player.AmountOfWalls;
+            NumberOfMoves = player.NumberOfMoves;
+            Path = player.Path;
         }
     }
 }

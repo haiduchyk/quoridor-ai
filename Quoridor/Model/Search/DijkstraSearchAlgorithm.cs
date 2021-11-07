@@ -4,11 +4,12 @@ namespace Quoridor.Model
 
     public class DijkstraSearchAlgorithm : SearchAlgorithm
     {
-        public DijkstraSearchAlgorithm(IMoveProvider moveProvider) : base(moveProvider)
+        public DijkstraSearchAlgorithm(IMoveProvider moveProvider, PathRetriever pathRetriever)
+            : base(moveProvider, pathRetriever)
         {
         }
 
-        protected override IComparer<FieldMask> GetComparer()
+        protected override IComparer<byte> GetComparer()
         {
             return new DistanceComparer(distances);
         }

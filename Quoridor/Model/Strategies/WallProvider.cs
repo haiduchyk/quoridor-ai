@@ -1,72 +1,114 @@
 namespace Quoridor.Model
 {
     using System.Collections.Generic;
+    using System.Linq;
+    using Players;
+    using Strategies;
 
     public interface IWallProvider
     {
-        List<FieldMask> GenerateWallMoves(Field field);
+        byte[] GetAllMoves();
 
-        bool CanPlaceWall(ref FieldMask mask, int y, int x, WallOrientation wallOrientation);
+        List<byte> GenerateWallMoves(Field field);
+
+        byte[] GenerateWallMoves(Field field, Player player);
+
+        bool CanPlaceWall(Field field, FieldMask wall);
 
         FieldMask GenerateWall(int y, int x, WallOrientation wallOrientation);
+
+        bool TryGetWallBehind(Field field, Player player, out byte wall);
+
+        bool HasCachedWalls(Field field, Player player, out List<byte> walls);
+  
+        void SetCachedWalls(Field field, Player player, List<byte> walls);
     }
 
     public class WallProvider : IWallProvider
     {
-        private const int MaxWallCount = 128;
-        private const int WallSize = 3;
+        private readonly IMoveProvider moveProvider;
+        private static readonly Dictionary<(FieldMask walls, byte player, byte enemy), byte[]> CachedMoves = new();
+        private static readonly Dictionary<(FieldMask walls, byte player, byte enemy), List<byte>> CachedWalls = new();
 
-        public List<FieldMask> GenerateWallMoves(Field field)
+        public WallProvider(IMoveProvider moveProvider)
         {
-            var possibleWalls = field.GetPossibleWallsMask();
-            var generatedWalls = new List<FieldMask>(MaxWallCount);
-            for (var i = 1; i < field.Size; i += 2)
-            {
-                for (var j = 1; j < field.Size; j += 2)
-                {
-                    if (CanPlaceWall(ref possibleWalls, i, j, WallOrientation.Horizontal))
-                    {
-                        var wall = GenerateWall(i, j, WallOrientation.Horizontal);
-                        generatedWalls.Add(wall);
-                    }
-                    if (CanPlaceWall(ref possibleWalls, i, j, WallOrientation.Vertical))
-                    {
-                        var wall = GenerateWall(i, j, WallOrientation.Vertical);
-                        generatedWalls.Add(wall);
-                    }
-                }
-            }
-
-            return generatedWalls;
+            this.moveProvider = moveProvider;
         }
 
-        public bool CanPlaceWall(ref FieldMask mask, int y, int x, WallOrientation wallOrientation)
+        public bool CanPlaceWall(Field field, FieldMask wall)
         {
-            var (yOffset, xOffset) = GetOffset(wallOrientation);
-            return mask.GetBit(y, x) &&
-                   !mask.GetBit(y + yOffset, x + xOffset) &&
-                   !mask.GetBit(y - yOffset, x - xOffset);
+            // return field.PossibleWalls.Any(w => w == wall);
+            return false;
         }
 
         public FieldMask GenerateWall(int y, int x, WallOrientation wallOrientation)
         {
-            var (yOffset, xOffset) = GetOffset(wallOrientation);
-            var wall = new FieldMask();
-            for (var i = 0; i < WallSize; i++)
-            {
-                var placeY = y + (i - 1) * yOffset;
-                var placeX = x + (i - 1) * xOffset;
-                wall.SetBit(placeY, placeX, true);
-            }
-
-            return wall;
+            return WallConstants.GenerateWall(y, x, wallOrientation);
         }
 
-        private (int yOffset, int xOffset) GetOffset(WallOrientation wallOrientation)
+        public byte[] GetAllMoves()
         {
-            var yOffset = wallOrientation == WallOrientation.Vertical ? 1 : 0;
-            var xOffset = wallOrientation == WallOrientation.Horizontal ? 1 : 0;
-            return (yOffset, xOffset);
+            return WallConstants.AllIndexes;
+        }
+
+        public List<byte> GenerateWallMoves(Field field)
+        {
+            return field.PossibleWalls;
+        }
+
+        public byte[] GenerateWallMoves(Field field, Player player)
+        {
+            var key = (field.Walls, player.Position, player.Enemy.Position);
+            if (CachedMoves.TryGetValue(key, out var walls))
+            {
+                return walls;
+            }
+
+            walls = CreateWallMoves(field, player);
+            CachedMoves[key] = walls;
+            return walls;
+        }
+
+        private byte[] CreateWallMoves(Field field, Player player)
+        {
+            var heuristicWalls = GetNearWalls(field)
+                .Concat(WallConstants.HorizontalNearEdgeWalls)
+                .Concat(WallConstants.NearPlayerWalls[player.Position])
+                .Concat(WallConstants.NearPlayerWalls[player.Enemy.Position]);
+
+            var result = heuristicWalls.Intersect(field.PossibleWalls).Distinct().ToArray();
+            return result;
+        }
+
+        private IEnumerable<byte> GetNearWalls(Field field)
+        {
+            return field.PlacedWalls.SelectMany(w => WallConstants.NearWallsToPlace[w]);
+        }
+
+        public bool TryGetWallBehind(Field field, Player player, out byte wall)
+        {
+            var row = moveProvider.GetRow(in player.Position);
+            if (row == 0 && player.EndDownIndex == PlayerConstants.EndRedDownIndexIncluding ||
+                row == 16 && player.EndDownIndex == PlayerConstants.EndBlueDownIndexIncluding)
+            {
+                wall = 0;
+                return false;
+            }
+
+            wall = WallConstants.BehindPlayerWall[(player.Position, player.EndDownIndex)];
+            return field.Walls.And(in WallConstants.AllWalls[wall]).IsZero();
+        }
+
+        public bool HasCachedWalls(Field field, Player player, out List<byte> walls)
+        {
+            var key = (field.Walls, player.Position, player.Enemy.Position);
+            return CachedWalls.TryGetValue(key, out walls);
+        }
+
+        public void SetCachedWalls(Field field, Player player, List<byte> walls)
+        {
+            var key = (field.Walls, player.Position, player.Enemy.Position);
+            CachedWalls[key] = walls.ToList();
         }
     }
 }

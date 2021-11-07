@@ -1,135 +1,132 @@
 namespace Quoridor.Model
 {
+    using System;
     using System.Collections.Generic;
     using Players;
+    using Strategies;
 
     public abstract class SearchAlgorithm : ISearch
     {
-        protected readonly Dictionary<FieldMask, int> distances = new(81);
+        private readonly Dictionary<(FieldMask walls, byte player, byte enemy, byte pos), FieldMask> cached = new();
 
-        private readonly FieldMask[] possiblePositions = new FieldMask[81];
-        private readonly Dictionary<FieldMask, FieldMask> prevNodes = new(81);
-        private readonly PriorityQueue<FieldMask> queue;
-        private readonly FieldMask nullPosition = new();
+        protected readonly int[] distances = new int[FieldMask.PlayerFieldArea];
+
+        private readonly (byte mask, bool isSimple)[] prevNodes = new (byte, bool)[FieldMask.PlayerFieldArea];
+        private readonly PriorityQueue<byte> queue;
 
         private readonly IMoveProvider moveProvider;
+        private readonly PathRetriever pathRetriever;
 
-        protected FieldMask endMask;
-        private Game game;
-        private Player enemy;
+        private Field field;
 
-        public SearchAlgorithm(IMoveProvider moveProvider)
+        protected SearchAlgorithm(IMoveProvider moveProvider, PathRetriever pathRetriever)
         {
             this.moveProvider = moveProvider;
+            this.pathRetriever = pathRetriever;
             var comparer = GetComparer();
-            queue = new PriorityQueue<FieldMask>(comparer);
-            FindPossiblePositions();
+            queue = new PriorityQueue<byte>(comparer);
         }
 
-        protected abstract IComparer<FieldMask> GetComparer();
+        protected abstract IComparer<byte> GetComparer();
 
-        private void FindPossiblePositions()
+
+        public bool HasPath(Field field, Player player, in byte position)
         {
-            var count = 0;
-            for (var y = 0; y < FieldMask.BitboardSize; y++)
+            this.field = field;
+            Prepare(player, in position);
+            return Search(player, false, out _);
+        }
+
+        public bool TryFindPath(Field field, Player player, in byte position, out FieldMask path)
+        {
+            this.field = field;
+            Prepare(player, in position);
+            return Search(player, true, out path);
+        }
+
+        public void UpdatePathForPlayers(Field field, Player player)
+        {
+            this.field = field;
+            UpdatePathFor(player);
+            UpdatePathFor(player.Enemy);
+        }
+
+        public void UpdatePathFor(Player player)
+        {
+            Prepare(player, in player.Position);
+            var key = (field.Walls, player.Position, player.Enemy.Position, player.Position);
+            if (cached.TryGetValue(key, out var path))
             {
-                for (var x = 0; x < FieldMask.BitboardSize; x++)
+                player.SetPath(path);
+                return;
+            }
+
+            var result = Search(player, true, out path);
+            player.SetPath(path);
+            cached[key] = path;
+        }
+
+        protected virtual unsafe void Prepare(Player player, in byte position)
+        {
+            fixed (int* distancesPtr = distances)
+            {
+                fixed ((byte, bool)* prevPtr = prevNodes)
                 {
-                    if (y % 2 == 0 && x % 2 == 0)
+                    for (byte i = 0; i < FieldMask.PlayerFieldArea; i++)
                     {
-                        var mask = new FieldMask();
-                        mask.SetBit(y, x, true);
-                        possiblePositions[count] = mask;
-                        count++;
+                        *(distancesPtr + i) = int.MaxValue; //assigning the value with the pointer
+                        *(prevPtr + i) = (Constants.EmptyIndex, default);
                     }
                 }
             }
-        }
 
-        public void Initialize(Game game)
-        {
-            this.game = game;
-        }
-
-        public bool HasPath(Player player, FieldMask position, out FieldMask path)
-        {
-            endMask = GetEndMask(player);
-            enemy = GetEnemy(player);
-            Prepare(position);
-            return Search(out path);
-        }
-
-        private FieldMask GetEndMask(Player player)
-        {
-            return player == game.BluePlayer ? Constants.BlueEndPositions : Constants.RedEndPositions;
-        }
-
-        private Player GetEnemy(Player player)
-        {
-            return player == game.BluePlayer ? game.RedPlayer : game.BluePlayer;
-        }
-
-        protected virtual void Prepare(FieldMask position)
-        {
-            for (var i = 0; i < 81; i++)
-            {
-                var pos = possiblePositions[i];
-                distances[pos] = int.MaxValue;
-                prevNodes[pos] = nullPosition;
-            }
             distances[position] = 0;
             queue.Clear();
             queue.Enqueue(position);
         }
 
-        private bool Search(out FieldMask path)
+        private bool Search(Player player, bool retrievePath, out FieldMask path)
         {
             while (queue.Count > 0)
             {
                 var position = queue.Dequeue();
 
-                if (IsDestinationReached(position))
+                if (IsDestinationReached(player, position))
                 {
-                    path = RetrievePath(position);
+                    path = retrievePath
+                        ? pathRetriever.RetrievePath(position, prevNodes, player.Enemy.Position)
+                        : Constants.EmptyField;
                     return true;
                 }
 
                 var traversedDistance = distances[position];
-                foreach (var pos in GetPossibleMoves(position))
+
+                var (masks, isSimple) = GetPossibleMoves(player, in position);
+
+                foreach (var pos in masks)
                 {
                     var distance = traversedDistance + 1;
                     if (distance < distances[pos])
                     {
                         distances[pos] = distance;
-                        prevNodes[pos] = position;
+                        prevNodes[pos] = (position, isSimple);
                         queue.Enqueue(pos);
                     }
                 }
             }
 
-            path = default;
+            path = Constants.EmptyField;
             return false;
         }
 
-        private bool IsDestinationReached(FieldMask position)
+        private bool IsDestinationReached(Player player, byte position)
         {
-            return endMask.And(position).IsNotZero();
+            return player.IsEndPosition(position);
         }
 
-        private FieldMask RetrievePath(FieldMask position)
+        private (byte[] indexes, bool isSimple) GetPossibleMoves(Player player, in byte position)
         {
-            var path = new FieldMask();
-            while (!position.Equals(nullPosition))
-            {
-                path = path.Or(position);
-                position = prevNodes[position];
-            }
-            return path;
-        }
-
-        private FieldMask[] GetPossibleMoves(FieldMask position)
-        {
-            return moveProvider.GetAvailableMoves(game.Field, in position, enemy.Position);
+            return moveProvider.GetAvailableMovesWithType(field, in position, in player.Enemy.Position);
         }
     }
 }
