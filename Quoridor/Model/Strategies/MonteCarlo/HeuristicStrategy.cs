@@ -45,7 +45,7 @@ namespace Quoridor.Model.Strategies
         {
             if (!player.HasWalls())
             {
-                return GetBackMoveOnPath(field, player);
+                // return GetBackMoveOnPath(field, player);
                 // TODO: test which faster
                 return new PlayerMove(player, player.Position, field, search, wallProvider);
             }

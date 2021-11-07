@@ -101,6 +101,7 @@ namespace Quoridor.Model.Players
             position = player.Position;
             AmountOfWalls = player.AmountOfWalls;
             NumberOfMoves = player.NumberOfMoves;
+            Path = player.Path;
         }
     }
 }

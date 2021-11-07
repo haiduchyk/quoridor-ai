@@ -11,7 +11,7 @@ namespace Quoridor.Model
 
         protected readonly int[] distances = new int[FieldMask.PlayerFieldArea];
 
-        private readonly Dictionary<byte, (byte mask, bool isSimple)> prevNodes = new(FieldMask.PlayerFieldArea);
+        private readonly (byte mask, bool isSimple)[] prevNodes = new (byte, bool)[FieldMask.PlayerFieldArea];
         private readonly PriorityQueue<byte> queue;
 
         private readonly IMoveProvider moveProvider;
@@ -70,10 +70,13 @@ namespace Quoridor.Model
         {
             fixed (int* distancesPtr = distances)
             {
-                for (byte i = 0; i < FieldMask.PlayerFieldArea; i++)
+                fixed ((byte, bool)* prevPtr = prevNodes)
                 {
-                    *(distancesPtr + i) = int.MaxValue; //assigning the value with the pointer
-                    prevNodes[i] = (Constants.EmptyIndex, default);
+                    for (byte i = 0; i < FieldMask.PlayerFieldArea; i++)
+                    {
+                        *(distancesPtr + i) = int.MaxValue; //assigning the value with the pointer
+                        *(prevPtr + i) = (Constants.EmptyIndex, default);
+                    }
                 }
             }
 

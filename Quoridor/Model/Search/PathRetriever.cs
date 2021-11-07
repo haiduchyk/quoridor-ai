@@ -11,7 +11,7 @@ namespace Quoridor.Model
         // <nextPlayerPosition <enemyPosition <playerPosition, mask>>>
         private readonly Dictionary<byte, Dictionary<byte, Dictionary<byte, FieldMask>>> withEnemyMoveMasks = new();
 
-        public FieldMask RetrievePath(byte playerPosition, Dictionary<byte, (byte mask, bool isSimple)> prevNodes,
+        public FieldMask RetrievePath(byte playerPosition, (byte mask, bool isSimple)[] prevNodes,
             byte enemyPosition)
         {
             var path = new FieldMask();

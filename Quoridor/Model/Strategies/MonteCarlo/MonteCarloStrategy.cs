@@ -180,10 +180,10 @@ namespace Quoridor.Model.Strategies
 
         private int Simulate(MonteNode node)
         {
-            var firstPlayer = node.IsPlayerMove ? montePlayer : monteEnemy;
-            var secondPlayer = node.IsPlayerMove ? monteEnemy : montePlayer;
+            var firstPlayer = node.IsPlayerMove ? monteEnemy : montePlayer;
+            var secondPlayer = node.IsPlayerMove ? montePlayer : monteEnemy;
             var moveCount = 0;
-            while (!firstPlayer.HasReachedFinish() && !secondPlayer.HasReachedFinish() && moveCount < 100)
+            while (!firstPlayer.HasReachedFinish() && !secondPlayer.HasReachedFinish() && moveCount < 400)
             {
                 var player = moveCount % 2 == 0 ? firstPlayer : secondPlayer;
                 var move = strategy.FindMove(monteField, player, null);
@@ -220,6 +220,7 @@ namespace Quoridor.Model.Strategies
 
         private void PrintStatistic(int count, long startTime, MonteNode bestNode)
         {
+#if DEBUG
             var name = montePlayer.EndDownIndex == PlayerConstants.EndBlueDownIndexIncluding ? "Blue" : "Red";
             Console.WriteLine($"{name}");
             Console.WriteLine($"Count => {count}");
@@ -229,6 +230,7 @@ namespace Quoridor.Model.Strategies
             Console.WriteLine($"Average branching => {(float)branching / nodes}");
             Console.WriteLine($"Win rate in root => {root.WinRate:F4}");
             Console.WriteLine($"Win rate in best => {bestNode.WinRate:F4}");
+#endif
         }
 
         private float GetTime(long startTime)

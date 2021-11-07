@@ -1,7 +1,6 @@
 namespace Quoridor.Model.Strategies
 {
     using System.Collections.Generic;
-    using System.Linq;
 
     public static class WallConstants
     {
@@ -16,10 +15,10 @@ namespace Quoridor.Model.Strategies
         // TODO index
         public static readonly Dictionary<(byte position, byte endPosition), byte> BehindPlayerWall = new();
 
-        public static readonly Dictionary<byte, byte[]> NearPlayerWalls = new();
-        public static readonly Dictionary<byte, byte[]> NearWallsToCheck = new();
-        public static readonly Dictionary<byte, byte[]> NearWallsToPlace = new();
-        public static readonly Dictionary<byte, byte[]> OverlappedWalls = new();
+        public static readonly byte[][] NearPlayerWalls = new byte[FieldMask.PlayerFieldArea][];
+        public static readonly byte[][] NearWallsToCheck = new byte[MaxWallCount][];
+        public static readonly byte[][] NearWallsToPlace = new byte[MaxWallCount][];
+        public static readonly byte[][] OverlappedWalls = new byte[MaxWallCount][];
 
         static WallConstants()
         {
@@ -27,7 +26,7 @@ namespace Quoridor.Model.Strategies
             GenerateNearEdgeWallMask();
             GenerateNearPlayerWalls();
             GenerateNearWallMasks();
-            GenerateNearWall();
+            GenerateOverlappedWall();
         }
 
         public static void GenerateAllWallMoves()
@@ -114,25 +113,24 @@ namespace Quoridor.Model.Strategies
                 ToIndex(i, j, WallOrientation.Horizontal);
         }
 
-        private static void GenerateNearWall()
+        private static void GenerateOverlappedWall()
         {
-            for (var i = 0; i < FieldMask.BitboardSize; i++)
+            var count = 0;
+            for (var i = 1; i < FieldMask.BitboardSize; i += 2)
             {
-                for (var j = 0; j < FieldMask.BitboardSize; j++)
+                for (var j = 1; j < FieldMask.BitboardSize; j += 2)
                 {
                     var currentNearWallsIndexes = new List<byte>();
-                    var index = ToIndex(i, j, WallOrientation.Horizontal);
                     AddIfInRange(i, j, WallOrientation.Vertical);
                     AddIfInRange(i, j - 2, WallOrientation.Horizontal);
                     AddIfInRange(i, j + 2, WallOrientation.Horizontal);
-                    OverlappedWalls[index] = currentNearWallsIndexes.ToArray();
+                    OverlappedWalls[count++] = currentNearWallsIndexes.ToArray();
 
                     currentNearWallsIndexes = new List<byte>();
                     AddIfInRange(i, j, WallOrientation.Horizontal);
                     AddIfInRange(i - 2, j, WallOrientation.Vertical);
                     AddIfInRange(i + 2, j, WallOrientation.Vertical);
-                    index = ToIndex(i, j, WallOrientation.Vertical);
-                    OverlappedWalls[index] = currentNearWallsIndexes.ToArray();
+                    OverlappedWalls[count++] = currentNearWallsIndexes.ToArray();
 
                     void AddIfInRange(int y, int x, WallOrientation orientation)
                     {
