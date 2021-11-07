@@ -26,6 +26,7 @@ namespace Quoridor.Model.Moves
 
         public bool IsValid()
         {
+            // TODO: rewrite to FieldMask
             var nearWalls = WallConstants.NearWallsToCheck[wallIndex].Intersect(field.PlacedWalls).Count();
             nearWalls += WallConstants.NearEdgeWalls.Contains(wallIndex) ? 1 : 0;
             if (nearWalls < 2)
