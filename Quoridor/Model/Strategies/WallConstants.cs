@@ -10,7 +10,7 @@ namespace Quoridor.Model.Strategies
         public static readonly FieldMask[] AllWalls = new FieldMask[MaxWallCount];
         public static readonly byte[] AllIndexes = new byte[MaxWallCount];
 
-        public static readonly byte[] NearEdgeWalls = new byte[16];
+        public static readonly byte[] NearEdgeWalls = new byte[32];
 
         // TODO index
         public static readonly Dictionary<(byte position, byte endPosition), byte> BehindPlayerWall = new();

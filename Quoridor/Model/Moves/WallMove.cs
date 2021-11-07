@@ -9,6 +9,8 @@ namespace Quoridor.Model.Moves
     {
         public ref readonly byte Id => ref wallIndex;
 
+        public bool IsMove => false;
+
         private readonly IWallProvider wallProvider;
         private readonly ISearch search;
         private readonly byte wallIndex;

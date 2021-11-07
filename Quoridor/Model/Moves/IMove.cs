@@ -4,8 +4,10 @@ namespace Quoridor.Model.Moves
 
     public interface IMove
     {
+        bool IsMove { get; }
+
         bool IsValid();
-        
+
         void Execute();
 
         void ExecuteForSimulation();

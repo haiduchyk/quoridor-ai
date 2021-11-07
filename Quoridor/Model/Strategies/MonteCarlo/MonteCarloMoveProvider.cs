@@ -43,7 +43,7 @@ namespace Quoridor.Model.Strategies
                 return FromWall(wall);
             }
             var turnPlayer = node.IsPlayerMove ? player : player.Enemy;
-            var turnEnemy = node.IsPlayerMove ? player : player.Enemy;
+            var turnEnemy = node.IsPlayerMove ? player.Enemy : player;
             if (turnPlayer.HasReachedFinish())
             {
                 return new List<IMove>();
@@ -56,6 +56,7 @@ namespace Quoridor.Model.Strategies
             {
                 return Shifts(node);
             }
+            // TODO test without this shit
             if (node.IsPlayerMove && !player.Enemy.HasWalls())
             {
                 return ShiftsWithBlockingWalls(node);

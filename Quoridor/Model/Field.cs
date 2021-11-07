@@ -83,6 +83,7 @@ namespace Quoridor.Model
         private void TryToRemoveNearWall(byte wall, Player player)
         {
             var nearWalls = WallConstants.NearWallsToCheck[wall].Intersect(PlacedWalls).Count();
+            // TODO vertical walls check
             nearWalls += WallConstants.NearEdgeWalls.Contains(wall) ? 1 : 0;
             if (nearWalls < 2)
             {

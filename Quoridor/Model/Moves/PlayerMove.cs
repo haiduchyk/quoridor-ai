@@ -1,6 +1,5 @@
 namespace Quoridor.Model.Moves
 {
-    using System;
     using Model;
     using Players;
     using Strategies;
@@ -8,6 +7,8 @@ namespace Quoridor.Model.Moves
     public class PlayerMove : IMove
     {
         public ref readonly byte Id => ref position;
+
+        public bool IsMove => true;
 
         private readonly byte position;
         private readonly ISearch search;

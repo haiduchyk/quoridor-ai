@@ -3,6 +3,7 @@ namespace Quoridor.Controller.Game
     using Model;
     using Model.Players;
     using Model.Strategies;
+    using Moves;
 
     public interface IPlayerCreator
     {
@@ -16,23 +17,25 @@ namespace Quoridor.Controller.Game
         private readonly IMoveProvider moveProvider;
         private readonly IWallProvider wallProvider;
         private readonly ISearch search;
+        private readonly IMoveConverter moveConverter;
 
-        public PlayerCreator(IMoveProvider moveProvider, IWallProvider wallProvider, ISearch search)
+        public PlayerCreator(IMoveProvider moveProvider, IWallProvider wallProvider, ISearch search,
+            IMoveConverter moveConverter)
         {
             this.moveProvider = moveProvider;
             this.wallProvider = wallProvider;
             this.search = search;
+            this.moveConverter = moveConverter;
         }
 
         public Player CreateFirstPlayer(GameOptions gameOptions)
         {
             var position = Constants.BluePlayerStartIndex;
             var walls = Constants.WallsPerGame;
-            
+
             var endUpIndex = PlayerConstants.EndBlueUpIndexIncluding;
             var endDownIndex = PlayerConstants.EndBlueDownIndexIncluding;
-            
-            
+
             return gameOptions.color switch
             {
                 StartColor.White => CreateBot(position, walls, endUpIndex, endDownIndex),
@@ -72,7 +75,7 @@ namespace Quoridor.Controller.Game
 
         private IMoveStrategy GetStrategy()
         {
-            return new MonteCarloStrategy(moveProvider, wallProvider, search);
+            return new MonteCarloStrategy(moveProvider, wallProvider, search, moveConverter);
         }
     }
 }

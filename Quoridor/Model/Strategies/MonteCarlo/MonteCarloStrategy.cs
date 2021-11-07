@@ -3,16 +3,20 @@ namespace Quoridor.Model.Strategies
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Controller.Moves;
     using Moves;
     using Players;
 
     public class MonteCarloStrategy : IMoveStrategy
     {
+        private static readonly double[] HeuristicCoef = { 0.7, 0.67, 0.64, 0.61, 0.58, 0.55, 0.54, 0.53, 0.52, 0.51, 0.5 };
+
         private const long ComputeTime = 2000;
         private const double C = 1.4142135;
 
         public bool IsManual => false;
 
+        private readonly IMoveConverter moveConverter;
         private readonly MonteCarloMoveProvider monteCarloMoveProvider;
         private readonly HeuristicStrategy strategy;
         private readonly Random random;
@@ -22,8 +26,10 @@ namespace Quoridor.Model.Strategies
         private readonly Player monteEnemy;
         private MonteNode root;
 
-        public MonteCarloStrategy(IMoveProvider moveProvider, IWallProvider wallProvider, ISearch search)
+        public MonteCarloStrategy(IMoveProvider moveProvider, IWallProvider wallProvider, ISearch search,
+            IMoveConverter moveConverter)
         {
+            this.moveConverter = moveConverter;
             monteField = new Field(search);
             montePlayer = new Player();
             monteEnemy = new Player();
@@ -32,7 +38,7 @@ namespace Quoridor.Model.Strategies
             monteCarloMoveProvider =
                 new MonteCarloMoveProvider(moveProvider, wallProvider, search, monteField, montePlayer);
             strategy = new HeuristicStrategy(moveProvider, wallProvider, search);
-            random = new Random(1);
+            random = new Random();
         }
 
         public IMove FindMove(Field field, Player player, IMove lastMove)
@@ -163,19 +169,27 @@ namespace Quoridor.Model.Strategies
             }
 
             var expand = (double)node.wins / node.games;
-            expand = node.IsPlayerMove ? expand : 1 - expand;
+            expand = !node.IsPlayerMove ? expand : 1 - expand;
             var explore = C * Math.Sqrt(Math.Log10(node.parent.games) / node.games);
             return expand + explore;
         }
 
         private MonteNode PickUnvisited(MonteNode node)
         {
+            var player = node.IsPlayerMove ? monteEnemy : montePlayer;
             var unvisited = node.children.Where(n => !n.IsVisited).ToArray();
-            var child = unvisited[random.Next(0, unvisited.Length)];
-
+            var child = GetRandomWithHeuristic(unvisited, player);
             child.move.Execute();
             child.SetChild(FindChildren(child));
             return child;
+        }
+
+        private MonteNode GetRandomWithHeuristic(MonteNode[] nodes, Player player)
+        {
+            var child = random.NextDouble() < HeuristicCoef[10 - player.AmountOfWalls]
+                ? nodes.FirstOrDefault(n => n.move.IsMove)
+                : nodes.FirstOrDefault(n => !n.move.IsMove);
+            return child ?? nodes[random.Next(0, nodes.Length)];
         }
 
         private int Simulate(MonteNode node)
@@ -230,6 +244,7 @@ namespace Quoridor.Model.Strategies
             Console.WriteLine($"Average branching => {(float)branching / nodes}");
             Console.WriteLine($"Win rate in root => {root.WinRate:F4}");
             Console.WriteLine($"Win rate in best => {bestNode.WinRate:F4}");
+            // PrintTree(root);
 #endif
         }
 
@@ -263,6 +278,20 @@ namespace Quoridor.Model.Strategies
             }
 
             return (0, 0);
+        }
+
+        private void PrintTree(MonteNode node)
+        {
+            if (node.children == null)
+            {
+                return;
+            }
+            var offset = "".PadLeft(node.level * 2, '-');
+            Console.WriteLine($"{offset}{moveConverter.GetCode(monteField, montePlayer, node.move)} -> {node.WinRate}");
+            foreach (var child in node.children)
+            {
+                PrintTree(child);
+            }
         }
     }
 }

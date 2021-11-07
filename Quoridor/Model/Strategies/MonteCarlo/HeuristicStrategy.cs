@@ -13,7 +13,7 @@ namespace Quoridor.Model.Strategies
         private readonly IWallProvider wallProvider;
         private readonly ISearch search;
 
-        private readonly Random random = new(1);
+        private readonly Random random = new();
 
         public HeuristicStrategy(IMoveProvider moveProvider, IWallProvider wallProvider, ISearch search)
         {

@@ -16,9 +16,9 @@ namespace Quoridor.Controller
             var wallProvider = new WallProvider(moveProvider);
             var pathRetriever = new PathRetriever();
             var search = new AStarSearchAlgorithm(moveProvider, pathRetriever);
-            var botCreator = new PlayerCreator(moveProvider, wallProvider, search);
             var positionConverter = new PositionConverter(wallProvider);
             var moveConverter = new MoveConverter(positionConverter, moveProvider, wallProvider, search);
+            var botCreator = new PlayerCreator(moveProvider, wallProvider, search, moveConverter);
             var gameProvider = new GameProvider(botCreator, wallProvider, search);
             var ioWorker = new ConsoleWorker();
             var menuController = new MenuController(ioWorker);
