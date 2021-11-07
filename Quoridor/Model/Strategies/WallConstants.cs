@@ -40,6 +40,7 @@ namespace Quoridor.Model.Strategies
                     AllWalls[count++] = GenerateWall(i, j, WallOrientation.Vertical);
                 }
             }
+
             for (byte i = 0; i < 128; i++)
             {
                 AllIndexes[i] = i;
@@ -53,6 +54,9 @@ namespace Quoridor.Model.Strategies
             {
                 NearEdgeWalls[count++] = ToIndex(i, 1, WallOrientation.Horizontal);
                 NearEdgeWalls[count++] = ToIndex(i, 15, WallOrientation.Horizontal);
+                
+                NearEdgeWalls[count++] = ToIndex(1, i, WallOrientation.Vertical);
+                NearEdgeWalls[count++] = ToIndex(15, i, WallOrientation.Vertical);
             }
         }
 
@@ -217,7 +221,7 @@ namespace Quoridor.Model.Strategies
                 AddIfInRange(i - 4, j, WallOrientation.Horizontal);
                 AddIfInRange(i + 4, j, WallOrientation.Horizontal);
             }
-            
+
             return walls.ToArray();
 
             void AddIfInRange(int y, int x, WallOrientation orientation)
@@ -255,7 +259,7 @@ namespace Quoridor.Model.Strategies
             i /= 2;
             j /= 2;
             var offset = wallOrientation == WallOrientation.Horizontal ? 0 : 1;
-            return (byte)((i * 8 + j) * 2 + offset);
+            return (byte) ((i * 8 + j) * 2 + offset);
         }
 
         public static (int i, int j, WallOrientation orientation) Flatten(byte wall)
