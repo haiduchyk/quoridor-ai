@@ -11,6 +11,7 @@ namespace Quoridor.Model.Strategies
         public static readonly byte[] AllIndexes = new byte[MaxWallCount];
 
         public static readonly byte[] NearEdgeWalls = new byte[32];
+        public static readonly byte[] HorizontalNearEdgeWalls = new byte[16];
 
         // TODO index
         public static readonly Dictionary<(byte position, byte endPosition), byte> BehindPlayerWall = new();
@@ -54,9 +55,15 @@ namespace Quoridor.Model.Strategies
             {
                 NearEdgeWalls[count++] = ToIndex(i, 1, WallOrientation.Horizontal);
                 NearEdgeWalls[count++] = ToIndex(i, 15, WallOrientation.Horizontal);
-                
+
                 NearEdgeWalls[count++] = ToIndex(1, i, WallOrientation.Vertical);
                 NearEdgeWalls[count++] = ToIndex(15, i, WallOrientation.Vertical);
+            }
+            count = 0;
+            for (var i = 1; i < FieldMask.BitboardSize; i += 2)
+            {
+                HorizontalNearEdgeWalls[count++] = ToIndex(i, 1, WallOrientation.Horizontal);
+                HorizontalNearEdgeWalls[count++] = ToIndex(i, 15, WallOrientation.Horizontal);
             }
         }
 
@@ -259,7 +266,7 @@ namespace Quoridor.Model.Strategies
             i /= 2;
             j /= 2;
             var offset = wallOrientation == WallOrientation.Horizontal ? 0 : 1;
-            return (byte) ((i * 8 + j) * 2 + offset);
+            return (byte)((i * 8 + j) * 2 + offset);
         }
 
         public static (int i, int j, WallOrientation orientation) Flatten(byte wall)

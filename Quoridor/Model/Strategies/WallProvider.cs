@@ -72,7 +72,7 @@ namespace Quoridor.Model
         private byte[] CreateWallMoves(Field field, Player player)
         {
             var heuristicWalls = GetNearWalls(field)
-                // .Concat(WallConstants.NearEdgeWalls)
+                .Concat(WallConstants.HorizontalNearEdgeWalls)
                 .Concat(WallConstants.NearPlayerWalls[player.Position])
                 .Concat(WallConstants.NearPlayerWalls[player.Enemy.Position]);
 

@@ -54,6 +54,7 @@ namespace Quoridor.Model.Strategies
             }
             if (!turnPlayer.HasWalls())
             {
+                return MoveOnPath(node);
                 return Shifts(node);
             }
             // TODO test without this shit

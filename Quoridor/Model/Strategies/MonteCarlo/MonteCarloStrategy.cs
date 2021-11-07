@@ -9,7 +9,7 @@ namespace Quoridor.Model.Strategies
 
     public class MonteCarloStrategy : IMoveStrategy
     {
-        private static readonly double[] HeuristicCoef = { 0.7, 0.67, 0.64, 0.61, 0.58, 0.55, 0.54, 0.53, 0.52, 0.51, 0.5 };
+        private static readonly double[] HeuristicCoef = { 0.9, 0.87, 0.84, 0.81, 0.78, 0.75, 0.72, 0.69, 0.66, 0.63, 0.6 };
 
         private const long ComputeTime = 2000;
         private const double C = 1.4142135;
@@ -113,7 +113,12 @@ namespace Quoridor.Model.Strategies
 
         private MonteNode FindBest(MonteNode node)
         {
-            return node.children.OrderByDescending(n => n.WinRate).First();
+            return node.children.OrderByDescending(GetEstimate).First();
+        }
+
+        private double GetEstimate(MonteNode node)
+        {
+            return node.WinRate * 80 + (double)node.games / root.games * 20;
         }
 
         private MonteNode[] FindChildren(MonteNode node)
