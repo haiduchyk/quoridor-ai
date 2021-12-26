@@ -27,41 +27,49 @@ namespace Quoridor.Model.Strategies
         public List<IMove> FindMoves(MonteNode node)
         {
             var row = moveProvider.GetRow(in player.Position);
-            var startRow = player.EndDownIndex == PlayerConstants.EndBlueDownIndexIncluding ? FieldMask.PlayerFieldSize - 1 : 0;
+            var startRow = player.EndDownIndex == PlayerConstants.EndBlueDownIndexIncluding
+                ? FieldMask.PlayerFieldSize - 1
+                : 0;
             if (IsLessNthMove(node, 5) && Math.Abs(startRow - row) < 3)
             {
                 return MoveOnPath(node);
             }
+
             if (IsNthMove(node, 3) && Math.Abs(startRow - row) == 3 &&
                 moveProvider.CanJump(field, player, out var jump))
             {
-                return FromMove(jump);
+                return FromMove(node, jump);
             }
+
             if (IsNthMove(node, 3) && Math.Abs(startRow - row) == 3 &&
                 wallProvider.TryGetWallBehind(field, player, out var wall))
             {
-                return FromWall(wall);
+                return FromWall(node, wall);
             }
-            var turnPlayer = node.IsPlayerMove ? player : player.Enemy;
-            var turnEnemy = node.IsPlayerMove ? player.Enemy : player;
-            if (turnPlayer.HasReachedFinish())
+
+            var turnPlayer = GetTurnPlayer(node);
+            var turnEnemy = GetTurnEnemy(node);
+            if (turnEnemy.HasReachedFinish() || turnPlayer.HasReachedFinish())
             {
                 return new List<IMove>();
             }
+
             if (!turnPlayer.HasWalls() && !turnEnemy.HasWalls())
             {
                 return MoveOnPath(node);
             }
+
             if (!turnPlayer.HasWalls())
             {
-                return MoveOnPath(node);
                 return Shifts(node);
             }
+
             // TODO test without this shit
             if (node.IsPlayerMove && !player.Enemy.HasWalls())
             {
                 return ShiftsWithBlockingWalls(node);
             }
+
             return AllMoves(node);
         }
 
@@ -77,40 +85,28 @@ namespace Quoridor.Model.Strategies
 
         private List<IMove> MoveOnPath(MonteNode node)
         {
-            var turnPlayer = node.IsPlayerMove ? player : player.Enemy;
+            var turnPlayer = GetTurnPlayer(node);
             if (search.TryFindPath(field, turnPlayer, in turnPlayer.Position, out var path))
             {
                 var moves = moveProvider.GetAvailableMoves(field, in turnPlayer.Position, in turnPlayer.Enemy.Position);
                 var movesOnPath = moves.Where(m => PlayerConstants.allPositions[m].And(in path).IsNotZero()).ToArray();
                 var shift = movesOnPath.First();
-                return FromMove(shift);
+                return FromMove(node, shift);
             }
+
             return Shifts(node);
         }
 
-        private List<IMove> FromMove(byte moveMask)
+        private List<IMove> FromMove(MonteNode node, byte moveMask)
         {
-            return new List<IMove>() { new PlayerMove(player, moveMask, field, search, wallProvider) };
+            var turnPlayer = GetTurnPlayer(node);
+            return new List<IMove>() { new PlayerMove(turnPlayer, moveMask, field, search, wallProvider) };
         }
 
-        private List<IMove> FromWall(byte wall)
+        private List<IMove> FromWall(MonteNode node, byte wall)
         {
-            return new List<IMove>() { new WallMove(field, player, search, wallProvider, wall) };
-        }
-
-        private List<IMove> Shifts(MonteNode node)
-        {
-            var turnPlayer = node.IsPlayerMove ? player : player.Enemy;
-            var shifts = moveProvider.GetAvailableMoves(field, in turnPlayer.Position, in turnPlayer.Enemy.Position);
-            return shifts.Select<byte, IMove>(m => new PlayerMove(turnPlayer, m, field, search, wallProvider)).ToList();
-        }
-
-        private IEnumerable<IMove> GetWallMoves(MonteNode node)
-        {
-            var turnPlayer = node.IsPlayerMove ? player : player.Enemy;
-            var walls = wallProvider.GenerateWallMoves(field, turnPlayer);
-            return walls
-                .Select<byte, IMove>(w => new WallMove(field, turnPlayer, search, wallProvider, w));
+            var turnPlayer = GetTurnPlayer(node);
+            return new List<IMove>() { new WallMove(field, turnPlayer, search, wallProvider, wall) };
         }
 
         private List<IMove> AllMoves(MonteNode node)
@@ -118,6 +114,21 @@ namespace Quoridor.Model.Strategies
             var moves = Shifts(node);
             moves.AddRange(GetWallMoves(node));
             return moves;
+        }
+
+        private List<IMove> Shifts(MonteNode node)
+        {
+            var turnPlayer = GetTurnPlayer(node);
+            var shifts = moveProvider.GetAvailableMoves(field, in turnPlayer.Position, in turnPlayer.Enemy.Position);
+            return shifts.Select<byte, IMove>(m => new PlayerMove(turnPlayer, m, field, search, wallProvider)).ToList();
+        }
+
+        private IEnumerable<IMove> GetWallMoves(MonteNode node)
+        {
+            var turnPlayer = GetTurnPlayer(node);
+            var walls = wallProvider.GenerateWallMoves(field, turnPlayer);
+            return walls
+                .Select<byte, IMove>(w => new WallMove(field, turnPlayer, search, wallProvider, w));
         }
 
         private List<IMove> ShiftsWithBlockingWalls(MonteNode node)
@@ -129,12 +140,16 @@ namespace Quoridor.Model.Strategies
 
         private IEnumerable<IMove> GetBlockingWallMoves(MonteNode node)
         {
-            var turnPlayer = node.IsPlayerMove ? player : player.Enemy;
+            var turnPlayer = GetTurnPlayer(node);
             var walls = wallProvider.GenerateWallMoves(field);
             search.TryFindPath(field, turnPlayer.Enemy, in turnPlayer.Enemy.Position, out var path);
             return walls
                 .Where(b => WallConstants.AllWalls[b].And(in path).IsNotZero())
                 .Select<byte, IMove>(w => new WallMove(field, turnPlayer, search, wallProvider, w));
         }
+
+        private Player GetTurnPlayer(MonteNode node) => node.IsPlayerMove ? player : player.Enemy;
+
+        private Player GetTurnEnemy(MonteNode node) => node.IsPlayerMove ? player.Enemy : player;
     }
 }
