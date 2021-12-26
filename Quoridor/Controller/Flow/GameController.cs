@@ -71,7 +71,9 @@ namespace Quoridor.Controller.Flow
 
         private void DrawField()
         {
+#if DEBUG
             fieldView.Draw(gameProvider.Game.Field, gameProvider.Game.BluePlayer, gameProvider.Game.RedPlayer);
+#endif
         }
     }
 }
