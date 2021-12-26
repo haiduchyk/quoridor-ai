@@ -9,7 +9,8 @@ namespace Quoridor.Model.Strategies
 
     public class MonteCarloStrategy : IMoveStrategy
     {
-        private static readonly double[] HeuristicCoef = { 0.9, 0.87, 0.84, 0.81, 0.78, 0.75, 0.72, 0.69, 0.66, 0.63, 0.6 };
+        private static readonly double[] HeuristicCoef =
+            { 0.9, 0.87, 0.84, 0.81, 0.78, 0.75, 0.72, 0.69, 0.66, 0.63, 0.6 };
 
         private const long ComputeTime = 2000;
         private const double C = 1.4142135;
@@ -60,6 +61,7 @@ namespace Quoridor.Model.Strategies
 
             var bestNode = FindBest(root);
             PrintStatistic(count, startTime, bestNode);
+            PrintTree();
 
             var move = bestNode.move;
             move.Apply(field, player);
@@ -140,6 +142,7 @@ namespace Quoridor.Model.Strategies
             {
                 return node;
             }
+
             var chosenNode = PickUnvisited(node);
             return chosenNode;
         }
@@ -285,15 +288,23 @@ namespace Quoridor.Model.Strategies
             return (0, 0);
         }
 
+        private void PrintTree()
+        {
+#if DEBUG
+            PrintTree(root);
+#endif
+        }
+
         private void PrintTree(MonteNode node)
         {
-            if (node.children == null)
+            if (node.children == null || node.level > 0)
             {
                 return;
             }
+
             var offset = "".PadLeft(node.level * 2, '-');
             Console.WriteLine($"{offset}{moveConverter.GetCode(monteField, montePlayer, node.move)} -> {node.WinRate}");
-            foreach (var child in node.children)
+            foreach (var child in node.children.OrderByDescending(n => n.WinRate))
             {
                 PrintTree(child);
             }
