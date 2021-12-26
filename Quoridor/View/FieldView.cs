@@ -11,9 +11,9 @@ namespace Quoridor.View
         private const char EmptyCharacter = '○';
         private const char Blue = '✱';
         private const char Red = '❤';
-        private const string Symbols = "0123456789abcdefgh";
+        private const string Symbols = "11223344556677889";
 
-        private const string HorizontalLine = "  0 1 2 3 4 5 6 7 8 9 a b c d e f g \n";
+        private const string HorizontalLine = "  A S B T C U D V E W F X G Y H Z I \n";
 
         public void Draw(Field field, Player bluePlayer, Player redPlayer)
         {
@@ -36,9 +36,11 @@ namespace Quoridor.View
                         RenderEmptyWall();
                     }
                 }
+
                 RenderBoardNumber(y);
                 Console.WriteLine();
             }
+
             RenderBoardLine();
         }
 
@@ -81,12 +83,24 @@ namespace Quoridor.View
 
         private void RenderBoardNumber(int y)
         {
-            Write($"{Symbols[y]} ", ConsoleColor.DarkMagenta);
+            var color = y % 2 == 0 ? ConsoleColor.DarkBlue : ConsoleColor.Yellow;
+            Write($"{Symbols[y]} ", color);
         }
 
         private void RenderBoardLine()
         {
-            Write(HorizontalLine, ConsoleColor.DarkCyan);
+            foreach (var symbol in HorizontalLine)
+            {
+                if (char.IsWhiteSpace(symbol))
+                {
+                    Write(symbol.ToString());
+                }
+                else
+                {
+                    var color = symbol is >= 'A' and <= 'I' ? ConsoleColor.DarkBlue : ConsoleColor.Yellow;
+                    Write(symbol.ToString(), color);
+                }
+            }
         }
 
         private void Write(string message)
