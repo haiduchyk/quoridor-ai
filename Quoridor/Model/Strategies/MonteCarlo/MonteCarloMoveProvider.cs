@@ -30,42 +30,43 @@ namespace Quoridor.Model.Strategies
             var startRow = player.EndDownIndex == PlayerConstants.EndBlueDownIndexIncluding
                 ? FieldMask.PlayerFieldSize - 1
                 : 0;
+            
             if (IsLessNthMove(node, 5) && Math.Abs(startRow - row) < 3)
             {
                 return MoveOnPath(node);
             }
-
+            
             if (IsNthMove(node, 3) && Math.Abs(startRow - row) == 3 &&
                 moveProvider.CanJump(field, player, out var jump))
             {
                 return FromMove(node, jump);
             }
-
+            
             if (IsNthMove(node, 3) && Math.Abs(startRow - row) == 3 &&
                 wallProvider.TryGetWallBehind(field, player, out var wall))
             {
                 return FromWall(node, wall);
             }
-
+            
             var turnPlayer = GetTurnPlayer(node);
             var turnEnemy = GetTurnEnemy(node);
             if (turnEnemy.HasReachedFinish() || turnPlayer.HasReachedFinish())
             {
                 return new List<IMove>();
             }
-
+            
             if (!turnPlayer.HasWalls() && !turnEnemy.HasWalls())
             {
                 return MoveOnPath(node);
             }
-
+            
             if (!turnPlayer.HasWalls())
             {
                 return Shifts(node);
             }
-
+            
             // TODO test without this shit
-            if (node.IsPlayerMove && !player.Enemy.HasWalls())
+            if (!node.IsPlayerMove && !player.Enemy.HasWalls())
             {
                 return ShiftsWithBlockingWalls(node);
             }
@@ -75,12 +76,12 @@ namespace Quoridor.Model.Strategies
 
         private bool IsLessNthMove(MonteNode node, int n)
         {
-            return node.IsPlayerMove && player.NumberOfMoves < n;
+            return !node.IsPlayerMove && player.NumberOfMoves < n;
         }
-
+        
         private bool IsNthMove(MonteNode node, int n)
         {
-            return node.IsPlayerMove && player.NumberOfMoves == n;
+            return !node.IsPlayerMove && player.NumberOfMoves == n;
         }
 
         private List<IMove> MoveOnPath(MonteNode node)
@@ -100,13 +101,13 @@ namespace Quoridor.Model.Strategies
         private List<IMove> FromMove(MonteNode node, byte moveMask)
         {
             var turnPlayer = GetTurnPlayer(node);
-            return new List<IMove>() { new PlayerMove(turnPlayer, moveMask, field, search, wallProvider) };
+            return new List<IMove>() {new PlayerMove(turnPlayer, moveMask, field, search, wallProvider)};
         }
 
         private List<IMove> FromWall(MonteNode node, byte wall)
         {
             var turnPlayer = GetTurnPlayer(node);
-            return new List<IMove>() { new WallMove(field, turnPlayer, search, wallProvider, wall) };
+            return new List<IMove>() {new WallMove(field, turnPlayer, search, wallProvider, wall)};
         }
 
         private List<IMove> AllMoves(MonteNode node)
@@ -148,8 +149,9 @@ namespace Quoridor.Model.Strategies
                 .Select<byte, IMove>(w => new WallMove(field, turnPlayer, search, wallProvider, w));
         }
 
-        private Player GetTurnPlayer(MonteNode node) => node.IsPlayerMove ? player : player.Enemy;
+        // inverted because we want next node players
+        private Player GetTurnPlayer(MonteNode node) => node.IsPlayerMove ? player.Enemy : player;
 
-        private Player GetTurnEnemy(MonteNode node) => node.IsPlayerMove ? player.Enemy : player;
+        private Player GetTurnEnemy(MonteNode node) => node.IsPlayerMove ? player : player.Enemy;
     }
 }

@@ -5,7 +5,7 @@ namespace Quoridor.Model.Strategies
 
     public class MonteNode
     {
-        public bool IsPlayerMove => level % 2 == 0;
+        public bool IsPlayerMove => level % 2 == 1;
 
         public bool IsFullyExpanded => children.Sum(c => c.games) >= children.Length;
 

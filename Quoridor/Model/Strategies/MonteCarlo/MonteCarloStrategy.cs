@@ -9,10 +9,12 @@ namespace Quoridor.Model.Strategies
 
     public class MonteCarloStrategy : IMoveStrategy
     {
+        // 1 - move, 0 - wall. All ones doesn't meant that there
+        // will be no wall moves, its just they will be taken in node in simulations after shifts
         private static readonly double[] HeuristicCoef =
-            { 0.9, 0.87, 0.84, 0.81, 0.78, 0.75, 0.72, 0.69, 0.66, 0.63, 0.6 };
+            {0.9, 0.87, 0.84, 0.81, 0.78, 0.75, 0.72, 0.69, 0.66, 0.63, 0.6};
 
-        private const long ComputeTime = 2000;
+        private const long ComputeTime = 5000;
         private const double C = 1.4142135;
 
         public bool IsManual => false;
@@ -120,7 +122,7 @@ namespace Quoridor.Model.Strategies
 
         private double GetEstimate(MonteNode node)
         {
-            return node.WinRate * 80 + (double)node.games / root.games * 20;
+            return node.WinRate * 80 + (double) node.games / root.games * 20;
         }
 
         private MonteNode[] FindChildren(MonteNode node)
@@ -176,14 +178,16 @@ namespace Quoridor.Model.Strategies
                 return double.PositiveInfinity;
             }
 
-            var expand = (double)node.wins / node.games;
-            expand = !node.IsPlayerMove ? expand : 1 - expand;
+            var expand = (double) node.wins / node.games;
+            // TODO check this this flag
+            expand = node.IsPlayerMove ? expand : 1 - expand;
             var explore = C * Math.Sqrt(Math.Log10(node.parent.games) / node.games);
             return expand + explore;
         }
 
         private MonteNode PickUnvisited(MonteNode node)
         {
+            // inverted because we need player for next node
             var player = node.IsPlayerMove ? monteEnemy : montePlayer;
             var unvisited = node.children.Where(n => !n.IsVisited).ToArray();
             var child = GetRandomWithHeuristic(unvisited, player);
@@ -194,7 +198,8 @@ namespace Quoridor.Model.Strategies
 
         private MonteNode GetRandomWithHeuristic(MonteNode[] nodes, Player player)
         {
-            var child = random.NextDouble() < HeuristicCoef[10 - player.AmountOfWalls]
+            var isMove = random.NextDouble() < HeuristicCoef[10 - player.AmountOfWalls];
+            var child = isMove
                 ? nodes.FirstOrDefault(n => n.move.IsMove)
                 : nodes.FirstOrDefault(n => !n.move.IsMove);
             return child ?? nodes[random.Next(0, nodes.Length)];
@@ -237,6 +242,7 @@ namespace Quoridor.Model.Strategies
 
         private bool HasTime(long startTime)
         {
+            // return GetCurrentTime() - startTime < ComputeTime;
             return GetCurrentTime() - startTime < ComputeTime;
         }
 
@@ -249,7 +255,7 @@ namespace Quoridor.Model.Strategies
             Console.WriteLine($"Time => {GetTime(startTime)}");
             Console.WriteLine($"Depth => {GetDepth(root)}");
             var (branching, nodes) = GetNodeStatistic(root);
-            Console.WriteLine($"Average branching => {(float)branching / nodes}");
+            Console.WriteLine($"Average branching => {(float) branching / nodes}");
             Console.WriteLine($"Win rate in root => {root.WinRate:F4}");
             Console.WriteLine($"Win rate in best => {bestNode.WinRate:F4}");
             // PrintTree(root);
