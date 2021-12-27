@@ -21,12 +21,13 @@ namespace Quoridor.Model.Strategies
             this.search = search;
         }
 
-        public IMove FindMove(Field field, Player player, IMove lastMove)
+        public IMove FindMove(Field field, Player player, IMove lastMove, bool shouldPunish = false)
         {
             if (!player.HasWalls())
             {
                 return GetRandomPlayerMove(field, player);
             }
+
             return random.NextDouble() < 0.7
                 ? GetRandomPlayerMove(field, player)
                 : GetRandomWallMove(field, player);

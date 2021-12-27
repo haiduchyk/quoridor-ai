@@ -14,8 +14,8 @@ namespace Quoridor.Model
         private readonly (byte mask, bool isSimple)[] prevNodes = new (byte, bool)[FieldMask.PlayerFieldArea];
         private readonly PriorityQueue<byte> queue;
 
-        private readonly IMoveProvider moveProvider;
-        private readonly PathRetriever pathRetriever;
+        protected readonly IMoveProvider moveProvider;
+        protected readonly PathRetriever pathRetriever;
 
         private Field field;
 
@@ -50,6 +50,7 @@ namespace Quoridor.Model
             UpdatePathFor(player);
             UpdatePathFor(player.Enemy);
         }
+
 
         public void UpdatePathFor(Player player)
         {
@@ -128,5 +129,7 @@ namespace Quoridor.Model
         {
             return moveProvider.GetAvailableMovesWithType(field, in position, in player.Enemy.Position);
         }
+
+        public abstract ISearch Copy();
     }
 }

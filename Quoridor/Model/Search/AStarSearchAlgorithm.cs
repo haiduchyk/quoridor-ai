@@ -1,6 +1,7 @@
 namespace Quoridor.Model
 {
     using System.Collections.Generic;
+    using System.Runtime.Serialization;
     using Players;
 
     public class AStarSearchAlgorithm : SearchAlgorithm
@@ -21,6 +22,11 @@ namespace Quoridor.Model
         {
             base.Prepare(player, position);
             heuristic.SetEndPosition(player.EndDownIndex);
+        }
+
+        public override ISearch Copy()
+        {
+            return new AStarSearchAlgorithm(moveProvider, pathRetriever);
         }
     }
 }

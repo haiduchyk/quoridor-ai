@@ -13,5 +13,10 @@ namespace Quoridor.Model
         {
             return new DistanceComparer(distances);
         }
+        
+        public override ISearch Copy()
+        {
+            return new DijkstraSearchAlgorithm(moveProvider, pathRetriever);
+        }
     }
 }

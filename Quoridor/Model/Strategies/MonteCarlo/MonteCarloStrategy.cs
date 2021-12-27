@@ -3,48 +3,72 @@ namespace Quoridor.Model.Strategies
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
     using Controller.Moves;
     using Moves;
     using Players;
 
     public class MonteCarloStrategy : IMoveStrategy
     {
-        // 1 - move, 0 - wall. All ones doesn't meant that there
-        // will be no wall moves, its just they will be taken in node in simulations after shifts
-        private static readonly double[] HeuristicCoef =
-            {0.9, 0.87, 0.84, 0.81, 0.78, 0.75, 0.72, 0.69, 0.66, 0.63, 0.6};
-
-        private const long ComputeTime = 5000;
+        private const long ComputeTime = 4990;
         private const double C = 1.4142135;
+        private const int MaxThreadsAmount = 4;
+        private const double ThresholdForBestNode = 0.01f;
+
 
         public bool IsManual => false;
 
         private readonly IMoveConverter moveConverter;
         private readonly MonteCarloMoveProvider monteCarloMoveProvider;
-        private readonly HeuristicStrategy strategy;
         private readonly Random random;
 
-        private readonly Field monteField;
-        private readonly Player montePlayer;
-        private readonly Player monteEnemy;
         private MonteNode root;
+
+        private Player[] montePlayers;
+        private Player[] monteEnemies;
+        private Field[] monteFields;
+        private HeuristicStrategy[] strategies;
+        private MonteThread[] threads;
+        private Task<int>[] tasks = new Task<int>[MaxThreadsAmount];
+
+        private Field monteField => monteFields[0];
+        private Player montePlayer => montePlayers[0];
+        private readonly Player monteEnemy;
 
         public MonteCarloStrategy(IMoveProvider moveProvider, IWallProvider wallProvider, ISearch search,
             IMoveConverter moveConverter)
         {
             this.moveConverter = moveConverter;
-            monteField = new Field(search);
-            montePlayer = new Player();
-            monteEnemy = new Player();
-            montePlayer.SetEnemy(monteEnemy);
-            monteEnemy.SetEnemy(montePlayer);
+            random = new Random();
+
+            montePlayers = new Player[MaxThreadsAmount];
+            monteEnemies = new Player[MaxThreadsAmount];
+            monteFields = new Field[MaxThreadsAmount];
+            strategies = new HeuristicStrategy[MaxThreadsAmount];
+            threads = new MonteThread[MaxThreadsAmount];
+
+            for (var i = 0; i < MaxThreadsAmount; i++)
+            {
+                var newSearch = search.Copy();
+                var enemy = new Player();
+                var player = new Player();
+
+                montePlayers[i] = player;
+                monteEnemies[i] = enemy;
+
+                player.SetEnemy(enemy);
+                enemy.SetEnemy(player);
+
+                monteFields[i] = new Field(newSearch);
+                strategies[i] = new HeuristicStrategy(moveProvider, wallProvider, newSearch);
+                threads[i] = new MonteThread();
+            }
+
             monteCarloMoveProvider =
                 new MonteCarloMoveProvider(moveProvider, wallProvider, search, monteField, montePlayer);
-            strategy = new HeuristicStrategy(moveProvider, wallProvider, search);
-            random = new Random();
         }
 
-        public IMove FindMove(Field field, Player player, IMove lastMove)
+        public IMove FindMove(Field field, Player player, IMove lastMove, bool shouldPunish = false)
         {
             UpdateFields(field, player);
             SetRoot(lastMove);
@@ -56,7 +80,7 @@ namespace Quoridor.Model.Strategies
             {
                 UpdateFields(field, player);
                 var node = Select(root);
-                var result = Simulate(node);
+                var result = SimulateMultiple(node);
                 Backpropagate(node, result);
                 count++;
             }
@@ -110,19 +134,43 @@ namespace Quoridor.Model.Strategies
 
         private void UpdateFields(Field field, Player player)
         {
-            monteField.Update(field);
-            montePlayer.Update(player);
-            monteEnemy.Update(player.Enemy);
+            for (var i = 0; i < MaxThreadsAmount; i++)
+            {
+                montePlayers[i].Update(player);
+                monteEnemies[i].Update(player.Enemy);
+                monteFields[i].Update(field);
+            }
         }
+
 
         private MonteNode FindBest(MonteNode node)
         {
-            return node.children.OrderByDescending(GetEstimate).First();
+            var bestShift = FindBest(node.children.Where(n => n.move.IsMove));
+            var bestNode = FindBest(node.children);
+            return bestShift == null || bestNode.WinRate - bestShift.WinRate > ThresholdForBestNode ? bestNode : bestShift;
         }
 
-        private double GetEstimate(MonteNode node)
+        private MonteNode FindBest(IEnumerable<MonteNode> nodes)
         {
-            return node.WinRate * 80 + (double) node.games / root.games * 20;
+            var max = float.NegativeInfinity;
+            MonteNode best = null;
+
+            foreach (var child in nodes)
+            {
+                var estimation = GetEstimate(child);
+                if (estimation > max)
+                {
+                    max = estimation;
+                    best = child;
+                }
+            }
+
+            return best;
+        }
+
+        private float GetEstimate(MonteNode node)
+        {
+            return node.WinRate * 80 + (float) node.games / root.games * 20;
         }
 
         private MonteNode[] FindChildren(MonteNode node)
@@ -179,7 +227,6 @@ namespace Quoridor.Model.Strategies
             }
 
             var expand = (double) node.wins / node.games;
-            // TODO check this this flag
             expand = node.IsPlayerMove ? expand : 1 - expand;
             var explore = C * Math.Sqrt(Math.Log10(node.parent.games) / node.games);
             return expand + explore;
@@ -187,52 +234,48 @@ namespace Quoridor.Model.Strategies
 
         private MonteNode PickUnvisited(MonteNode node)
         {
-            // inverted because we need player for next node
-            var player = node.IsPlayerMove ? monteEnemy : montePlayer;
             var unvisited = node.children.Where(n => !n.IsVisited).ToArray();
-            var child = GetRandomWithHeuristic(unvisited, player);
+            var child = GetRandomWithHeuristic(unvisited);
             child.move.Execute();
             child.SetChild(FindChildren(child));
             return child;
         }
 
-        private MonteNode GetRandomWithHeuristic(MonteNode[] nodes, Player player)
+        private MonteNode GetRandomWithHeuristic(MonteNode[] nodes)
         {
-            var isMove = random.NextDouble() < HeuristicCoef[10 - player.AmountOfWalls];
-            var child = isMove
-                ? nodes.FirstOrDefault(n => n.move.IsMove)
-                : nodes.FirstOrDefault(n => !n.move.IsMove);
+            var child = nodes.FirstOrDefault(n => n.move.IsMove);
             return child ?? nodes[random.Next(0, nodes.Length)];
         }
 
-        private int Simulate(MonteNode node)
+        private int SimulateMultiple(MonteNode node)
         {
-            var firstPlayer = node.IsPlayerMove ? monteEnemy : montePlayer;
-            var secondPlayer = node.IsPlayerMove ? montePlayer : monteEnemy;
-            var moveCount = 0;
-            while (!firstPlayer.HasReachedFinish() && !secondPlayer.HasReachedFinish() && moveCount < 400)
+            for (var i = 0; i < MaxThreadsAmount; i++)
             {
-                var player = moveCount % 2 == 0 ? firstPlayer : secondPlayer;
-                var move = strategy.FindMove(monteField, player, null);
-                if (move.IsValid())
-                {
-                    move.ExecuteForSimulation();
-                    moveCount++;
-                }
+                var thread = threads[i];
+                thread.montePlayer = montePlayers[i];
+                thread.monteEnemy = monteEnemies[i];
+                thread.monteField = monteFields[i];
+                thread.strategy = strategies[i];
+                thread.node = node;
+
+                var task = Task.Factory.StartNew(thread.Simulate);
+                tasks[i] = task;
             }
 
-            return montePlayer.HasReachedFinish() ? 1 : 0;
+            var result = tasks.Sum(task => task.GetAwaiter().GetResult());
+
+            return result;
         }
 
         private void Backpropagate(MonteNode node, int result)
         {
             while (node.parent != null)
             {
-                node.Update(result);
+                node.Update(result, MaxThreadsAmount);
                 node = node.parent;
             }
 
-            node.Update(result);
+            node.Update(result, MaxThreadsAmount);
         }
 
         private long GetCurrentTime()
@@ -242,14 +285,13 @@ namespace Quoridor.Model.Strategies
 
         private bool HasTime(long startTime)
         {
-            // return GetCurrentTime() - startTime < ComputeTime;
             return GetCurrentTime() - startTime < ComputeTime;
         }
 
         private void PrintStatistic(int count, long startTime, MonteNode bestNode)
         {
 #if DEBUG
-            var name = montePlayer.EndDownIndex == PlayerConstants.EndBlueDownIndexIncluding ? "Blue" : "Red";
+            var name = montePlayers[0].EndDownIndex == PlayerConstants.EndBlueDownIndexIncluding ? "Blue" : "Red";
             Console.WriteLine($"{name}");
             Console.WriteLine($"Count => {count}");
             Console.WriteLine($"Time => {GetTime(startTime)}");
@@ -303,13 +345,14 @@ namespace Quoridor.Model.Strategies
 
         private void PrintTree(MonteNode node)
         {
-            if (node.children == null || node.level > 0)
+            if (node.children == null || node.level > 1)
             {
                 return;
             }
 
             var offset = "".PadLeft(node.level * 2, '-');
-            Console.WriteLine($"{offset}{moveConverter.GetCode(monteField, montePlayer, node.move)} -> {node.WinRate}");
+            Console.WriteLine(
+                $"{offset}{moveConverter.GetCode(monteFields[0], montePlayers[0], node.move)} -> {node.WinRate}");
             foreach (var child in node.children.OrderByDescending(n => n.WinRate))
             {
                 PrintTree(child);

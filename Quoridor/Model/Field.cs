@@ -16,7 +16,8 @@ namespace Quoridor.Model
         public ref readonly FieldMask Walls => ref walls;
 
         private FieldMask walls;
-        private readonly ISearch search;
+        // TODO make private
+        public readonly ISearch search;
 
         public Field(ISearch search)
         {

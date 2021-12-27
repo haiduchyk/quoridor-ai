@@ -22,8 +22,13 @@ namespace Quoridor.Model.Strategies
             this.search = search;
         }
 
-        public IMove FindMove(Field field, Player player, IMove lastMove)
+        public IMove FindMove(Field field, Player player, IMove lastMove, bool shouldPunish = false)
         {
+            if (!player.HasWalls() && !shouldPunish)
+            {
+                return GetMoveOnPath(field, player);
+            }
+
             return random.NextDouble() < 0.7
                 ? GetMoveOnPath(field, player)
                 : GetRandomWallMove(field, player);
@@ -31,7 +36,6 @@ namespace Quoridor.Model.Strategies
 
         private IMove GetMoveOnPath(Field field, Player player)
         {
-            // TODO make list of shortest path of bytes in Player 
             // TODO dont take random, take bigger row
             var availableMoves = moveProvider.GetAvailableMoves(field, in player.Position, in player.Enemy.Position);
             // TODO Fix this check, don't need it
@@ -72,6 +76,7 @@ namespace Quoridor.Model.Strategies
             {
                 move = availableMoves.Last();
             }
+
             return new PlayerMove(player, move, field, search, wallProvider);
         }
     }
